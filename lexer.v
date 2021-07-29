@@ -13,6 +13,7 @@ fn (mut lexer Lexer) lex() ?[]Token {
 
     for {
         if lexer.lookahead() == "EOF" {
+            tokens << Token{.eof, "EOF"}
             break
         }
 
@@ -25,39 +26,39 @@ fn (mut lexer Lexer) lex() ?[]Token {
 
         match current {
             "(" {
-                tokens << Token{ .open_paren, current }
+                tokens << Token{.open_paren, current}
                 continue
             }
             ")" {
-                tokens << Token{ .close_paren, current }
+                tokens << Token{.close_paren, current}
                 continue
             }
             "{" {
-                tokens << Token{ .open_curly, current }
+                tokens << Token{.open_curly, current}
                 continue
             }
             "}" {
-                tokens << Token{ .close_curly, current }
+                tokens << Token{.close_curly, current}
                 continue
             }
             "@" {
-                tokens << Token{ .at, current }
+                tokens << Token{.at, current}
                 continue
             }
             ";" {
-                tokens << Token{ .semicolon, current }
+                tokens << Token{.semicolon, current}
                 continue
             }
             "," {
-                tokens << Token{ .comma, current }
+                tokens << Token{.comma, current}
                 continue
             }
             ":" {
                 if lexer.lookahead() == ":" {
-                    tokens << Token{ .double_colon, "::" }
+                    tokens << Token{.double_colon, "::"}
                     lexer.advance()
                 } else {
-                    tokens << Token{ .colon, current }
+                    tokens << Token{.colon, current}
                 }
                 continue
             }
@@ -66,18 +67,21 @@ fn (mut lexer Lexer) lex() ?[]Token {
 
         if !lexer.is_number(current) {
             if current != "\"" {
-                tokens << Token{ .identifier, lexer.read_identifier(current) }
+                id := lexer.read_identifier(current)
+                // We check if its a valid keyword, if so, we set the token kind
+                kind := to_keyword(id) or { TokenType.identifier }
+                tokens << Token{kind, id}
                 continue
             }
         }
 
         if lexer.is_number(current) {
-            tokens << Token{ .number, lexer.read_number(current)? }
+            tokens << Token{.number, lexer.read_number(current)?}
             continue
         }
 
         if current == "\"" {
-            tokens << Token{ .string, lexer.read_string() }
+            tokens << Token{.string, lexer.read_string()}
             continue
         }
 

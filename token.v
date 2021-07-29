@@ -14,6 +14,12 @@ enum TokenType {
     identifier
     number
 
+    // keywords
+    kw_struct
+    kw_fn
+    kw_is
+
+    eof
 }
 
 struct Token {
