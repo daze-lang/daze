@@ -1,0 +1,12 @@
+is main
+
+struct Person {
+  name :: String
+  age :: Int
+}
+
+// This is a comment
+
+fn main() :: void {
+  out("Hello, world.");
+}
