@@ -12,7 +12,7 @@ implement Person {
   }
 
   fn something() :: String {
-    ret "hello there";
+    ret "hello there my friend.";
   }
 
   fn get_hello() :: String {
