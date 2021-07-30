@@ -17,6 +17,7 @@ pub type Statement = FunctionDeclarationStatement
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
     | NumberLiteralExpr
+    | RawBinaryOpExpr
     | VariableExpr
     | VariableDecl
     | ReturnExpr
@@ -69,6 +70,11 @@ pub struct FunctionCallExpr {
 pub:
     name string
     args []Expr
+}
+
+pub struct RawBinaryOpExpr {
+pub:
+    value string
 }
 
 pub struct StringLiteralExpr {

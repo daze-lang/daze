@@ -1,6 +1,5 @@
 is testModule;
 
-fn get_hello_world() :: String {
-  str := "Hello, world..";
-  ret str;
+fn get_num() :: Int32 {
+  ret 8;
 }

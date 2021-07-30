@@ -36,7 +36,6 @@ fn remove_comments(code string) string {
 
 fn load_imports(code string) ?[]string {
     matches := match_all(code, "use (.*?);")
-    mut output := code
     mut compiled_modules := []string{}
 
     for m in matches {
@@ -67,6 +66,10 @@ fn main() {
     mut input_file := os.read_file("lang.dz") or { panic("File not found") }
     input_file = remove_comments(input_file)
     compiled_modules := load_imports(input_file)?
+    // mut lexer := lexer.Lexer{input: input_file.split('')}
+    // tokens := lexer.lex()?
+    // panic(tokens)
+
     code := to_crystal(input_file)?
     mut final_code := ""
     for mod in compiled_modules {

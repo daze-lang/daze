@@ -1,15 +1,14 @@
 // Main module definition
 is main;
 
-// Functions will be available under testModule.
 use "testModule";
 
-// This is a Struct
-struct Person {
-  name :: String,
-  age :: Int32
+fn name() :: Int32 {
+  ret 5;
 }
 
 // This is the main function, the entry point of the program.
 fn main() :: Void {
+  var := 5 + 10 + TestModule.get_num();
+  out(var);
 }

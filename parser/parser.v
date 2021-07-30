@@ -83,6 +83,15 @@ fn (mut parser Parser) expr() Expr {
         }
     }
 
+    mut raw_op := []string{}
+    raw_op << parser.peek().value
+    if parser.lookahead_by(1).kind == .plus {
+        for parser.lookahead().kind != .semicolon {
+            raw_op << parser.advance().value
+        }
+        return ast.RawBinaryOpExpr{raw_op.join("")}
+    }
+
     return node
 }
 

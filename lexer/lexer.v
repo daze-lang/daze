@@ -53,6 +53,18 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 tokens << Token{.comma, current}
                 continue
             }
+            "+" {
+                tokens << Token{.plus, current}
+                continue
+            }
+            "-" {
+                tokens << Token{.minus, current}
+                continue
+            }
+            "/" {
+                tokens << Token{.div, current}
+                continue
+            }
             ":" {
                 if lexer.lookahead() == ":" {
                     tokens << Token{.double_colon, "::"}
@@ -158,5 +170,5 @@ fn (lexer Lexer) is_number(c string) bool {
 }
 
 fn (lexer Lexer) is_letter(c string) bool {
-    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".contains(c)
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.".contains(c)
 }

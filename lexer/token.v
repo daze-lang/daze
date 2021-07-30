@@ -11,11 +11,13 @@ pub enum TokenType {
     colon // :
     double_colon // ::
     colon_equal // :=
-    slash // /
     double_slash //
     string
     identifier
     number
+    plus // +
+    minus // -
+    div // /
 
     // keywords
     kw_struct

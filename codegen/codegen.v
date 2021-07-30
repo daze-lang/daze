@@ -75,6 +75,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.return_expr(node)
     } else if mut node is ast.VariableDecl {
         code = gen.variable_decl(node)
+    } else if mut node is ast.RawBinaryOpExpr {
+        code = node.value
     }
 
     return code
@@ -85,7 +87,6 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
     for arg in node.args {
         args << gen.fn_arg(arg)
     }
-
     mut code := "def self.${node.name}(${args.join(", ")})\n"
     for expr in node.body {
         code += gen.gen(expr)
@@ -105,8 +106,9 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     for arg in node.args {
         args << gen.expr(arg)
     }
-    fn_name := if node.name == "out" { "puts" } else { "self.$node.name" }
-    mut code := "${fn_name}(${args.join(", ")})"
+    accessor := if node.name.contains(".") { "" } else {"self."}
+    fn_name := if node.name == "out" { "puts" } else { "$accessor$node.name" }
+    mut code := "${fn_name}(${args.join(", ")})\n"
 
     return code
 }
