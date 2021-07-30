@@ -1,0 +1,5 @@
+is strings;
+
+fn hello() :: String {
+  ret "hello.";
+}

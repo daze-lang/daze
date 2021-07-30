@@ -40,7 +40,12 @@ fn load_imports(code string) ?[]string {
     mut compiled_modules := []string{}
 
     for m in matches {
-        module_path := m.replace("\"", "").replace("use ", "").replace(";", "")
+        mut module_path := m.replace("\"", "").replace("use ", "").replace(";", "")
+        if module_path.starts_with("std::") {
+            module_name := module_path.replace("std::", "")
+            module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
+            // panic(module_path)
+        }
         mut module_file := remove_comments(os.read_file("${module_path}.dz") or { panic("File not found") })
         compiled_modules << to_crystal(module_file)?
     }

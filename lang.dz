@@ -1,5 +1,7 @@
 is main;
 
+use "std::strings";
+
 struct Person {
   name :: String,
   age :: Int32
@@ -10,17 +12,13 @@ implement Person {
     Self.name = name;
     Self.age = age;
   }
-
-  fn something() :: String {
-    ret "hello there my friend.";
-  }
-
-  fn get_hello() :: String {
-    ret Self.something();
-  }
 }
 
 fn main() :: Void {
-  p = Person.new("Mark", 24);
-  out("My name is #{p.name()} and I'm #{p.age()}, also: #{p.get_hello()}");
+  me = Person.new("Mark", 24);
+  my_name = me.name();
+  my_age = me.age();
+
+  out("My name is #{my_name} and I'm #{my_age}. This is Daze.");
+  out("You can also get the info like so: #{me.name()}, #{me.age()}");
 }
