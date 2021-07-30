@@ -1,4 +1,4 @@
-module main
+module lexer
 
 const keywords_map = map{
     'struct': TokenType.kw_struct,
