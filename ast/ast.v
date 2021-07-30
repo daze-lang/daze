@@ -10,6 +10,7 @@ pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
     | RawCrystalCodeStatement
+    | ImplementBlockStatement
     | ModuleUseStatement
     | FunctionArgument
     | Comment
@@ -27,11 +28,12 @@ pub type Expr = FunctionCallExpr
 pub type Node = Statement | Expr
 
 pub struct FunctionDeclarationStatement {
-pub:
+pub mut:
     name string
     args []FunctionArgument
     body []Expr
     return_type string
+    is_struct bool
 }
 
 pub struct ModuleDeclarationStatement {
@@ -44,6 +46,12 @@ pub:
     value string
 }
 
+pub struct ImplementBlockStatement {
+pub:
+    name string
+    fns []FunctionDeclarationStatement
+}
+
 pub struct ModuleUseStatement {
 pub:
     path string
@@ -53,6 +61,8 @@ pub struct StructDeclarationStatement {
 pub:
     name string
     fields []FunctionArgument
+pub mut:
+    fns []FunctionDeclarationStatement
 }
 
 pub struct ReturnExpr {

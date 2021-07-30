@@ -12,10 +12,18 @@ pub struct Parser {
         index int = -1
         current Token
         previous Token
+        structs map[string]ast.StructDeclarationStatement = map[string]ast.StructDeclarationStatement{}
 }
 
 pub fn (mut parser Parser) parse() AST {
-    return AST{"TopLevel", parser.statements()}
+    mut statements := parser.statements()
+    for _, v in parser.structs {
+        statements << v
+    }
+    // a << statements
+    ast := AST{"TopLevel", statements}
+    // panic(ast)
+    return ast
 }
 
 fn (mut parser Parser) statements() []Statement {
@@ -29,6 +37,9 @@ fn (mut parser Parser) statements() []Statement {
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement{}
     match parser.lookahead().kind {
+        .kw_implement {
+            parser.implement_block()
+        }
         .raw_crystal_code {
             node = parser.raw_crystal_code()
         }
@@ -36,7 +47,8 @@ fn (mut parser Parser) statement() Statement {
             node = parser.use()
         }
         .kw_struct {
-            node = parser.construct()
+            construct := parser.construct()
+            parser.structs[construct.name] = construct
         }
         .kw_fn {
             node = parser.fn_decl()
@@ -125,7 +137,7 @@ fn (mut parser Parser) expr() Expr {
 }
 
 // Function Declarations
-fn (mut parser Parser) fn_decl() Statement {
+fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     parser.expect(.kw_fn)
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
@@ -149,7 +161,8 @@ fn (mut parser Parser) fn_decl() Statement {
         name: fn_name,
         args: args,
         body: body,
-        return_type: ret_type
+        return_type: ret_type,
+        is_struct: false
     }
 }
 
@@ -175,6 +188,29 @@ fn (mut parser Parser) fn_arg() ast.FunctionArgument {
         name: name,
         type_name: type_name
     }
+}
+
+fn (mut parser Parser) implement_block() {
+    parser.expect(.kw_implement)
+    name := parser.expect(.identifier).value
+    parser.expect(.open_curly)
+
+    mut fns := []ast.FunctionDeclarationStatement{}
+    for parser.lookahead().kind != .close_curly {
+        fns << parser.fn_decl()
+    }
+
+    for mut func in fns {
+        if func.name == "new" {
+            func.name = "initialize"
+            func.body << ast.ReturnExpr{
+                value: ast.VariableExpr{"self"},
+            }
+        }
+        func.is_struct = true
+    }
+    parser.expect(.close_curly)
+    parser.structs[name].fns =fns
 }
 
 fn (mut parser Parser) fn_call() Expr {
@@ -213,7 +249,7 @@ fn (mut parser Parser) raw_crystal_code() ast.RawCrystalCodeStatement {
     return ast.RawCrystalCodeStatement{parser.advance().value}
 }
 
-fn (mut parser Parser) construct() Statement {
+fn (mut parser Parser) construct() ast.StructDeclarationStatement {
     parser.expect(.kw_struct)
     struct_name := parser.expect(.identifier).value
     parser.expect(.open_curly)
@@ -222,7 +258,8 @@ fn (mut parser Parser) construct() Statement {
 
     return ast.StructDeclarationStatement{
         name: struct_name,
-        fields: fields
+        fields: fields,
+        fns: []ast.FunctionDeclarationStatement{},
     }
 }
 
@@ -248,9 +285,12 @@ fn (mut parser Parser) ret() Expr {
 
 fn (mut parser Parser) variable_decl() Expr {
     name := parser.expect(.identifier).value
+
     parser.expect(.equal)
     value := parser.expr()
-    parser.expect(.semicolon)
+    if !(value is ast.FunctionCallExpr) {
+        parser.expect(.semicolon)
+    }
 
     return ast.VariableDecl {
         name: name,

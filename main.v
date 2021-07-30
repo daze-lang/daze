@@ -4,6 +4,7 @@ import os
 import pcre
 
 import lexer{Token}
+import ast{StructDeclarationStatement}
 import parser
 import codegen
 
@@ -50,7 +51,7 @@ fn load_imports(code string) ?[]string {
 fn to_crystal(source string) ?string {
     mut lexer := lexer.Lexer{input: source.split('')}
     tokens := lexer.lex()?
-    mut parser := parser.Parser{tokens, -1, Token{}, Token{}}
+    mut parser := parser.Parser{tokens, -1, Token{}, Token{}, map[string]StructDeclarationStatement{}}
     ast := parser.parse()
     mut codegen := codegen.CodeGenerator{ast, "", []string{}}
     mut code := codegen.run()
@@ -67,7 +68,7 @@ fn main() {
     mut input_file := os.read_file("lang.dz") or { panic("File not found") }
     input_file = remove_comments(input_file)
     compiled_modules := load_imports(input_file)?
-    mut lexer := lexer.Lexer{input: input_file.split('')}
+    // mut lexer := lexer.Lexer{input: input_file.split('')}
     // tokens := lexer.lex()?
     // panic(tokens)
 

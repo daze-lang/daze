@@ -89,7 +89,9 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
     for arg in node.args {
         args << gen.fn_arg(arg)
     }
-    mut code := "def self.${node.name}(${args.join(", ")})\n"
+
+    prefix := if node.name == "initialize" { "" } else { if node.is_struct { "" } else { "self." } }
+    mut code := "def $prefix${node.name}(${args.join(", ")})\n"
     for expr in node.body {
         code += gen.gen(expr)
     }
@@ -124,7 +126,7 @@ fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) strin
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
-    return node.value
+    return node.value.replace("Self.", "@@") + "\n"
 }
 
 fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
@@ -132,7 +134,7 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
-    return "$node.name = ${gen.gen(node.value)}\n"
+    return "${node.name.replace("Self.", "@@")} = ${gen.gen(node.value)}"
 }
 
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
@@ -140,6 +142,11 @@ fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) stri
     for arg in node.fields {
         code += "@@${gen.fn_arg(arg)}\n"
     }
+
+    for func in node.fns {
+        code += "${gen.fn_decl(func)}\n"
+    }
+
     code += "end\n\n"
 
     return code
