@@ -4,6 +4,7 @@ const keywords_map = map{
     'struct': TokenType.kw_struct,
     'fn': TokenType.kw_fn,
     'is': TokenType.kw_is,
+    'ret': TokenType.kw_return,
 }
 
 pub fn to_keyword(id string) ?TokenType {

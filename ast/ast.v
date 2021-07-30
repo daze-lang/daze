@@ -13,6 +13,8 @@ pub type Statement = FunctionDeclarationStatement
 
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
+    | VariableExpr
+    | ReturnExpr
     | NoOp
 
 pub type Node = Statement | Expr
@@ -36,6 +38,11 @@ pub:
     fields []FunctionArgument
 }
 
+pub struct ReturnExpr {
+pub:
+    value Expr
+}
+
 pub struct FunctionCallExpr {
 pub:
     name string
@@ -43,6 +50,11 @@ pub:
 }
 
 pub struct StringLiteralExpr {
+pub:
+    value string
+}
+
+pub struct VariableExpr {
 pub:
     value string
 }

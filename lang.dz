@@ -2,9 +2,13 @@ is main;
 
 struct Person {
   name :: String,
-  age :: Int,
+  age :: Int32,
 }
 
-fn main(name :: String, age :: String) :: void {
-  out("Hello, world.");
+fn say_name(name :: String) :: Void {
+  out(name);
+}
+
+fn main() :: Void {
+  say_name("Mark");
 }

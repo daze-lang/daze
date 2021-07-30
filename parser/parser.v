@@ -51,12 +51,19 @@ fn (mut parser Parser) expr() Expr {
             node = ast.StringLiteralExpr{parser.lookahead().value}
             parser.advance()
         }
+        .kw_return {
+            node = parser.ret()
+        }
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
                     node = parser.fn_call()
                 }
-                else {}
+                else {
+                    node = ast.VariableExpr{parser.lookahead().value}
+                    parser.advance()
+
+                }
             }
         }
         else {
@@ -125,7 +132,9 @@ fn (mut parser Parser) fn_call() Expr {
     parser.expect(.open_paren)
     arg := parser.expr()
     parser.expect(.close_paren)
-    parser.expect(.semicolon)
+    if parser.lookahead().kind != .close_paren {
+        parser.expect(.semicolon)
+    }
 
    return ast.FunctionCallExpr{
         name: fn_name,
@@ -153,5 +162,16 @@ fn (mut parser Parser) construct() Statement {
     return ast.StructDeclarationStatement{
         name: struct_name,
         fields: fields
+    }
+}
+
+fn (mut parser Parser) ret() Expr {
+    println("ret")
+    parser.expect(.kw_return)
+    value := parser.expr()
+    parser.expect(.semicolon)
+
+    return ast.ReturnExpr{
+        value: value,
     }
 }

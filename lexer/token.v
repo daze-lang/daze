@@ -18,6 +18,7 @@ pub enum TokenType {
     kw_struct
     kw_fn
     kw_is
+    kw_return
 
     eof
 }

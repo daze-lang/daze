@@ -42,6 +42,8 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
         code = gen.fn_decl(node)
     } else if mut node is ast.FunctionArgument {
         code = gen.fn_arg(node)
+    } else if mut node is ast.StructDeclarationStatement {
+        code = gen.struct_decl(node)
     }
 
     return code
@@ -54,6 +56,10 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.string_literal_expr(node)
     } else if mut node is ast.FunctionCallExpr {
         code = gen.fn_call(node)
+    } else if mut node is ast.VariableExpr {
+        code = gen.variable_expr(node)
+    } else if mut node is ast.ReturnExpr {
+        code = gen.return_expr(node)
     }
 
     return code
@@ -76,16 +82,36 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
 
 fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
     typ := if node.type_name == "string" { "String" } else { node.type_name }
-    return "$node.name : $typ"
+    return "$node.name : $typ?"
 }
 
 fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     fn_name := if node.name == "out" { "puts" } else { node.name }
-    mut code := "${fn_name}(${gen.gen(node.args)})\n"
+    mut code := "${fn_name}(${gen.gen(node.args)})"
 
     return code
 }
 
 fn (mut gen CodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
     return '"$node.value"'
+}
+
+
+fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
+    return node.value
+}
+
+fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
+    return "return ${gen.gen(node.value)}\n"
+}
+
+
+fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
+    mut code := "class ${node.name}\n"
+    for arg in node.fields {
+        code += "@@${gen.fn_arg(arg)}\n"
+    }
+    code += "end\n\n"
+
+    return code
 }

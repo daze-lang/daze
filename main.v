@@ -15,10 +15,10 @@ fn main() {
     mut parser := parser.Parser{tokens, -1, Token{}, Token{}}
     ast := parser.parse()
     println(ast)
-    // mut codegen := codegen.CodeGenerator{ast}
-    // mut result := codegen.run() + "\nmain()"
-    // println(result)
+    mut codegen := codegen.CodeGenerator{ast}
+    mut result := codegen.run() + "\nmain()"
+    println(result)
 
-    // os.write_file("/tmp/lang.cr", result) or { panic("Failed writing file") }
-    // os.execute("crystal build /tmp/lang.cr")
+    os.write_file("/tmp/lang.cr", result) or { panic("Failed writing file") }
+    os.execute("crystal build /tmp/lang.cr")
 }
