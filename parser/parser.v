@@ -69,18 +69,51 @@ fn (mut parser Parser) fn_decl() Statement {
     parser.expect(.kw_fn)
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
+    mut args := []ast.FunctionArgument{}
+    if parser.lookahead().kind == .identifier {
+        args = parser.fn_args()
+    }
     parser.expect(.close_paren)
     parser.expect(.double_colon)
 
     ret_type := parser.expect(.identifier).value
     parser.expect(.open_curly)
-    expr := parser.expr()
+
+    mut body := []Expr{}
+    for parser.lookahead().kind != .close_curly {
+        body << parser.expr()
+    }
     parser.expect(.close_curly)
 
     return ast.FunctionDeclarationStatement{
         name: fn_name,
-        body: expr,
+        args: args,
+        body: body,
         return_type: ret_type
+    }
+}
+
+fn (mut parser Parser) fn_args() []ast.FunctionArgument {
+    mut args := []ast.FunctionArgument{}
+
+    for parser.lookahead().kind != .close_paren {
+        args << parser.fn_arg()
+        if parser.lookahead().kind != .close_paren {
+            parser.expect(.comma)
+        }
+    }
+
+    return args
+}
+
+fn (mut parser Parser) fn_arg() ast.FunctionArgument {
+    name := parser.expect(.identifier).value
+    parser.expect(.double_colon)
+    type_name := parser.expect(.identifier).value
+
+    return ast.FunctionArgument {
+        name: name,
+        type_name: type_name
     }
 }
 

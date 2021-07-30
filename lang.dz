@@ -1,3 +1,5 @@
-fn main() :: void {
+is main;
+
+fn main(name :: String, age :: String) :: void {
   out("Hello, world.");
 }

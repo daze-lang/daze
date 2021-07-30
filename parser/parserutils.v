@@ -29,3 +29,11 @@ pub fn (mut parser Parser) expect(kind TokenType) Token {
 
     panic("Unexpected token ${parser.lookahead().kind}, expected ${kind}")
 }
+
+pub fn (mut parser Parser) expect_or(kind TokenType, fallback TokenType) Token {
+    if parser.lookahead().kind == kind || parser.lookahead().kind == fallback {
+        return parser.advance()
+    }
+
+    panic("Unexpected token ${parser.lookahead().kind}, expected ${kind} or $fallback")
+}

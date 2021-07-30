@@ -14,7 +14,7 @@ fn main() {
     tokens := lexer.lex()?
     mut parser := parser.Parser{tokens, -1, Token{}, Token{}}
     ast := parser.parse()
-    // println(ast)
+    println(ast)
     mut codegen := codegen.CodeGenerator{ast}
     mut result := codegen.run() + "\nmain()"
     // println(result)

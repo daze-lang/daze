@@ -40,6 +40,8 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
     mut code := ""
     if mut node is ast.FunctionDeclarationStatement {
         code = gen.fn_decl(node)
+    } else if mut node is ast.FunctionArgument {
+        code = gen.fn_arg(node)
     }
 
     return code
@@ -58,11 +60,23 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
 }
 
 fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string {
-    mut code := "def ${node.name}()\n"
-    code += gen.gen(node.body)
+    mut args := []string{}
+    for arg in node.args {
+        args << gen.fn_arg(arg)
+    }
+
+    mut code := "def ${node.name}(${args.join(", ")})\n"
+    for expr in node.body {
+        code += gen.gen(expr)
+    }
     code += "end\n\n"
 
     return code
+}
+
+fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
+    typ := if node.type_name == "string" { "String" } else { node.type_name }
+    return "$node.name : $typ"
 }
 
 fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
