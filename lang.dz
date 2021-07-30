@@ -1,14 +1,21 @@
+// Main module definition
 is main;
 
+// Functions will be available under testModule.
+use "testModule";
+
+// This is a Struct
 struct Person {
   name :: String,
-  age :: Int32,
+  age :: Int32
 }
 
-fn say_name(name :: String) :: Void {
-  out(name);
+fn get_hello_world() :: String {
+  str := "Hello, world..";
+  ret str;
 }
 
+// This is the main function, the entry point of the program.
 fn main() :: Void {
-  say_name("Mark");
+  out(get_hello_world());
 }

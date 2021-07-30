@@ -57,6 +57,9 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 if lexer.lookahead() == ":" {
                     tokens << Token{.double_colon, "::"}
                     lexer.advance()
+                } else if lexer.lookahead() == "=" {
+                    tokens << Token{.colon_equal, ":="}
+                    lexer.advance()
                 } else {
                     tokens << Token{.colon, current}
                 }

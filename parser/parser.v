@@ -1,5 +1,7 @@
 module parser
 
+import strconv
+
 import lexer{Token}
 import ast{AST, Statement, Expr, Node}
 
@@ -27,6 +29,9 @@ fn (mut parser Parser) statements() []Statement {
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement{}
     match parser.lookahead().kind {
+        .kw_use {
+            node = parser.use()
+        }
         .kw_struct {
             node = parser.construct()
         }
@@ -51,6 +56,10 @@ fn (mut parser Parser) expr() Expr {
             node = ast.StringLiteralExpr{parser.lookahead().value}
             parser.advance()
         }
+        .number {
+            node = ast.NumberLiteralExpr{strconv.atoi(parser.lookahead().value) or { 0 }}
+            parser.advance()
+        }
         .kw_return {
             node = parser.ret()
         }
@@ -60,9 +69,12 @@ fn (mut parser Parser) expr() Expr {
                     node = parser.fn_call()
                 }
                 else {
-                    node = ast.VariableExpr{parser.lookahead().value}
-                    parser.advance()
-
+                    if parser.lookahead_by(2).kind == .colon_equal {
+                        node = parser.variable_decl()
+                    } else {
+                        node = ast.VariableExpr{parser.lookahead().value}
+                        parser.advance()
+                    }
                 }
             }
         }
@@ -130,7 +142,14 @@ fn (mut parser Parser) fn_arg() ast.FunctionArgument {
 fn (mut parser Parser) fn_call() Expr {
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
-    arg := parser.expr()
+    mut args := []Expr{}
+    for parser.lookahead().kind != .close_paren {
+        args << parser.expr()
+        if parser.lookahead().kind != .close_paren {
+            parser.expect(.comma)
+        }
+    }
+
     parser.expect(.close_paren)
     if parser.lookahead().kind != .close_paren {
         parser.expect(.semicolon)
@@ -138,7 +157,7 @@ fn (mut parser Parser) fn_call() Expr {
 
    return ast.FunctionCallExpr{
         name: fn_name,
-        args: arg
+        args: args
    }
 }
 
@@ -165,13 +184,34 @@ fn (mut parser Parser) construct() Statement {
     }
 }
 
+fn (mut parser Parser) use() Statement {
+    parser.expect(.kw_use)
+    path := parser.expect(.string).value
+    parser.expect(.semicolon)
+
+    return ast.ModuleUseStatement{
+        path: path
+    }
+}
+
 fn (mut parser Parser) ret() Expr {
-    println("ret")
     parser.expect(.kw_return)
     value := parser.expr()
     parser.expect(.semicolon)
 
     return ast.ReturnExpr{
         value: value,
+    }
+}
+
+fn (mut parser Parser) variable_decl() Expr {
+    name := parser.expect(.identifier).value
+    parser.expect(.colon_equal)
+    value := parser.expr()
+    parser.expect(.semicolon)
+
+    return ast.VariableDecl {
+        name: name,
+        value: value
     }
 }

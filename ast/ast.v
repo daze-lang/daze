@@ -8,12 +8,17 @@ pub mut:
 
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
-    | FunctionArgument
     | StructDeclarationStatement
+    | ModuleUseStatement
+    | FunctionArgument
+    | Comment
+    | NoOp
 
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
+    | NumberLiteralExpr
     | VariableExpr
+    | VariableDecl
     | ReturnExpr
     | NoOp
 
@@ -32,6 +37,11 @@ pub:
     name string
 }
 
+pub struct ModuleUseStatement {
+pub:
+    path string
+}
+
 pub struct StructDeclarationStatement {
 pub:
     name string
@@ -43,16 +53,34 @@ pub:
     value Expr
 }
 
+pub struct VariableDecl {
+pub:
+    name string
+    value Expr
+}
+
+pub struct Comment {
+pub:
+    value string
+}
+
+
 pub struct FunctionCallExpr {
 pub:
     name string
-    args Expr
+    args []Expr
 }
 
 pub struct StringLiteralExpr {
 pub:
     value string
 }
+
+pub struct NumberLiteralExpr {
+pub:
+    value int
+}
+
 
 pub struct VariableExpr {
 pub:

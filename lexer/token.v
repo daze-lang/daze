@@ -10,6 +10,9 @@ pub enum TokenType {
     comma // ,
     colon // :
     double_colon // ::
+    colon_equal // :=
+    slash // /
+    double_slash //
     string
     identifier
     number
@@ -19,6 +22,7 @@ pub enum TokenType {
     kw_fn
     kw_is
     kw_return
+    kw_use
 
     eof
 }
