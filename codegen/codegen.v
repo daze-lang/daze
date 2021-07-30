@@ -112,7 +112,7 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     }
     accessor := if node.name.contains(".") { "" } else {"self."}
     fn_name := if node.name == "out" { "puts" } else { "$accessor$node.name" }
-    mut code := "${fn_name}(${args.join(", ")})\n"
+    mut code := "${fn_name.replace("Self", "self")}(${args.join(", ")})\n"
 
     return code
 }

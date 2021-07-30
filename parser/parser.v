@@ -130,7 +130,7 @@ fn (mut parser Parser) expr() Expr {
             raw_op[0] = ""
         }
 
-        return ast.RawBinaryOpExpr{raw_op.join("")}
+        return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@@")}
     }
 
     return node
@@ -209,8 +209,23 @@ fn (mut parser Parser) implement_block() {
         }
         func.is_struct = true
     }
+
+
+    for field in parser.structs[name].fields {
+        mut body := []ast.Expr{}
+        body << ast.ReturnExpr{ast.VariableExpr{"@@$field.name"}}
+        func := ast.FunctionDeclarationStatement{
+            name: field.name,
+            args: []ast.FunctionArgument{},
+            body: body,
+            return_type: field.type_name,
+            is_struct: true
+        }
+        fns << func
+    }
+
     parser.expect(.close_curly)
-    parser.structs[name].fns =fns
+    parser.structs[name].fns = fns
 }
 
 fn (mut parser Parser) fn_call() Expr {
@@ -276,7 +291,9 @@ fn (mut parser Parser) use() Statement {
 fn (mut parser Parser) ret() Expr {
     parser.expect(.kw_return)
     value := parser.expr()
-    parser.expect(.semicolon)
+    if !(value is ast.FunctionCallExpr) {
+        parser.expect(.semicolon)
+    }
 
     return ast.ReturnExpr{
         value: value,

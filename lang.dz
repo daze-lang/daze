@@ -11,16 +11,16 @@ implement Person {
     Self.age = age;
   }
 
-  fn name() :: String {
-    ret Self.name;
+  fn something() :: String {
+    ret "hello there";
   }
-}
 
-fn name() :: String {
-  ret "hello";
+  fn get_hello() :: String {
+    ret Self.something();
+  }
 }
 
 fn main() :: Void {
   p = Person.new("Mark", 24);
-  out("My name is #{p.name()}");
+  out("My name is #{p.name()} and I'm #{p.age()}, also: #{p.get_hello()}");
 }
