@@ -1,5 +1,10 @@
 is main;
 
+struct Person {
+  name :: String,
+  age :: Int,
+}
+
 fn main(name :: String, age :: String) :: void {
   out("Hello, world.");
 }

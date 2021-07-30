@@ -9,6 +9,7 @@ pub mut:
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | FunctionArgument
+    | StructDeclarationStatement
 
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
@@ -27,6 +28,12 @@ pub:
 pub struct ModuleDeclarationStatement {
 pub:
     name string
+}
+
+pub struct StructDeclarationStatement {
+pub:
+    name string
+    fields []FunctionArgument
 }
 
 pub struct FunctionCallExpr {

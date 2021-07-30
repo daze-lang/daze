@@ -27,6 +27,9 @@ fn (mut parser Parser) statements() []Statement {
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement{}
     match parser.lookahead().kind {
+        .kw_struct {
+            node = parser.construct()
+        }
         .kw_fn {
             node = parser.fn_decl()
         }
@@ -71,7 +74,7 @@ fn (mut parser Parser) fn_decl() Statement {
     parser.expect(.open_paren)
     mut args := []ast.FunctionArgument{}
     if parser.lookahead().kind == .identifier {
-        args = parser.fn_args()
+        args = parser.fn_args(.close_paren)
     }
     parser.expect(.close_paren)
     parser.expect(.double_colon)
@@ -93,12 +96,12 @@ fn (mut parser Parser) fn_decl() Statement {
     }
 }
 
-fn (mut parser Parser) fn_args() []ast.FunctionArgument {
+fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     mut args := []ast.FunctionArgument{}
 
-    for parser.lookahead().kind != .close_paren {
+    for parser.lookahead().kind != delim {
         args << parser.fn_arg()
-        if parser.lookahead().kind != .close_paren {
+        if parser.lookahead().kind != delim {
             parser.expect(.comma)
         }
     }
@@ -138,4 +141,17 @@ fn (mut parser Parser) module_decl() Statement {
     }
     parser.expect(.semicolon)
     return node
+}
+
+fn (mut parser Parser) construct() Statement {
+    parser.expect(.kw_struct)
+    struct_name := parser.expect(.identifier).value
+    parser.expect(.open_curly)
+    fields := parser.fn_args(.close_curly)
+    parser.expect(.close_curly)
+
+    return ast.StructDeclarationStatement{
+        name: struct_name,
+        fields: fields
+    }
 }
