@@ -1,29 +1,77 @@
 module main
 
 import os
+import pcre
 
 import lexer{Token}
 import parser
 import codegen
 
-fn main() {
-    mut input_file := os.read_file('lang.dz') or { panic('File not found') }
-    // removing comments
-    for line in input_file.split("\n") {
+fn match_all(text string, regexp string) []string {
+    mut matches := []string{}
+    mut str_copy := text
+
+    mut re := pcre.new_regex(regexp, 0) or { panic(err) }
+
+    for {
+        m := re.match_str(str_copy, 0, 0) or { break }
+        matched := m.get(0) or { break }
+        str_copy = str_copy.replace_once(matched, '')
+        matches << matched
+    }
+
+    return matches
+}
+
+fn remove_comments(code string) string {
+    mut input := code
+    for line in input.split("\n") {
         if line.starts_with("//") {
-            input_file = input_file.replace(line, "")
+            input = input.replace(line, "")
         }
     }
-    chars := input_file.split('')
 
-    mut lexer := lexer.Lexer{input: chars}
+    return input
+}
+
+fn load_imports(code string) ?[]string {
+    matches := match_all(code, "use (.*?);")
+    mut output := code
+    mut compiled_modules := []string{}
+
+    for m in matches {
+        module_path := m.replace("\"", "").replace("use ", "").replace(";", "")
+        mut module_file := remove_comments(os.read_file("${module_path}.dz") or { panic("File not found") })
+        compiled_modules << to_crystal(module_file)?
+    }
+
+    return compiled_modules
+}
+
+fn to_crystal(source string) ?string {
+    mut lexer := lexer.Lexer{input: source.split('')}
     tokens := lexer.lex()?
     mut parser := parser.Parser{tokens, -1, Token{}, Token{}}
     ast := parser.parse()
-    mut codegen := codegen.CodeGenerator{ast, ""}
-    mut result := codegen.run()
-    // println(result)
+    mut codegen := codegen.CodeGenerator{ast, "", []string{}}
+    mut code := codegen.run()
+    return code
+}
 
-    os.write_file("/tmp/lang.cr", result) or { panic("Failed writing file") }
+fn compile(code string) {
+    os.write_file("/tmp/lang.cr", code) or { panic("Failed writing file") }
     os.execute("crystal build /tmp/lang.cr")
+}
+
+fn main() {
+    mut input_file := os.read_file("lang.dz") or { panic("File not found") }
+    input_file = remove_comments(input_file)
+    compiled_modules := load_imports(input_file)?
+    code := to_crystal(input_file)?
+    mut final_code := ""
+    for mod in compiled_modules {
+        final_code += "$mod\n\n"
+    }
+
+    compile(final_code + code)
 }

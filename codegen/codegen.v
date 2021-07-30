@@ -7,6 +7,7 @@ pub:
     ast ast.AST
 pub mut:
     mod string
+    imports []string
 }
 
 pub fn (mut gen CodeGenerator) run() string {
@@ -52,6 +53,8 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
         code = gen.struct_decl(node)
     } else if mut node is ast.ModuleDeclarationStatement {
         gen.set_module(node.name)
+    } else if mut node is ast.ModuleUseStatement {
+        gen.imports << node.path
     }
 
     return code

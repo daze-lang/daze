@@ -10,12 +10,6 @@ struct Person {
   age :: Int32
 }
 
-fn get_hello_world() :: String {
-  str := "Hello, world..";
-  ret str;
-}
-
 // This is the main function, the entry point of the program.
 fn main() :: Void {
-  out(get_hello_world());
 }

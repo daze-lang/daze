@@ -1,0 +1,6 @@
+is testModule;
+
+fn get_hello_world() :: String {
+  str := "Hello, world..";
+  ret str;
+}
