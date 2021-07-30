@@ -1,9 +1,19 @@
 module parser
 
+import term
+
 import lexer{Token, TokenType}
 
 pub fn (mut parser Parser) advance() Token {
     parser.index++
+    current := parser.current
+    parser.current = parser.tokens[parser.index]
+    parser.previous = current
+    return parser.current
+}
+
+pub fn (mut parser Parser) step_back() Token {
+    parser.index--
     current := parser.current
     parser.current = parser.tokens[parser.index]
     parser.previous = current
@@ -23,17 +33,13 @@ pub fn (mut parser Parser) lookahead_by(num int) Token {
 }
 
 pub fn (mut parser Parser) expect(kind TokenType) Token {
-    if parser.lookahead().kind == kind {
+    next := parser.lookahead()
+    if next.kind == kind {
         return parser.advance()
     }
 
-    panic("Unexpected token ${parser.lookahead().kind}, expected ${kind}")
-}
-
-pub fn (mut parser Parser) expect_or(kind TokenType, fallback TokenType) Token {
-    if parser.lookahead().kind == kind || parser.lookahead().kind == fallback {
-        return parser.advance()
-    }
-
-    panic("Unexpected token ${parser.lookahead().kind}, expected ${kind} or $fallback")
+    err_msg := term.bold(term.white("Unexpected token: ${next.kind}, expected: ${kind}."))
+    line_info := term.bold(term.yellow("(line ${next.line}, col $next.column)"))
+    println("${term.bold(term.red("ERROR: $err_msg $line_info"))}")
+    exit(1)
 }

@@ -11,6 +11,7 @@ pub enum TokenType {
     colon // :
     double_colon // ::
     colon_equal // :=
+    equal // =
     double_slash //
     string
     identifier
@@ -18,6 +19,11 @@ pub enum TokenType {
     plus // +
     minus // -
     div // /
+    mod // %
+    and_and // &&
+    not_equal // !=
+    equal_equal // ==
+    not // !
 
     // keywords
     kw_struct
@@ -33,4 +39,6 @@ pub struct Token {
 pub:
     kind TokenType
     value string
+    line int
+    column int
 }

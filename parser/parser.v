@@ -69,7 +69,7 @@ fn (mut parser Parser) expr() Expr {
                     node = parser.fn_call()
                 }
                 else {
-                    if parser.lookahead_by(2).kind == .colon_equal {
+                    if parser.lookahead_by(2).kind == .equal {
                         node = parser.variable_decl()
                     } else {
                         node = ast.VariableExpr{parser.lookahead().value}
@@ -85,10 +85,36 @@ fn (mut parser Parser) expr() Expr {
 
     mut raw_op := []string{}
     raw_op << parser.peek().value
-    if parser.lookahead_by(1).kind == .plus {
+    if parser.lookahead_by(1).kind == .plus
+        || parser.lookahead_by(1).kind == .minus
+        || parser.lookahead_by(1).kind == .mod
+        || parser.lookahead_by(1).kind == .div
+        || parser.lookahead_by(1).kind == .and_and
+        || parser.lookahead_by(1).kind == .not
+        || parser.lookahead_by(1).kind == .not_equal
+        || parser.lookahead_by(1).kind == .equal_equal {
+
         for parser.lookahead().kind != .semicolon {
-            raw_op << parser.advance().value
+            val := parser.advance().value
+            if val == "," {
+                parser.step_back()
+                break
+            }
+
+            if val == ")" {
+                if parser.lookahead_by(-1).value == ")" {
+                    parser.step_back()
+                    break
+                }
+            }
+
+            raw_op << val
         }
+
+        if raw_op[0] == "=" {
+            raw_op[0] = ""
+        }
+
         return ast.RawBinaryOpExpr{raw_op.join("")}
     }
 
@@ -154,6 +180,7 @@ fn (mut parser Parser) fn_call() Expr {
     mut args := []Expr{}
     for parser.lookahead().kind != .close_paren {
         args << parser.expr()
+        println(args)
         if parser.lookahead().kind != .close_paren {
             parser.expect(.comma)
         }
@@ -215,7 +242,7 @@ fn (mut parser Parser) ret() Expr {
 
 fn (mut parser Parser) variable_decl() Expr {
     name := parser.expect(.identifier).value
-    parser.expect(.colon_equal)
+    parser.expect(.equal)
     value := parser.expr()
     parser.expect(.semicolon)
 

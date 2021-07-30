@@ -6,6 +6,8 @@ pub struct Lexer {
     input []string [required]
     mut:
         index int = -1
+        line int = 1
+        column int
 }
 
 pub fn (mut lexer Lexer) lex() ?[]Token {
@@ -13,7 +15,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
 
     for {
         if lexer.lookahead() == "EOF" {
-            tokens << Token{.eof, "EOF"}
+            tokens << Token{.eof, "EOF", lexer.line, lexer.column}
             break
         }
 
@@ -26,54 +28,83 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
 
         match current {
             "(" {
-                tokens << Token{.open_paren, current}
+                tokens << Token{.open_paren, current, lexer.line, lexer.column}
                 continue
             }
             ")" {
-                tokens << Token{.close_paren, current}
+                tokens << Token{.close_paren, current, lexer.line, lexer.column}
                 continue
             }
             "{" {
-                tokens << Token{.open_curly, current}
+                tokens << Token{.open_curly, current, lexer.line, lexer.column}
                 continue
             }
             "}" {
-                tokens << Token{.close_curly, current}
+                tokens << Token{.close_curly, current, lexer.line, lexer.column}
                 continue
             }
             "@" {
-                tokens << Token{.at, current}
+                tokens << Token{.at, current, lexer.line, lexer.column}
                 continue
             }
             ";" {
-                tokens << Token{.semicolon, current}
+                tokens << Token{.semicolon, current, lexer.line, lexer.column}
                 continue
             }
             "," {
-                tokens << Token{.comma, current}
+                tokens << Token{.comma, current, lexer.line, lexer.column}
                 continue
             }
             "+" {
-                tokens << Token{.plus, current}
+                tokens << Token{.plus, current, lexer.line, lexer.column}
                 continue
             }
             "-" {
-                tokens << Token{.minus, current}
+                tokens << Token{.minus, current, lexer.line, lexer.column}
                 continue
             }
             "/" {
-                tokens << Token{.div, current}
+                tokens << Token{.div, current, lexer.line, lexer.column}
+                continue
+            }
+            "%" {
+                tokens << Token{.mod, current, lexer.line, lexer.column}
+                continue
+            }
+            "=" {
+                if lexer.lookahead() == "=" {
+                    tokens << Token{.equal_equal, "==", lexer.line, lexer.column}
+                    lexer.advance()
+                } else {
+                    tokens << Token{.equal, current, lexer.line, lexer.column}
+                }
+                continue
+            }
+            "&" {
+                if lexer.lookahead() == "&" {
+                    tokens << Token{.and_and, "&&", lexer.line, lexer.column}
+                    lexer.advance()
+                }
+                continue
+            }
+            "!" {
+                if lexer.lookahead() == "=" {
+                    tokens << Token{.not_equal, "!=", lexer.line, lexer.column}
+                    lexer.advance()
+                } else {
+                    tokens << Token{.not, "!", lexer.line, lexer.column}
+                }
                 continue
             }
             ":" {
                 if lexer.lookahead() == ":" {
-                    tokens << Token{.double_colon, "::"}
+                    tokens << Token{.double_colon, "::", lexer.line, lexer.column}
                     lexer.advance()
                 } else if lexer.lookahead() == "=" {
-                    tokens << Token{.colon_equal, ":="}
+                    tokens << Token{.colon_equal, ":=", lexer.line, lexer.column}
                     lexer.advance()
                 } else {
-                    tokens << Token{.colon, current}
+                    tokens << Token{.colon, current, lexer.line, lexer.column}
                 }
                 continue
             }
@@ -85,18 +116,18 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 id := lexer.read_identifier(current)
                 // We check if its a valid keyword, if so, we set the token kind
                 kind := to_keyword(id) or { TokenType.identifier }
-                tokens << Token{kind, id}
+                tokens << Token{kind, id, lexer.line, lexer.column}
                 continue
             }
         }
 
         if lexer.is_number(current) {
-            tokens << Token{.number, lexer.read_number(current)?}
+            tokens << Token{.number, lexer.read_number(current)?, lexer.line, lexer.column}
             continue
         }
 
         if current == "\"" {
-            tokens << Token{.string, lexer.read_string()}
+            tokens << Token{.string, lexer.read_string(), lexer.line, lexer.column}
             continue
         }
 
@@ -110,6 +141,12 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
 
 fn (mut lexer Lexer) advance() string {
     lexer.index++
+    if lexer.input[lexer.index] == "\n" {
+        lexer.line++
+        lexer.column = 0
+    } else {
+        lexer.column++
+    }
     return lexer.input[lexer.index]
 }
 
