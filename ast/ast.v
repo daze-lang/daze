@@ -9,6 +9,7 @@ pub mut:
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
+    | RawCrystalCodeStatement
     | ModuleUseStatement
     | FunctionArgument
     | Comment
@@ -36,6 +37,11 @@ pub:
 pub struct ModuleDeclarationStatement {
 pub:
     name string
+}
+
+pub struct RawCrystalCodeStatement {
+pub:
+    value string
 }
 
 pub struct ModuleUseStatement {

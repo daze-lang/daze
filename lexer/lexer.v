@@ -87,6 +87,15 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 }
                 continue
             }
+            "`" {
+                mut raw_code := ""
+                for lexer.lookahead() != "`" {
+                    raw_code += lexer.advance()
+                }
+                lexer.advance()
+                tokens << Token{.raw_crystal_code, raw_code.replace("raw\n", ""), lexer.line, lexer.column}
+                continue
+            }
             "!" {
                 if lexer.lookahead() == "=" {
                     tokens << Token{.not_equal, "!=", lexer.line, lexer.column}
@@ -159,6 +168,13 @@ fn (lexer Lexer) lookahead() string {
         return "EOF"
     }
     return lexer.input[lexer.index + 1]
+}
+
+fn (lexer Lexer) lookahead_by(amount int) string {
+    if lexer.index >= lexer.input.len - 1{
+        return "EOF"
+    }
+    return lexer.input[lexer.index + amount]
 }
 
 fn (mut lexer Lexer) read_identifier(c string) string {

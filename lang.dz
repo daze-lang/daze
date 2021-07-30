@@ -1,13 +1,12 @@
 // Main module definition
 is main;
 
-use "testModule";
+`raw
+def self.some_random_crystal_method()
+  puts "Hello world, directly from crystal."
+end
+`
 
-fn name() :: Bool {
-  ret 5 == 4;
-}
-
-// This is the main function, the entry point of the program.
 fn main() :: Void {
-  out(5 == 5, 1 == 1, true == name());
+  some_random_crystal_method();
 }

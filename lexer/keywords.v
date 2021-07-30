@@ -5,7 +5,8 @@ const keywords_map = map{
     'fn': TokenType.kw_fn,
     'is': TokenType.kw_is,
     'ret': TokenType.kw_return,
-    'use': TokenType.kw_use
+    'use': TokenType.kw_use,
+    'raw': TokenType.kw_raw
 }
 
 pub fn to_keyword(id string) ?TokenType {

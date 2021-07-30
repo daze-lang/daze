@@ -29,6 +29,9 @@ fn (mut parser Parser) statements() []Statement {
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement{}
     match parser.lookahead().kind {
+        .raw_crystal_code {
+            node = parser.raw_crystal_code()
+        }
         .kw_use {
             node = parser.use()
         }
@@ -205,6 +208,10 @@ fn (mut parser Parser) module_decl() Statement {
     }
     parser.expect(.semicolon)
     return node
+}
+
+fn (mut parser Parser) raw_crystal_code() ast.RawCrystalCodeStatement {
+    return ast.RawCrystalCodeStatement{parser.advance().value}
 }
 
 fn (mut parser Parser) construct() Statement {

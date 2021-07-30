@@ -24,6 +24,7 @@ pub enum TokenType {
     not_equal // !=
     equal_equal // ==
     not // !
+    backtick // `
 
     // keywords
     kw_struct
@@ -31,6 +32,9 @@ pub enum TokenType {
     kw_is
     kw_return
     kw_use
+    kw_raw
+
+    raw_crystal_code
 
     eof
 }

@@ -55,6 +55,8 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
         gen.set_module(node.name)
     } else if mut node is ast.ModuleUseStatement {
         gen.imports << node.path
+    } else if mut node is ast.RawCrystalCodeStatement {
+        code = node.value
     }
 
     return code
