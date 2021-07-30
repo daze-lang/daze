@@ -183,7 +183,6 @@ fn (mut parser Parser) fn_call() Expr {
     mut args := []Expr{}
     for parser.lookahead().kind != .close_paren {
         args << parser.expr()
-        println(args)
         if parser.lookahead().kind != .close_paren {
             parser.expect(.comma)
         }

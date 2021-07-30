@@ -1,12 +1,27 @@
 // Main module definition
 is main;
 
+use "testModule";
+
+struct Person {
+  name :: String,
+  age :: Int32
+}
+
+// This is inline crystal code
 `raw
 def self.some_random_crystal_method()
   puts "Hello world, directly from crystal."
 end
 `
 
+fn say_my_name_and_age(name :: String, age :: Int32) :: String {
+  ret "Hi, my name is #{name}, and I'm #{age} years old.";
+}
+
+// And here we can call it
 fn main() :: Void {
   some_random_crystal_method();
+  out(TestModule.say_hello());
+  out(say_my_name_and_age("Mark", 24));
 }

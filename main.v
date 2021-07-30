@@ -68,7 +68,7 @@ fn main() {
     input_file = remove_comments(input_file)
     compiled_modules := load_imports(input_file)?
     mut lexer := lexer.Lexer{input: input_file.split('')}
-    tokens := lexer.lex()?
+    // tokens := lexer.lex()?
     // panic(tokens)
 
     code := to_crystal(input_file)?
