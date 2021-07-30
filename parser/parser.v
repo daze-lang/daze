@@ -30,6 +30,11 @@ fn (mut parser Parser) statement() Node {
         .kw_fn {
             node = parser.fn_decl()
         }
+        .kw_is {
+            if parser.lookahead_by(2).kind == .identifier {
+                node = parser.module_decl()
+            }
+        }
         else {}
     }
 
@@ -90,4 +95,14 @@ fn (mut parser Parser) fn_call() Expr {
         name: fn_name,
         args: arg
    }
+}
+
+fn (mut parser Parser) module_decl() Node {
+    parser.expect(.kw_is)
+    module_name := parser.advance().value
+    node := ast.ModuleDeclarationStatement{
+        name: module_name
+    }
+    parser.expect(.semicolon)
+    return node
 }

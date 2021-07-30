@@ -1,3 +1,5 @@
+is main;
+
 fn main() :: void {
   hello();
 }

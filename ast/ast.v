@@ -7,6 +7,8 @@ pub mut:
 }
 
 pub type Node = FunctionDeclarationStatement
+    | ModuleDeclarationStatement
+
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
     | NoOp
@@ -16,6 +18,11 @@ pub:
     name string
     body Expr
     return_type string
+}
+
+pub struct ModuleDeclarationStatement {
+pub:
+    name string
 }
 
 pub struct FunctionCallExpr {
