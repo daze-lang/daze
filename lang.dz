@@ -1,9 +1,3 @@
-is main;
-
 fn main() :: void {
-  hello();
-}
-
-fn hello() :: void {
   out("Hello, world.");
 }

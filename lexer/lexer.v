@@ -155,5 +155,5 @@ fn (lexer Lexer) is_number(c string) bool {
 }
 
 fn (lexer Lexer) is_letter(c string) bool {
-    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(c)
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".contains(c)
 }

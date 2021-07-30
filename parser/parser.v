@@ -1,7 +1,7 @@
 module parser
 
 import lexer{Token}
-import ast{AST, Node, Expr}
+import ast{AST, Statement, Expr, Node}
 
 pub struct Parser {
     tokens []Token [required]
@@ -16,16 +16,16 @@ pub fn (mut parser Parser) parse() AST {
     return AST{"TopLevel", parser.statements()}
 }
 
-fn (mut parser Parser) statements() []Node {
-    mut statements := []Node{}
+fn (mut parser Parser) statements() []Statement {
+    mut statements := []Statement{}
     for parser.lookahead().kind != .eof {
         statements << parser.statement()
     }
     return statements
 }
 
-fn (mut parser Parser) statement() Node {
-    mut node := ast.Node{}
+fn (mut parser Parser) statement() Statement {
+    mut node := ast.Statement{}
     match parser.lookahead().kind {
         .kw_fn {
             node = parser.fn_decl()
@@ -65,7 +65,7 @@ fn (mut parser Parser) expr() Expr {
 }
 
 // Function Declarations
-fn (mut parser Parser) fn_decl() Node {
+fn (mut parser Parser) fn_decl() Statement {
     parser.expect(.kw_fn)
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
@@ -97,7 +97,7 @@ fn (mut parser Parser) fn_call() Expr {
    }
 }
 
-fn (mut parser Parser) module_decl() Node {
+fn (mut parser Parser) module_decl() Statement {
     parser.expect(.kw_is)
     module_name := parser.advance().value
     node := ast.ModuleDeclarationStatement{

@@ -3,15 +3,17 @@ module ast
 pub struct AST {
 pub mut:
     name string
-    nodes []Node
+    nodes []Statement
 }
 
-pub type Node = FunctionDeclarationStatement
+pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
 
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
     | NoOp
+
+pub type Node = Statement | Expr
 
 pub struct FunctionDeclarationStatement {
 pub:
