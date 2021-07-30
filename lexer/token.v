@@ -1,6 +1,6 @@
-module main
+module lexer
 
-enum TokenType {
+pub enum TokenType {
     open_paren // (
     close_paren // )
     open_curly // {
@@ -22,7 +22,8 @@ enum TokenType {
     eof
 }
 
-struct Token {
+pub struct Token {
+pub:
     kind TokenType
     value string
 }

@@ -1,14 +1,14 @@
-module main
+module lexer
 
 import strconv
 
-struct Lexer {
+pub struct Lexer {
     input []string [required]
     mut:
         index int = -1
 }
 
-fn (mut lexer Lexer) lex() ?[]Token {
+pub fn (mut lexer Lexer) lex() ?[]Token {
     mut tokens := []Token{}
 
     for {

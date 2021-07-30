@@ -1,1 +1,7 @@
-out("Hello, world.");
+fn main() :: void {
+  hello();
+}
+
+fn hello() :: void {
+  out("Hello, world.");
+}
