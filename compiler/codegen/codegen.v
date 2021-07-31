@@ -85,6 +85,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.for_loop(node)
     } else if mut node is ast.ArrayDefinition {
         code = gen.array(node)
+    } else if mut node is ast.ArrayPushExpr {
+        code = "$node.target << ${gen.gen(node.value)}\n"
     }
 
     return code

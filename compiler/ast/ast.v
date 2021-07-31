@@ -15,7 +15,6 @@ pub type Statement = FunctionDeclarationStatement
     | ImplementBlockStatement
     | ModuleUseStatement
     | FunctionArgument
-    | Comment
     | NoOp
 
 pub type Expr = FunctionCallExpr
@@ -23,6 +22,7 @@ pub type Expr = FunctionCallExpr
     | NumberLiteralExpr
     | ArrayDefinition
     | RawBinaryOpExpr
+    | ArrayPushExpr
     | VariableExpr
     | VariableDecl
     | ForLoopExpr
@@ -89,12 +89,6 @@ pub:
     value Expr
 }
 
-pub struct Comment {
-pub:
-    value string
-}
-
-
 pub struct FunctionCallExpr {
 pub:
     name string
@@ -109,11 +103,13 @@ pub:
 pub struct StringLiteralExpr {
 pub:
     value string
+    value_type string
 }
 
 pub struct NumberLiteralExpr {
 pub:
     value int
+    value_type string
 }
 
 
@@ -126,6 +122,12 @@ pub struct ForLoopExpr {
 pub:
     conditional Expr
     body []Expr
+}
+
+pub struct ArrayPushExpr {
+pub:
+    target string
+    value Expr
 }
 
 pub struct ArrayDefinition {

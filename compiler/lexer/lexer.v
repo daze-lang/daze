@@ -83,6 +83,9 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 if lexer.lookahead() == "=" {
                     tokens << Token{.less_than_equal, "<=", lexer.line, lexer.column}
                     lexer.advance()
+                } else if lexer.lookahead() == "-" {
+                    tokens << Token{.arrow_left, "<-", lexer.line, lexer.column}
+                    lexer.advance()
                 } else {
                     tokens << Token{.less_than, current, lexer.line, lexer.column}
                 }

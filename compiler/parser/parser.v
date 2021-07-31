@@ -84,11 +84,11 @@ fn (mut parser Parser) expr() Expr {
             node = parser.if_statement()
         }
         .string {
-            node = ast.StringLiteralExpr{parser.lookahead().value}
+            node = ast.StringLiteralExpr{parser.lookahead().value, "String"}
             parser.advance()
         }
         .number {
-            node = ast.NumberLiteralExpr{strconv.atoi(parser.lookahead().value) or { 0 }}
+            node = ast.NumberLiteralExpr{strconv.atoi(parser.lookahead().value) or { 0 }, "Int32"}
             parser.advance()
         }
         .kw_return {
@@ -102,6 +102,9 @@ fn (mut parser Parser) expr() Expr {
                     } else {
                         node = parser.fn_call()
                     }
+                }
+                .arrow_left {
+                    node = parser.array_push()
                 }
                 else {
                     if parser.lookahead_by(2).kind == .equal {
@@ -205,7 +208,17 @@ fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
 fn (mut parser Parser) fn_arg() ast.FunctionArgument {
     name := parser.expect(.identifier).value
     parser.expect(.double_colon)
-    type_name := parser.expect(.identifier).value
+    mut is_arr := false
+
+    if parser.lookahead().kind == .open_square {
+        is_arr = true
+        parser.expect(.open_square)
+        parser.expect(.close_square)
+    }
+    mut type_name := parser.expect(.identifier).value
+    if is_arr {
+        type_name = "Array($type_name)"
+    }
 
     return ast.FunctionArgument {
         name: name,
@@ -270,6 +283,18 @@ fn (mut parser Parser) implement_block() {
 
     parser.expect(.close_curly)
     parser.structs[name].fns = fns
+}
+
+fn (mut parser Parser) array_push() Expr {
+    target_arr := parser.expect(.identifier).value
+    parser.expect(.arrow_left)
+    value_to_push := parser.expr()
+    parser.expect(.semicolon)
+
+    return ast.ArrayPushExpr {
+        target: target_arr,
+        value: value_to_push
+    }
 }
 
 fn (mut parser Parser) for_loop() Expr {

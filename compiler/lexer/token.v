@@ -31,6 +31,7 @@ pub enum TokenType {
     backtick            // `
     open_square         // [
     close_square        // ]
+    arrow_left          // <-
 
     // keywords
     kw_struct
