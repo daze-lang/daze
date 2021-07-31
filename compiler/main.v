@@ -44,9 +44,8 @@ fn load_imports(code string) ?[]string {
         if module_path.starts_with("std::") {
             module_name := module_path.replace("std::", "")
             module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
-            // panic(module_path)
         }
-        mut module_file := remove_comments(os.read_file("${module_path}.dz") or { panic("File not found") })
+        mut module_file := remove_comments(os.read_file("${module_path}.daze") or { panic("File not found") })
         compiled_modules << to_crystal(module_file)?
     }
 
@@ -70,7 +69,7 @@ fn compile(code string) {
 }
 
 fn main() {
-    mut input_file := os.read_file("demo/lang.dz") or { panic("File not found") }
+    mut input_file := os.read_file("demo/lang.daze") or { panic("File not found") }
     input_file = remove_comments(input_file)
     compiled_modules := load_imports(input_file)?
     // mut lexer := lexer.Lexer{input: input_file.split('')}
