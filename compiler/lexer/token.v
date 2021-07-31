@@ -48,6 +48,7 @@ pub enum TokenType {
     kw_elif
     kw_for
     kw_break
+    kw_in
 
     raw_crystal_code
 

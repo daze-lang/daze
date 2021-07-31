@@ -74,7 +74,11 @@ fn (mut parser Parser) expr() Expr {
             node = parser.array()
         }
         .kw_for {
-            node = parser.for_loop()
+            if parser.lookahead_by(3).kind == .kw_in {
+                node = parser.for_in_loop()
+            } else {
+                node = parser.for_loop()
+            }
         }
         .kw_break {
             node = ast.VariableExpr{parser.advance().value}
@@ -112,8 +116,11 @@ fn (mut parser Parser) expr() Expr {
                 .minus_minus {
                     node = parser.decrement()
                 }
+                .open_square {
+                    node = parser.indexing()
+                }
                 else {
-                    if parser.lookahead_by(2).kind == .equal {
+                    if parser.lookahead_by(2).kind == .equal || parser.lookahead_by(2).kind == .double_colon {
                         node = parser.variable_decl()
                     } else {
                         node = ast.VariableExpr{parser.lookahead().value}
@@ -325,6 +332,31 @@ fn (mut parser Parser) for_loop() Expr {
     }
 }
 
+fn (mut parser Parser) for_in_loop() Expr {
+    parser.expect(.kw_for)
+    container := parser.expect(.identifier).value
+    parser.expect(.kw_in)
+    target := parser.expect(.identifier).value
+    mut body := []Expr{}
+    parser.expect(.open_curly)
+
+    for parser.lookahead().kind != .close_curly {
+        body_expr := parser.expr()
+        if body_expr is ast.NoOp {
+            break
+        }
+        body << body_expr
+    }
+
+    parser.expect(.close_curly)
+
+    return ast.ForInLoopExpr{
+        container: container,
+        target: target,
+        body: body
+    }
+}
+
 fn (mut parser Parser) fn_call() Expr {
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
@@ -423,7 +455,11 @@ fn (mut parser Parser) ret() Expr {
 
 fn (mut parser Parser) variable_decl() Expr {
     name := parser.expect(.identifier).value
-
+    mut type_name := ""
+    if parser.lookahead().kind == .double_colon {
+        parser.expect(.double_colon)
+        type_name = parser.expect(.identifier).value
+    }
     parser.expect(.equal)
     value := parser.expr()
     if !(value is ast.FunctionCallExpr) {
@@ -432,7 +468,8 @@ fn (mut parser Parser) variable_decl() Expr {
 
     return ast.VariableDecl {
         name: name,
-        value: value
+        value: value,
+        type_name: type_name
     }
 }
 
@@ -501,5 +538,17 @@ fn (mut parser Parser) decrement() ast.DecrementExpr {
     parser.expect(.semicolon)
     return ast.DecrementExpr {
         target: target
+    }
+}
+
+fn (mut parser Parser) indexing() ast.IndexingExpr {
+    var_name := parser.expect(.identifier).value
+    parser.expect(.open_square)
+    body := parser.expr()
+    parser.expect(.close_square)
+
+    return ast.IndexingExpr{
+        var: var_name,
+        body: body
     }
 }

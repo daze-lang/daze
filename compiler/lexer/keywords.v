@@ -13,6 +13,7 @@ const keywords_map = map{
     "elif": TokenType.kw_elif
     "for": TokenType.kw_for
     "break": TokenType.kw_break
+    "in": TokenType.kw_in
 }
 
 pub fn is_keyword(id string) bool {

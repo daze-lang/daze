@@ -91,6 +91,10 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = "$node.target += 1\n"
     } else if mut node is ast.DecrementExpr {
         code = "$node.target -= 1\n"
+    } else if mut node is ast.ForInLoopExpr {
+        code = gen.for_in_loop(node)
+    } else if mut node is ast.IndexingExpr {
+        code = gen.indexing(node)
     }
 
     return code
@@ -124,7 +128,7 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     }
     accessor := if node.name.contains(".") { "" } else {"self."}
     fn_name := if node.name == "out" { "puts" } else { "$accessor$node.name" }
-    mut code := "${fn_name.replace("Self", "self")}(${args.join(", ")})\n"
+    mut code := "\n${fn_name.replace("Self", "self")}(${args.join(", ")})"
 
     return code
 }
@@ -203,6 +207,15 @@ fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
     return code
 }
 
+fn (mut gen CodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
+    mut code := "${node.target}.each_index do |index|\n$node.container = ${node.target}[index]\n"
+    for func in node.body {
+        code += gen.gen(func) + "\n"
+    }
+    code += "end\n"
+    return code
+}
+
 fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
     mut code := "["
     mut items := []string{}
@@ -213,4 +226,8 @@ fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
 
     code += "${items.join(", ")}] of $node.type_name"
     return code
+}
+
+fn (mut gen CodeGenerator) indexing(node ast.IndexingExpr) string {
+    return "$node.var[${gen.gen(node.body)}]"
 }

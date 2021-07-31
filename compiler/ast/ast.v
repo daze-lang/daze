@@ -22,9 +22,11 @@ pub type Expr = FunctionCallExpr
     | NumberLiteralExpr
     | ArrayDefinition
     | RawBinaryOpExpr
+    | ForInLoopExpr
     | ArrayPushExpr
     | IncrementExpr
     | DecrementExpr
+    | IndexingExpr
     | VariableExpr
     | VariableDecl
     | ForLoopExpr
@@ -89,6 +91,7 @@ pub struct VariableDecl {
 pub:
     name string
     value Expr
+    type_name string
 }
 
 pub struct FunctionCallExpr {
@@ -129,9 +132,22 @@ pub:
     value string
 }
 
+pub struct IndexingExpr {
+pub:
+    var string
+    body Expr
+}
+
 pub struct ForLoopExpr {
 pub:
     conditional Expr
+    body []Expr
+}
+
+pub struct ForInLoopExpr {
+pub:
+    container string
+    target string
     body []Expr
 }
 

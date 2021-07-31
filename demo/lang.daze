@@ -1,5 +1,6 @@
 is main;
 
 fn main() :: Void {
-  test_arr = []String{"hello", "there"};
+  a = []String{"Hello", "There"};
+  out(a[0]);
 }
