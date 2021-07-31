@@ -18,4 +18,4 @@ jobs:
         v-version: latest
       id: v
     - name: Build app
-      run: cd compiler && v .
+      run: cd compiler && v install pcre && v .
