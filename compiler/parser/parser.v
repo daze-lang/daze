@@ -36,6 +36,10 @@ fn (mut parser Parser) statements() []Statement {
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement{}
     match parser.lookahead().kind {
+        .kw_for {
+            // TODO: handle cases like this
+            panic("For not allowed at top level")
+        }
         .kw_implement {
             parser.implement_block()
         }
@@ -66,6 +70,13 @@ fn (mut parser Parser) statement() Statement {
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
     match parser.lookahead().kind {
+        .kw_for {
+            node = parser.for_loop()
+        }
+        .kw_break {
+            node = ast.VariableExpr{parser.advance().value}
+            parser.expect(.semicolon)
+        }
         .kw_if {
             node = parser.if_statement()
         }
@@ -258,6 +269,28 @@ fn (mut parser Parser) implement_block() {
     parser.structs[name].fns = fns
 }
 
+fn (mut parser Parser) for_loop() Expr {
+    parser.expect(.kw_for)
+    conditional := parser.expr()
+    mut body := []Expr{}
+    parser.expect(.open_curly)
+
+    for parser.lookahead().kind != .close_curly {
+        body_expr := parser.expr()
+        if body_expr is ast.NoOp {
+            break
+        }
+        body << body_expr
+    }
+
+    parser.expect(.close_curly)
+
+    return ast.ForLoopExpr{
+        conditional: conditional,
+        body: body
+    }
+}
+
 fn (mut parser Parser) fn_call() Expr {
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
@@ -356,7 +389,7 @@ fn (mut parser Parser) if_statement() Expr {
     for parser.lookahead().kind != .close_curly {
         body << parser.expr()
     }
-    println(conditional)
+
     parser.expect(.close_curly)
     mut elseifs := []ast.IfExpression{}
     if parser.lookahead().kind == .kw_elif {

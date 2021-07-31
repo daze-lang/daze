@@ -81,6 +81,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = node.value
     } else if mut node is ast.IfExpression {
         code = gen.if_statement(node)
+    } else if mut node is ast.ForLoopExpr {
+        code = gen.for_loop(node)
     }
 
     return code
@@ -180,6 +182,15 @@ fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
         }
     }
 
+    code += "end\n"
+    return code
+}
+
+fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
+    mut code := "while ${gen.gen(node.conditional)}\n"
+    for func in node.body {
+        code += gen.gen(func) + "\n"
+    }
     code += "end\n"
     return code
 }

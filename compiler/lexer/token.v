@@ -29,6 +29,8 @@ pub enum TokenType {
     less_than           // <
     not                 // !
     backtick            // `
+    open_square         // [
+    close_square        // ]
 
     // keywords
     kw_struct
@@ -41,6 +43,8 @@ pub enum TokenType {
     kw_if
     kw_else
     kw_elif
+    kw_for
+    kw_break
 
     raw_crystal_code
 

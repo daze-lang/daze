@@ -1,5 +1,15 @@
 is main;
 
 fn main() :: Void {
-  out("Hello, world.");
+  i = 0;
+  for i < 10 {
+    if i == 5 {
+      out("i is 5");
+      break;
+    } else {
+      out(i);
+    }
+
+    i = i + 1;
+  }
 }

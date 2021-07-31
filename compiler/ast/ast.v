@@ -24,6 +24,7 @@ pub type Expr = FunctionCallExpr
     | RawBinaryOpExpr
     | VariableExpr
     | VariableDecl
+    | ForLoopExpr
     | ReturnExpr
     | NoOp
     | IfExpression
@@ -118,6 +119,12 @@ pub:
 pub struct VariableExpr {
 pub:
     value string
+}
+
+pub struct ForLoopExpr {
+pub:
+    conditional Expr
+    body []Expr
 }
 
 pub struct FunctionArgument {
