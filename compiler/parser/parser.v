@@ -67,6 +67,9 @@ fn (mut parser Parser) statement() Statement {
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
     match parser.lookahead().kind {
+        .kw_if {
+            node = parser.if_statement()
+        }
         .string {
             node = ast.StringLiteralExpr{parser.lookahead().value}
             parser.advance()
@@ -111,7 +114,7 @@ fn (mut parser Parser) expr() Expr {
 
         for parser.lookahead().kind != .semicolon {
             val := parser.advance().value
-            if val == "," {
+            if val == "," || val == "{" {
                 parser.step_back()
                 break
             }
@@ -312,5 +315,54 @@ fn (mut parser Parser) variable_decl() Expr {
     return ast.VariableDecl {
         name: name,
         value: value
+    }
+}
+
+fn (mut parser Parser) if_statement() Expr {
+    parser.expect(.kw_if)
+    conditional := parser.expr()
+    parser.expect(.open_curly)
+    mut body := []Expr{}
+    mut else_body := []Expr{}
+
+    for parser.lookahead().kind != .close_curly {
+        body << parser.expr()
+    }
+    parser.expect(.close_curly)
+    mut elseifs := []ast.IfExpression{}
+    if parser.lookahead().kind == .kw_elif {
+        for parser.lookahead().kind == .kw_elif {
+            parser.expect(.kw_elif)
+            elseif_conditional := parser.expr()
+            parser.expect(.open_curly)
+            mut elseif_body := []Expr{}
+
+            for parser.lookahead().kind != .close_curly {
+                elseif_body << parser.expr()
+            }
+            parser.expect(.close_curly)
+            elseif_expr := ast.IfExpression{
+                conditional: elseif_conditional,
+                body: elseif_body,
+                else_branch: []Expr{}
+            }
+            elseifs << elseif_expr
+        }
+    }
+
+    if parser.lookahead().kind == .kw_else {
+        parser.expect(.kw_else)
+        parser.expect(.open_curly)
+        for parser.lookahead().kind != .close_curly {
+            else_body << parser.expr()
+        }
+        parser.expect(.close_curly)
+    }
+
+    return ast.IfExpression{
+        conditional: conditional,
+        body: body,
+        elseifs: elseifs,
+        else_branch: else_body
     }
 }

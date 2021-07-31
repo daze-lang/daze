@@ -79,6 +79,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.variable_decl(node)
     } else if mut node is ast.RawBinaryOpExpr {
         code = node.value
+    } else if mut node is ast.IfExpression {
+        code = gen.if_statement(node)
     }
 
     return code
@@ -134,7 +136,7 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
-    return "${node.name.replace("Self.", "@@")} = ${gen.gen(node.value)}"
+    return "${node.name.replace("Self.", "@@")} = ${gen.gen(node.value)}\n"
 }
 
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
@@ -154,4 +156,30 @@ fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) stri
 
 fn (mut gen CodeGenerator) set_module(name string) {
     gen.mod = name
+}
+
+fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
+    mut code := "if ${gen.expr(node.conditional)}\n"
+    for func in node.body {
+        code += gen.gen(func)
+    }
+
+    if node.elseifs.len != 0 {
+        for elsif in node.elseifs {
+            code += "elsif ${gen.expr(elsif.conditional)}\n"
+            for func in elsif.body {
+                code += gen.gen(func)
+            }
+        }
+    }
+
+    if node.else_branch.len != 0 {
+        code += "else\n"
+        for func in node.else_branch {
+            code += gen.gen(func)
+        }
+    }
+
+    code += "end\n"
+    return code
 }

@@ -1,24 +1,16 @@
 is main;
 
-use "std::strings";
-
-struct Person {
-  name :: String,
-  age :: Int32
-}
-
-implement Person {
-  fn new(name :: String, age :: Int32) :: Void {
-    Self.name = name;
-    Self.age = age;
-  }
-}
-
 fn main() :: Void {
-  me = Person.new("Mark", 24);
-  my_name = me.name();
-  my_age = me.age();
+  a = 40;
+  b = 10;
 
-  out("My name is #{my_name} and I'm #{my_age}. This is Daze.");
-  out("You can also get the info like so: #{me.name()}, #{me.age()}");
+  if a == b {
+    out("a and b are equal");
+  } elif a == 20 {
+    out("a is 20");
+  } elif a == 30 {
+    out("a is 30");
+  } else {
+    out("Fallback.");
+  }
 }

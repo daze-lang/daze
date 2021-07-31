@@ -8,6 +8,9 @@ const keywords_map = map{
     "use": TokenType.kw_use,
     "raw": TokenType.kw_raw,
     "implement": TokenType.kw_implement,
+    "if": TokenType.kw_if
+    "else": TokenType.kw_else
+    "elif": TokenType.kw_elif
 }
 
 pub fn to_keyword(id string) ?TokenType {

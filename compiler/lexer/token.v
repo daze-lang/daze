@@ -34,6 +34,9 @@ pub enum TokenType {
     kw_use
     kw_raw
     kw_implement
+    kw_if
+    kw_else
+    kw_elif
 
     raw_crystal_code
 

@@ -6,6 +6,8 @@ pub mut:
     nodes []Statement
 }
 
+// TODO (mark): Ditch Statements & Exprs for `Node`
+
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
@@ -24,6 +26,7 @@ pub type Expr = FunctionCallExpr
     | VariableDecl
     | ReturnExpr
     | NoOp
+    | IfExpression
 
 pub type Node = Statement | Expr
 
@@ -68,6 +71,14 @@ pub mut:
 pub struct ReturnExpr {
 pub:
     value Expr
+}
+
+pub struct IfExpression {
+pub:
+    conditional Expr
+    body []Expr
+    elseifs []IfExpression
+    else_branch []Expr
 }
 
 pub struct VariableDecl {
