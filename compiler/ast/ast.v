@@ -21,6 +21,7 @@ pub type Statement = FunctionDeclarationStatement
 pub type Expr = FunctionCallExpr
     | StringLiteralExpr
     | NumberLiteralExpr
+    | ArrayDefinition
     | RawBinaryOpExpr
     | VariableExpr
     | VariableDecl
@@ -125,6 +126,12 @@ pub struct ForLoopExpr {
 pub:
     conditional Expr
     body []Expr
+}
+
+pub struct ArrayDefinition {
+pub:
+    type_name string
+    items []Expr
 }
 
 pub struct FunctionArgument {

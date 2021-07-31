@@ -70,6 +70,9 @@ fn (mut parser Parser) statement() Statement {
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
     match parser.lookahead().kind {
+        .open_square {
+            node = parser.array()
+        }
         .kw_for {
             node = parser.for_loop()
         }
@@ -312,6 +315,29 @@ fn (mut parser Parser) fn_call() Expr {
         name: fn_name,
         args: args
    }
+}
+
+fn (mut parser Parser) array() Expr {
+    mut items := []Expr{}
+
+    parser.expect(.open_square)
+    parser.expect(.close_square)
+    type_name := parser.expect(.identifier).value
+    parser.expect(.open_curly)
+    for parser.lookahead().kind != .close_curly {
+        items << parser.expr()
+        if parser.lookahead().kind != .close_curly {
+            parser.expect(.comma)
+        }
+    }
+
+    if parser.lookahead().kind != .close_paren {
+        parser.expect(.close_curly)
+    }
+    return ast.ArrayDefinition {
+        type_name: type_name,
+        items: items
+    }
 }
 
 fn (mut parser Parser) module_decl() Statement {

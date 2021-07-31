@@ -83,6 +83,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.if_statement(node)
     } else if mut node is ast.ForLoopExpr {
         code = gen.for_loop(node)
+    } else if mut node is ast.ArrayDefinition {
+        code = gen.array(node)
     }
 
     return code
@@ -192,5 +194,17 @@ fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
         code += gen.gen(func) + "\n"
     }
     code += "end\n"
+    return code
+}
+
+fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
+    mut code := "["
+    mut items := []string{}
+
+    for item in node.items {
+        items << gen.gen(item)
+    }
+
+    code += "${items.join(", ")}] of $node.type_name"
     return code
 }
