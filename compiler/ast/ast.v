@@ -23,6 +23,8 @@ pub type Expr = FunctionCallExpr
     | ArrayDefinition
     | RawBinaryOpExpr
     | ArrayPushExpr
+    | IncrementExpr
+    | DecrementExpr
     | VariableExpr
     | VariableDecl
     | ForLoopExpr
@@ -112,6 +114,15 @@ pub:
     value_type string
 }
 
+pub struct IncrementExpr {
+pub:
+    target string
+}
+
+pub struct DecrementExpr {
+pub:
+    target string
+}
 
 pub struct VariableExpr {
 pub:

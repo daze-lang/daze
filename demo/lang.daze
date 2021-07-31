@@ -1,18 +1,5 @@
 is main;
 
-fn print_array(arr :: []Int32) :: Void {
-  out("Array contents: #{arr}");
-}
-
 fn main() :: Void {
-  test_array = []Int32{};
-  print_array(test_array);
-  i = 0;
-
-  for i < 10 {
-    test_array <- i;
-    i = i + 1;
-  }
-
-  print_array(test_array);
+  test_arr = []String{"hello", "there"};
 }

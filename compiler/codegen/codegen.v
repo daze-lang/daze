@@ -87,6 +87,10 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.array(node)
     } else if mut node is ast.ArrayPushExpr {
         code = "$node.target << ${gen.gen(node.value)}\n"
+    } else if mut node is ast.IncrementExpr {
+        code = "$node.target += 1\n"
+    } else if mut node is ast.DecrementExpr {
+        code = "$node.target -= 1\n"
     }
 
     return code

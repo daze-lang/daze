@@ -56,11 +56,21 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 continue
             }
             "+" {
-                tokens << Token{.plus, current, lexer.line, lexer.column}
+                if lexer.lookahead() == "+" {
+                    tokens << Token{.plus_plus, "++", lexer.line, lexer.column}
+                    lexer.advance()
+                } else {
+                    tokens << Token{.plus, current, lexer.line, lexer.column}
+                }
                 continue
             }
             "-" {
-                tokens << Token{.minus, current, lexer.line, lexer.column}
+                if lexer.lookahead() == "-" {
+                    tokens << Token{.minus_minus, "--", lexer.line, lexer.column}
+                    lexer.advance()
+                } else {
+                    tokens << Token{.minus, current, lexer.line, lexer.column}
+                }
                 continue
             }
             "/" {

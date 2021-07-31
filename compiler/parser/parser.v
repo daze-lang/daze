@@ -106,6 +106,12 @@ fn (mut parser Parser) expr() Expr {
                 .arrow_left {
                     node = parser.array_push()
                 }
+                .plus_plus {
+                    node = parser.increment()
+                }
+                .minus_minus {
+                    node = parser.decrement()
+                }
                 else {
                     if parser.lookahead_by(2).kind == .equal {
                         node = parser.variable_decl()
@@ -477,5 +483,23 @@ fn (mut parser Parser) if_statement() Expr {
         body: body,
         elseifs: elseifs,
         else_branch: else_body
+    }
+}
+
+fn (mut parser Parser) increment() ast.IncrementExpr {
+    target := parser.expect(.identifier).value
+    parser.expect(.plus_plus)
+    parser.expect(.semicolon)
+    return ast.IncrementExpr {
+        target: target
+    }
+}
+
+fn (mut parser Parser) decrement() ast.DecrementExpr {
+    target := parser.expect(.identifier).value
+    parser.expect(.minus_minus)
+    parser.expect(.semicolon)
+    return ast.DecrementExpr {
+        target: target
     }
 }

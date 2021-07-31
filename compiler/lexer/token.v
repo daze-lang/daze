@@ -17,7 +17,9 @@ pub enum TokenType {
     identifier
     number
     plus                // +
+    plus_plus           // ++
     minus               // -
+    minus_minus         // --
     div                 // /
     mod                 // %
     and_and             // &&
