@@ -70,7 +70,7 @@ fn compile(code string) {
 }
 
 fn main() {
-    mut input_file := os.read_file("lang.dz") or { panic("File not found") }
+    mut input_file := os.read_file("demo/lang.dz") or { panic("File not found") }
     input_file = remove_comments(input_file)
     compiled_modules := load_imports(input_file)?
     // mut lexer := lexer.Lexer{input: input_file.split('')}
