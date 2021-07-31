@@ -120,7 +120,7 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
 }
 
 fn (mut gen CodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
-    return '"$node.value"'
+    return "\"${node.value.replace("Self.", "@")}\""
 }
 
 fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
@@ -142,7 +142,7 @@ fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
     mut code := "class ${node.name}\n"
     for arg in node.fields {
-        code += "@@${gen.fn_arg(arg)}\n"
+        code += "@${gen.fn_arg(arg)}\n"
     }
 
     for func in node.fns {

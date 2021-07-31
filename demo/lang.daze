@@ -1,26 +1,5 @@
 is main;
 
-struct Person {
-  name :: String,
-  age :: Int32
-}
-
-implement Person {
-  fn new(name :: String, age :: Int32) :: Person {
-  }
-}
-
-fn is_idiot(p :: Person) :: Bool {
-  if p.name == "Flammand" {
-    ret true;
-  }
-
-  ret false;
-}
-
-fn main() :: String {
-  flammand = Person.new("Flammand", 5);
-  enigma = Person.new("Enigma", 24);
-  out(is_idiot(flammand));
-  out(is_idiot(enigma));
+fn main() :: Void {
+  out("Hello, world.");
 }

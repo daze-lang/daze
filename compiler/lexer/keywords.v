@@ -13,6 +13,10 @@ const keywords_map = map{
     "elif": TokenType.kw_elif
 }
 
+pub fn is_keyword(id string) bool {
+    return keywords_map.keys().contains(id)
+}
+
 pub fn to_keyword(id string) ?TokenType {
     return keywords_map[id] or {
         return error("Not a keyword.")

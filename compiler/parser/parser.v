@@ -2,7 +2,7 @@ module parser
 
 import strconv
 
-import lexer{Token}
+import lexer{Token, is_keyword}
 import ast{AST, Statement, Expr, Node}
 
 pub struct Parser {
@@ -138,9 +138,10 @@ fn (mut parser Parser) parse_binary_ops() ast.RawBinaryOpExpr {
         raw_op << val
     }
 
-    if raw_op[0] == "=" {
+    if raw_op[0] == "=" || is_keyword(raw_op[0]) {
         raw_op[0] = ""
     }
+
     return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@")}
 }
 
@@ -269,7 +270,8 @@ fn (mut parser Parser) fn_call() Expr {
     }
 
     parser.expect(.close_paren)
-    if parser.lookahead().kind != .close_paren {
+
+    if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly {
         parser.expect(.semicolon)
     }
 
