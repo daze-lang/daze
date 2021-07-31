@@ -18,7 +18,7 @@ pub fn (mut gen CodeGenerator) run() string {
     }
 
     code = [
-        "module ${gen.mod.capitalize()}\n",
+        "module ${gen.mod.capitalize()}\nextend self",
         code,
         "end"
     ].join("\n")

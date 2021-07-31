@@ -26,9 +26,3 @@ class DazeString
     @value.length
   end
 end
-
-module DazeModule
-  def len(val : Any)
-    val.length
-  end
-end

@@ -24,17 +24,6 @@ fn match_all(text string, regexp string) []string {
     return matches
 }
 
-fn remove_comments(code string) string {
-    mut input := code
-    for line in input.split("\n") {
-        if line.starts_with("//") {
-            input = input.replace(line, "")
-        }
-    }
-
-    return input
-}
-
 fn load_imports(code string) ?[]string {
     matches := match_all(code, "use (.*?);")
     mut compiled_modules := []string{}
@@ -45,7 +34,8 @@ fn load_imports(code string) ?[]string {
             module_name := module_path.replace("daze::", "")
             module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
         }
-        mut module_file := remove_comments(os.read_file("${module_path}.daze") or { panic("File not found") })
+        mut module_file := os.read_file("${module_path}.daze") or { panic("File not found") }
+        compiled_modules << load_imports(module_file)?
         compiled_modules << to_crystal(module_file)?
     }
 
@@ -65,19 +55,15 @@ fn to_crystal(source string) ?string {
 fn compile(code string) {
     os.write_file("/tmp/lang.cr", code) or { panic("Failed writing file") }
     os.execute("crystal tool format /tmp/lang.cr")
-    println(os.execute("crystal build /tmp/lang.cr"))
+    println(os.execute("crystal build /tmp/lang.cr").output)
     println("==========================================")
 }
 
 fn main() {
     mut input_file := os.read_file("demo/lang.daze") or { panic("File not found") }
-    input_file = remove_comments(input_file)
     compiled_modules := load_imports(input_file)?
-    // mut lexer := lexer.Lexer{input: input_file.split('')}
-    // tokens := lexer.lex()?
-    // panic(tokens)
-
     code := to_crystal(input_file)?
+
     mut final_code := ""
     for mod in compiled_modules {
         final_code += "$mod\n\n"
@@ -85,5 +71,4 @@ fn main() {
 
     mut builtin_file := os.read_file("compiler/builtins/string.cr") or { panic("File not found") }
     compile(builtin_file + "\n" + final_code + code)
-    // compile(final_code + code)
 }
