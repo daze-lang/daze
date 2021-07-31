@@ -175,7 +175,12 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
         }
 
         if current == "\"" {
-            tokens << Token{.string, lexer.read_string(), lexer.line, lexer.column}
+            if lexer.lookahead() == "\"" {
+                lexer.advance()
+                tokens << Token{.string, "", lexer.line, lexer.column}
+            } else {
+                tokens << Token{.string, lexer.read_string(), lexer.line, lexer.column}
+            }
             continue
         }
 
@@ -225,6 +230,9 @@ fn (mut lexer Lexer) read_identifier(c string) string {
         }
 
         id += lexer.advance()
+    }
+    if id == "String" {
+        id = "DazeString"
     }
 
     return id

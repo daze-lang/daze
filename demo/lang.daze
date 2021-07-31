@@ -1,6 +1,7 @@
-is main;
+is Main;
+
+use "daze::Std";
 
 fn main() :: Void {
-  a = []String{"Hello", "There"};
-  out(a[0]);
+  Std.out("Hello, world.");
 }

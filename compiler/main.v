@@ -41,8 +41,8 @@ fn load_imports(code string) ?[]string {
 
     for m in matches {
         mut module_path := m.replace("\"", "").replace("use ", "").replace(";", "")
-        if module_path.starts_with("std::") {
-            module_name := module_path.replace("std::", "")
+        if module_path.starts_with("daze::") {
+            module_name := module_path.replace("daze::", "")
             module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
         }
         mut module_file := remove_comments(os.read_file("${module_path}.daze") or { panic("File not found") })
@@ -83,5 +83,7 @@ fn main() {
         final_code += "$mod\n\n"
     }
 
-    compile(final_code + code)
+    mut builtin_file := os.read_file("compiler/builtins/string.cr") or { panic("File not found") }
+    compile(builtin_file + "\n" + final_code + code)
+    // compile(final_code + code)
 }

@@ -1,0 +1,13 @@
+is Std;
+
+fn out(value :: String) :: Void {
+  `raw
+  puts(value.value())
+  `
+}
+
+fn out(value :: Int32) :: Void {
+  `raw
+  puts(value)
+  `
+}

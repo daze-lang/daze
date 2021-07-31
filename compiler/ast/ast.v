@@ -18,6 +18,7 @@ pub type Statement = FunctionDeclarationStatement
     | NoOp
 
 pub type Expr = FunctionCallExpr
+    | RawCrystalCodeExpr
     | StringLiteralExpr
     | NumberLiteralExpr
     | ArrayDefinition
@@ -51,6 +52,10 @@ pub:
 }
 
 pub struct RawCrystalCodeStatement {
+pub:
+    value string
+}
+pub struct RawCrystalCodeExpr {
 pub:
     value string
 }

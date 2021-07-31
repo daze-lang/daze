@@ -18,12 +18,12 @@ pub fn (mut gen CodeGenerator) run() string {
     }
 
     code = [
-        "module ${gen.mod.capitalize()}",
+        "module ${gen.mod.capitalize()}\n",
         code,
         "end"
     ].join("\n")
 
-    if gen.mod == "main" {
+    if gen.mod == "Main" {
         code += "\nMain.main()"
     }
 
@@ -95,6 +95,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.for_in_loop(node)
     } else if mut node is ast.IndexingExpr {
         code = gen.indexing(node)
+    } else if mut node is ast.RawCrystalCodeExpr {
+        code = node.value
     }
 
     return code
@@ -127,14 +129,16 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
         args << gen.expr(arg)
     }
     accessor := if node.name.contains(".") { "" } else {"self."}
-    fn_name := if node.name == "out" { "puts" } else { "$accessor$node.name" }
+    fn_name := "$accessor$node.name"
     mut code := "\n${fn_name.replace("Self", "self")}(${args.join(", ")})"
 
     return code
 }
 
 fn (mut gen CodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
-    return "\"${node.value.replace("Self.", "@")}\""
+    val := node.value.replace("Self.", "@")
+    return "DazeString.new(\"$val\")"
+    // return "\"${node.value.replace("Self.", "@")}\""
 }
 
 fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {

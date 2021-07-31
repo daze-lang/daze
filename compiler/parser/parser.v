@@ -44,7 +44,7 @@ fn (mut parser Parser) statement() Statement {
             parser.implement_block()
         }
         .raw_crystal_code {
-            node = parser.raw_crystal_code()
+            node = ast.RawCrystalCodeStatement{parser.advance().value}
         }
         .kw_use {
             node = parser.use()
@@ -70,6 +70,9 @@ fn (mut parser Parser) statement() Statement {
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
     match parser.lookahead().kind {
+        .raw_crystal_code {
+            node = ast.RawCrystalCodeExpr{parser.advance().value}
+        }
         .open_square {
             node = parser.array()
         }
@@ -101,11 +104,11 @@ fn (mut parser Parser) expr() Expr {
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
-                    if parser.check_for_binary_ops(4) {
-                        return parser.parse_binary_ops()
-                    } else {
                         node = parser.fn_call()
-                    }
+                    // if parser.check_for_binary_ops(4) {
+                    //     return parser.parse_binary_ops()
+                    // } else {
+                    // }
                 }
                 .arrow_left {
                     node = parser.array_push()
@@ -145,7 +148,7 @@ fn (mut parser Parser) parse_binary_ops() ast.RawBinaryOpExpr {
     mut raw_op := []string{}
     raw_op << parser.peek().value
 
-    for parser.lookahead().kind != .semicolon {
+    for parser.lookahead().kind != .semicolon && parser.lookahead().kind != .close_paren {
         next := parser.advance()
         mut val := next.value
 
@@ -361,6 +364,7 @@ fn (mut parser Parser) fn_call() Expr {
     fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
     mut args := []Expr{}
+
     for parser.lookahead().kind != .close_paren {
         args << parser.expr()
         if parser.lookahead().kind != .close_paren {
@@ -374,10 +378,10 @@ fn (mut parser Parser) fn_call() Expr {
         parser.expect(.semicolon)
     }
 
-   return ast.FunctionCallExpr{
+    return ast.FunctionCallExpr{
         name: fn_name,
         args: args
-   }
+    }
 }
 
 fn (mut parser Parser) array() Expr {
@@ -411,10 +415,6 @@ fn (mut parser Parser) module_decl() Statement {
     }
     parser.expect(.semicolon)
     return node
-}
-
-fn (mut parser Parser) raw_crystal_code() ast.RawCrystalCodeStatement {
-    return ast.RawCrystalCodeStatement{parser.advance().value}
 }
 
 fn (mut parser Parser) construct() ast.StructDeclarationStatement {
