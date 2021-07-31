@@ -7,13 +7,11 @@ struct Person {
 
 implement Person {
   fn new(name :: String, age :: Int32) :: Person {
-    Self.name = name;
-    Self.age = age;
   }
 }
 
 fn is_idiot(p :: Person) :: Bool {
-  if p.name() == "Flammand" {
+  if p.name == "Flammand" {
     ret true;
   }
 

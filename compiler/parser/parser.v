@@ -20,9 +20,8 @@ pub fn (mut parser Parser) parse() AST {
     for _, v in parser.structs {
         statements << v
     }
-    // a << statements
+
     ast := AST{"TopLevel", statements}
-    // panic(ast)
     return ast
 }
 
@@ -84,7 +83,11 @@ fn (mut parser Parser) expr() Expr {
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
-                    node = parser.fn_call()
+                    if parser.check_for_binary_ops(4) {
+                        return parser.parse_binary_ops()
+                    } else {
+                        node = parser.fn_call()
+                    }
                 }
                 else {
                     if parser.lookahead_by(2).kind == .equal {
@@ -101,52 +104,44 @@ fn (mut parser Parser) expr() Expr {
         }
     }
 
-    mut raw_op := []string{}
-    raw_op << parser.peek().value
-    if parser.lookahead_by(1).kind == .plus
-        || parser.lookahead_by(1).kind == .minus
-        || parser.lookahead_by(1).kind == .mod
-        || parser.lookahead_by(1).kind == .div
-        || parser.lookahead_by(1).kind == .and_and
-        || parser.lookahead_by(1).kind == .not
-        || parser.lookahead_by(1).kind == .not_equal
-        || parser.lookahead_by(1).kind == .equal_equal
-        || parser.lookahead_by(1).kind == .less_than
-        || parser.lookahead_by(1).kind == .less_than_equal
-        || parser.lookahead_by(1).kind == .greater_than
-        || parser.lookahead_by(1).kind == .greater_than_equal {
-
-        for parser.lookahead().kind != .semicolon {
-            next := parser.advance()
-            mut val := next.value
-
-            if next.kind == .string {
-                val = "\"$val\""
-            }
-
-            if val == "," || val == "{" {
-                parser.step_back()
-                break
-            }
-
-            if val == ")" {
-                if parser.lookahead_by(-1).value == ")" {
-                    parser.step_back()
-                    break
-                }
-            }
-
-            raw_op << val
-        }
-
-        if raw_op[0] == "=" {
-            raw_op[0] = ""
-        }
-
-        return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@")}
+    if parser.check_for_binary_ops(1) {
+        return parser.parse_binary_ops()
     }
 
     return node
+}
+
+fn (mut parser Parser) parse_binary_ops() ast.RawBinaryOpExpr {
+    mut raw_op := []string{}
+    raw_op << parser.peek().value
+
+    for parser.lookahead().kind != .semicolon {
+        next := parser.advance()
+        mut val := next.value
+
+        if next.kind == .string {
+            val = "\"$val\""
+        }
+
+        if val == "," || val == "{" {
+            parser.step_back()
+            break
+        }
+
+        if val == ")" {
+            if parser.lookahead_by(-1).value == ")" {
+                parser.step_back()
+                break
+            }
+        }
+
+        raw_op << val
+    }
+
+    if raw_op[0] == "=" {
+        raw_op[0] = ""
+    }
+    return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@")}
 }
 
 // Function Declarations
@@ -201,6 +196,27 @@ fn (mut parser Parser) fn_arg() ast.FunctionArgument {
         name: name,
         type_name: type_name
     }
+}
+
+fn (mut parser Parser) check_for_binary_ops(lookahead_by_amount int) bool {
+    mut raw_op := []string{}
+    raw_op << parser.peek().value
+    if parser.lookahead_by(lookahead_by_amount).kind == .plus
+        || parser.lookahead_by(lookahead_by_amount).kind == .minus
+        || parser.lookahead_by(lookahead_by_amount).kind == .mod
+        || parser.lookahead_by(lookahead_by_amount).kind == .div
+        || parser.lookahead_by(lookahead_by_amount).kind == .and_and
+        || parser.lookahead_by(lookahead_by_amount).kind == .not
+        || parser.lookahead_by(lookahead_by_amount).kind == .not_equal
+        || parser.lookahead_by(lookahead_by_amount).kind == .equal_equal
+        || parser.lookahead_by(lookahead_by_amount).kind == .less_than
+        || parser.lookahead_by(lookahead_by_amount).kind == .less_than_equal
+        || parser.lookahead_by(lookahead_by_amount).kind == .greater_than
+        || parser.lookahead_by(lookahead_by_amount).kind == .greater_than_equal {
+            return true
+    }
+
+    return false
 }
 
 fn (mut parser Parser) implement_block() {
