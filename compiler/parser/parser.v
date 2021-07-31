@@ -110,10 +110,20 @@ fn (mut parser Parser) expr() Expr {
         || parser.lookahead_by(1).kind == .and_and
         || parser.lookahead_by(1).kind == .not
         || parser.lookahead_by(1).kind == .not_equal
-        || parser.lookahead_by(1).kind == .equal_equal {
+        || parser.lookahead_by(1).kind == .equal_equal
+        || parser.lookahead_by(1).kind == .less_than
+        || parser.lookahead_by(1).kind == .less_than_equal
+        || parser.lookahead_by(1).kind == .greater_than
+        || parser.lookahead_by(1).kind == .greater_than_equal {
 
         for parser.lookahead().kind != .semicolon {
-            val := parser.advance().value
+            next := parser.advance()
+            mut val := next.value
+
+            if next.kind == .string {
+                val = "\"$val\""
+            }
+
             if val == "," || val == "{" {
                 parser.step_back()
                 break
@@ -133,7 +143,7 @@ fn (mut parser Parser) expr() Expr {
             raw_op[0] = ""
         }
 
-        return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@@")}
+        return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@")}
     }
 
     return node
@@ -216,7 +226,7 @@ fn (mut parser Parser) implement_block() {
 
     for field in parser.structs[name].fields {
         mut body := []ast.Expr{}
-        body << ast.ReturnExpr{ast.VariableExpr{"@@$field.name"}}
+        body << ast.ReturnExpr{ast.VariableExpr{"@$field.name"}}
         func := ast.FunctionDeclarationStatement{
             name: field.name,
             args: []ast.FunctionArgument{},
@@ -328,6 +338,7 @@ fn (mut parser Parser) if_statement() Expr {
     for parser.lookahead().kind != .close_curly {
         body << parser.expr()
     }
+    println(conditional)
     parser.expect(.close_curly)
     mut elseifs := []ast.IfExpression{}
     if parser.lookahead().kind == .kw_elif {

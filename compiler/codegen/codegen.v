@@ -128,7 +128,7 @@ fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) strin
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
-    return node.value.replace("Self.", "@@") + "\n"
+    return node.value.replace("Self.", "@") + "\n"
 }
 
 fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
@@ -136,7 +136,7 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
-    return "${node.name.replace("Self.", "@@")} = ${gen.gen(node.value)}\n"
+    return "${node.name.replace("Self.", "@")} = ${gen.gen(node.value)}\n"
 }
 
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {

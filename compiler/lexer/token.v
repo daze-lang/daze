@@ -1,30 +1,34 @@
 module lexer
 
 pub enum TokenType {
-    open_paren      // (
-    close_paren     // )
-    open_curly      // {
-    close_curly     // }
-    at              // @
-    semicolon       // ;
-    comma           // ,
-    colon           // :
-    double_colon    // ::
-    colon_equal     // :=
-    equal           // =
-    double_slash    //
+    open_paren          // (
+    close_paren         // )
+    open_curly          // {
+    close_curly         // }
+    at                  // @
+    semicolon           // ;
+    comma               // ,
+    colon               // :
+    double_colon        // ::
+    colon_equal         // :=
+    equal               // =
+    double_slash        //
     string
     identifier
     number
-    plus            // +
-    minus           // -
-    div             // /
-    mod             // %
-    and_and         // &&
-    not_equal       // !=
-    equal_equal     // ==
-    not             // !
-    backtick        // `
+    plus                // +
+    minus               // -
+    div                 // /
+    mod                 // %
+    and_and             // &&
+    not_equal           // !=
+    equal_equal         // ==
+    greater_than        // >
+    greater_than_equal  // >=
+    less_than_equal     // <=
+    less_than           // <
+    not                 // !
+    backtick            // `
 
     // keywords
     kw_struct
