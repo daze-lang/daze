@@ -106,7 +106,7 @@ pub:
 }
 
 pub struct RawBinaryOpExpr {
-pub:
+pub mut:
     value string
 }
 

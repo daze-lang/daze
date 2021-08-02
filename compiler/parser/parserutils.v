@@ -1,6 +1,6 @@
 module parser
 
-import term
+import utils
 
 import lexer{Token, TokenType}
 
@@ -38,8 +38,9 @@ pub fn (mut parser Parser) expect(kind TokenType) Token {
         return parser.advance()
     }
 
-    err_msg := term.bold(term.white("Unexpected token: ${next.kind}, expected: ${kind}."))
-    line_info := term.bold(term.yellow("(line ${next.line}, col $next.column)"))
-    println("${term.bold(term.red("ERROR: $err_msg $line_info"))}")
-    exit(1)
+    found := lexer.to_string(next.kind)
+    expected := lexer.to_string(kind)
+
+    utils.syntax_error(found, expected, next.line, next.column)
+    return Token{}
 }

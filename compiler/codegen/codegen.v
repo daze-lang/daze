@@ -6,8 +6,7 @@ pub struct CodeGenerator {
 pub:
     ast ast.AST
 pub mut:
-    mod string
-    imports []string
+    mod_count int
 }
 
 pub fn (mut gen CodeGenerator) run() string {
@@ -17,16 +16,8 @@ pub fn (mut gen CodeGenerator) run() string {
         code += gen.gen(node)
     }
 
-    code = [
-        "module ${gen.mod.capitalize()}\nextend self",
-        code,
-        "end"
-    ].join("\n")
-
-    if gen.mod == "Main" {
-        code += "\nMain.main()"
-    }
-
+    // code += "end\n".repeat(gen.mod_count)
+    code += "\nend\nMain.main()"
     return code
 }
 
@@ -52,9 +43,9 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.StructDeclarationStatement {
         code = gen.struct_decl(node)
     } else if mut node is ast.ModuleDeclarationStatement {
-        gen.set_module(node.name)
-    } else if mut node is ast.ModuleUseStatement {
-        gen.imports << node.path
+        prefix := if gen.mod_count > 0 {"\nend\n"} else {""}
+        code = "${prefix}module $node.name\n"
+        gen.mod_count++
     } else if mut node is ast.RawCrystalCodeStatement {
         code = node.value
     }
@@ -120,6 +111,10 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
 
 fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
     typ := if node.type_name == "string" { "String" } else { node.type_name }
+    if node.type_name == "Any" {
+        return "$node.name"
+    }
+
     return "$node.name : $typ?"
 }
 
@@ -130,7 +125,7 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     }
     accessor := if node.name.contains(".") { "" } else {"self."}
     fn_name := "$accessor$node.name"
-    mut code := "\n${fn_name.replace("Self", "self")}(${args.join(", ")})"
+    mut code := "${fn_name.replace("Self", "self")}(${args.join(", ")})\n"
 
     return code
 }
@@ -173,7 +168,7 @@ fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) stri
 }
 
 fn (mut gen CodeGenerator) set_module(name string) {
-    gen.mod = name
+    // gen.mod = name
 }
 
 fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {

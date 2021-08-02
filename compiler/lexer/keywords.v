@@ -14,6 +14,7 @@ const keywords_map = map{
     "for": TokenType.kw_for
     "break": TokenType.kw_break
     "in": TokenType.kw_in
+    "make": TokenType.kw_make
 }
 
 pub fn is_keyword(id string) bool {

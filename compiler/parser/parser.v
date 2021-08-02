@@ -69,7 +69,21 @@ fn (mut parser Parser) statement() Statement {
 
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
+    println(parser.lookahead())
     match parser.lookahead().kind {
+        // .open_paren {
+        //     if parser.check_for_binary_ops(3) || parser.check_for_binary_ops(2) {
+        //         parser.advance()
+        //         node = parser.parse_binary_ops()
+        //     }
+        // }
+        .plus {
+            panic("hello")
+        }
+        .kw_make {
+            parser.expect(.kw_make)
+            node = parser.fn_call(true)
+        }
         .raw_crystal_code {
             node = ast.RawCrystalCodeExpr{parser.advance().value}
         }
@@ -104,7 +118,7 @@ fn (mut parser Parser) expr() Expr {
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
-                        node = parser.fn_call()
+                        node = parser.fn_call(false)
                     // if parser.check_for_binary_ops(4) {
                     //     return parser.parse_binary_ops()
                     // } else {
@@ -137,9 +151,10 @@ fn (mut parser Parser) expr() Expr {
         }
     }
 
-    if parser.check_for_binary_ops(1) {
-        return parser.parse_binary_ops()
-    }
+    // if parser.check_for_binary_ops(1) {
+    //     return parser.parse_binary_ops()
+    // }
+
 
     return node
 }
@@ -148,7 +163,7 @@ fn (mut parser Parser) parse_binary_ops() ast.RawBinaryOpExpr {
     mut raw_op := []string{}
     raw_op << parser.peek().value
 
-    for parser.lookahead().kind != .semicolon && parser.lookahead().kind != .close_paren {
+    for parser.lookahead().kind != .semicolon {
         next := parser.advance()
         mut val := next.value
 
@@ -210,7 +225,6 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
 
 fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     mut args := []ast.FunctionArgument{}
-
     for parser.lookahead().kind != delim {
         args << parser.fn_arg()
         if parser.lookahead().kind != delim {
@@ -245,18 +259,19 @@ fn (mut parser Parser) fn_arg() ast.FunctionArgument {
 fn (mut parser Parser) check_for_binary_ops(lookahead_by_amount int) bool {
     mut raw_op := []string{}
     raw_op << parser.peek().value
-    if parser.lookahead_by(lookahead_by_amount).kind == .plus
-        || parser.lookahead_by(lookahead_by_amount).kind == .minus
-        || parser.lookahead_by(lookahead_by_amount).kind == .mod
-        || parser.lookahead_by(lookahead_by_amount).kind == .div
-        || parser.lookahead_by(lookahead_by_amount).kind == .and_and
-        || parser.lookahead_by(lookahead_by_amount).kind == .not
-        || parser.lookahead_by(lookahead_by_amount).kind == .not_equal
-        || parser.lookahead_by(lookahead_by_amount).kind == .equal_equal
-        || parser.lookahead_by(lookahead_by_amount).kind == .less_than
-        || parser.lookahead_by(lookahead_by_amount).kind == .less_than_equal
-        || parser.lookahead_by(lookahead_by_amount).kind == .greater_than
-        || parser.lookahead_by(lookahead_by_amount).kind == .greater_than_equal {
+    if parser.lookahead_by(lookahead_by_amount).kind in [
+        .plus,
+        .minus,
+        .mod,
+        .div,
+        .and_and,
+        .not,
+        .not_equal,
+        .equal_equal,
+        .less_than,
+        .less_than_equal,
+        .greater_than,
+        .greater_than_equal] {
             return true
     }
 
@@ -360,13 +375,19 @@ fn (mut parser Parser) for_in_loop() Expr {
     }
 }
 
-fn (mut parser Parser) fn_call() Expr {
-    fn_name := parser.expect(.identifier).value
+fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
+    mut fn_name := parser.expect(.identifier).value
     parser.expect(.open_paren)
     mut args := []Expr{}
 
+    if is_struct_initializer {
+        fn_name = "${fn_name}.new"
+    }
+
     for parser.lookahead().kind != .close_paren {
-        args << parser.expr()
+        mut next := parser.expr()
+        args << next
+
         if parser.lookahead().kind != .close_paren {
             parser.expect(.comma)
         }
@@ -462,9 +483,6 @@ fn (mut parser Parser) variable_decl() Expr {
     }
     parser.expect(.equal)
     value := parser.expr()
-    if !(value is ast.FunctionCallExpr) {
-        parser.expect(.semicolon)
-    }
 
     return ast.VariableDecl {
         name: name,

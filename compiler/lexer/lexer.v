@@ -272,3 +272,15 @@ fn (lexer Lexer) is_number(c string) bool {
 fn (lexer Lexer) is_letter(c string) bool {
     return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.".contains(c)
 }
+
+pub fn to_string(kw TokenType) string {
+    if kw.str().contains("kw_") {
+        for key, tk_type in keywords_map {
+            if tk_type == kw {
+                return key
+            }
+        }
+    }
+
+    return lexer.tokens_map[kw.str()] or { kw.str() }
+}

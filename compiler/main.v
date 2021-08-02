@@ -6,7 +6,9 @@ import pcre
 import lexer{Token}
 import ast{StructDeclarationStatement}
 import parser
+import checker
 import codegen
+import utils
 
 fn match_all(text string, regexp string) []string {
     mut matches := []string{}
@@ -33,10 +35,16 @@ fn load_imports(code string) ?[]string {
         if module_path.starts_with("daze::") {
             module_name := module_path.replace("daze::", "")
             module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
+            if module_name != module_name.capitalize() {
+                utils.error("Module name should be capitalized.")
+            }
         }
+
+
         mut module_file := os.read_file("${module_path}.daze") or { panic("File not found") }
+        compiled_modules << module_file
         compiled_modules << load_imports(module_file)?
-        compiled_modules << to_crystal(module_file)?
+        // compiled_modules << to_crystal(module_file)?
     }
 
     return compiled_modules
@@ -47,7 +55,9 @@ fn to_crystal(source string) ?string {
     tokens := lexer.lex()?
     mut parser := parser.Parser{tokens, -1, Token{}, Token{}, map[string]StructDeclarationStatement{}}
     ast := parser.parse()
-    mut codegen := codegen.CodeGenerator{ast, "", []string{}}
+    mut checker := checker.Checker{ast, map[string]ast.FunctionDeclarationStatement, []string{}}
+    checker.run()
+    mut codegen := codegen.CodeGenerator{ast, 0}
     mut code := codegen.run()
     return code
 }
@@ -62,13 +72,14 @@ fn compile(code string) {
 fn main() {
     mut input_file := os.read_file("demo/lang.daze") or { panic("File not found") }
     compiled_modules := load_imports(input_file)?
-    code := to_crystal(input_file)?
 
-    mut final_code := ""
+    mut source := ""
     for mod in compiled_modules {
-        final_code += "$mod\n\n"
+        source += "\n$mod\n\n"
     }
+    source += input_file
+    code := to_crystal(source)?
 
     mut builtin_file := os.read_file("compiler/builtins/string.cr") or { panic("File not found") }
-    compile(builtin_file + "\n" + final_code + code)
+    compile(builtin_file + "\n" + code)
 }

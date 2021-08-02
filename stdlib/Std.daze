@@ -6,8 +6,32 @@ fn out(value :: String) :: Void {
   `
 }
 
-fn out(value :: Int32) :: Void {
+fn out(value :: Any) :: Void {
   `raw
   puts(value)
+  `
+}
+
+fn out_raw(value :: String) :: Void {
+  `raw
+  printf(value.value())
+  `
+}
+
+fn out_raw(value :: Any) :: Void {
+  `raw
+  printf(value)
+  `
+}
+
+fn input() :: String {
+  `raw
+  gets
+  `
+}
+
+fn type(val :: Any) :: Any {
+  `raw
+  typeof(val)
   `
 }
