@@ -38,3 +38,8 @@ class DazeString
     @value.to_i
   end
 end
+
+class DazeInt
+  def initialize(@value : Int32)
+  end
+end

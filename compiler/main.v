@@ -88,6 +88,6 @@ fn main() {
 
     code := to_crystal(stripped_comments)?
 
-    mut builtin_file := os.read_file("compiler/builtins/string.cr") or { panic("File not found") }
+    mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
     compile(builtin_file + "\n" + code)
 }

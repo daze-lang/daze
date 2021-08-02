@@ -260,10 +260,10 @@ fn (mut lexer Lexer) read_string() string {
 
 fn (mut lexer Lexer) read_number(c string) ?string {
     mut raw_num := c
-    for lexer.is_number(lexer.lookahead()) || lexer.lookahead() == "." {
+    for lexer.is_number(lexer.lookahead()) {
         raw_num += lexer.advance()
     }
-
+    println(raw_num)
     return raw_num
 }
 
