@@ -126,7 +126,7 @@ fn (mut parser Parser) expr() Expr {
             parser.advance()
         }
         .number {
-            node = ast.NumberLiteralExpr{strconv.atoi(parser.lookahead().value) or { 0 }, "Int32"}
+            node = ast.NumberLiteralExpr{strconv.atof64(parser.lookahead().value), "Int"}
             parser.advance()
         }
         .kw_return {
@@ -532,7 +532,6 @@ fn (mut parser Parser) variable_decl() Expr {
 fn (mut parser Parser) if_statement() Expr {
     parser.expect(.kw_if)
     conditional := parser.expr()
-    println(conditional)
     parser.expect(.open_curly)
     mut body := []Expr{}
     mut else_body := []Expr{}

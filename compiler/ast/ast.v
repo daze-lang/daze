@@ -126,7 +126,7 @@ pub:
 
 pub struct NumberLiteralExpr {
 pub:
-    value int
+    value f64
     value_type string
 }
 

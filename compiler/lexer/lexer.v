@@ -43,10 +43,10 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 tokens << Token{.close_curly, current, lexer.line, lexer.column}
                 continue
             }
-            "@" {
-                tokens << Token{.at, current, lexer.line, lexer.column}
-                continue
-            }
+            // "@" {
+            //     tokens << Token{.at, current, lexer.line, lexer.column}
+            //     continue
+            // }
             ";" {
                 tokens << Token{.semicolon, current, lexer.line, lexer.column}
                 continue
@@ -238,8 +238,12 @@ fn (mut lexer Lexer) read_identifier(c string) string {
 
         id += lexer.advance()
     }
+
+    // Custom types
     if id == "String" {
         id = "DazeString"
+    } else if id == "Int" {
+        id = "DazeInt"
     }
 
     return id
@@ -263,7 +267,7 @@ fn (mut lexer Lexer) read_number(c string) ?string {
     for lexer.is_number(lexer.lookahead()) {
         raw_num += lexer.advance()
     }
-    println(raw_num)
+
     return raw_num
 }
 
@@ -272,12 +276,17 @@ fn (lexer Lexer) is_whitespace(c string) bool {
 }
 
 fn (lexer Lexer) is_number(c string) bool {
-    strconv.atoi(c) or { return false }
+    strconv.atoi(c) or {
+        if c == "." {
+            return true
+        }
+        return false
+    }
     return true
 }
 
 fn (lexer Lexer) is_letter(c string) bool {
-    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.".contains(c)
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.@".contains(c)
 }
 
 pub fn to_string(kw TokenType) string {

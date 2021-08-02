@@ -1,5 +1,5 @@
 is Math;
 
-fn pi() :: Int32 {
+fn pi() :: Int {
   ret 3.14159265359;
 }

@@ -121,13 +121,19 @@ fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
 }
 
 fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
+
     mut args := []string{}
     for arg in node.args {
         args << gen.expr(arg)
     }
 
     accessor := if node.name.contains(".") { "" } else {"self."}
-    fn_name := "$accessor$node.name"
+    mut fn_name := "$accessor$node.name"
+
+    if node.name.starts_with("@") {
+        fn_name = node.name.replace("@", "")
+    }
+
     mut code := "\n${fn_name.replace("Self", "self")}(${args.join("")})"
     return code
 }
@@ -135,11 +141,10 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
 fn (mut gen CodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
     val := node.value.replace("Self.", "@")
     return "DazeString.new(\"$val\")"
-    // return "\"${node.value.replace("Self.", "@")}\""
 }
 
 fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
-    return node.value.str()
+    return "DazeInt.new(${node.value})"
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {

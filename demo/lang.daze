@@ -1,9 +1,9 @@
 is Main;
 
 use "daze::Std";
-use "daze::Math";
 
 fn main() :: Void {
-  Std.out(Math.pi() / 2);
+  @debug("Hello, world.");
+  Std.out(@assert("5" == "5"));
 }
 

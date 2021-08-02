@@ -40,6 +40,18 @@ class DazeString
 end
 
 class DazeInt
-  def initialize(@value : Int32)
+  def initialize(@value : Float64)
   end
+
+  def value
+    @value
+  end
+end
+
+def debug(val)
+  pp val
+end
+
+def assert(assertion)
+  assertion
 end

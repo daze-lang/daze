@@ -6,6 +6,12 @@ fn out(value :: String) :: Void {
   `
 }
 
+fn out(value :: Int) :: Void {
+  `raw
+  puts(value.value())
+  `
+}
+
 fn out(value :: Any) :: Void {
   `raw
   puts(value)
