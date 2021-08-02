@@ -33,4 +33,8 @@ class DazeString
   def len
     @value.length
   end
+
+  def int
+    @value.to_i
+  end
 end

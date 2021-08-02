@@ -1,12 +1,14 @@
 module codegen
 
 import ast
+import parser{is_binary_op}
 
 pub struct CodeGenerator {
 pub:
     ast ast.AST
 pub mut:
     mod_count int
+    c int
 }
 
 pub fn (mut gen CodeGenerator) run() string {
@@ -126,7 +128,7 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
 
     accessor := if node.name.contains(".") { "" } else {"self."}
     fn_name := "$accessor$node.name"
-    mut code := "${fn_name.replace("Self", "self")}(${args.join("")})"
+    mut code := "\n${fn_name.replace("Self", "self")}(${args.join("")})"
     return code
 }
 
@@ -141,6 +143,9 @@ fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) strin
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
+    if node.value == "===" {
+        return " ${node.value.replace("Self.", "@")} "
+    }
     return node.value.replace("Self.", "@")
 }
 
@@ -215,8 +220,12 @@ fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
     return code
 }
 
+// TODO: this is bad because it evaluates the expression twice
+// we should save it into a temporary variable
 fn (mut gen CodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
-    mut code := "${node.target}.each_index do |index|\n$node.container = ${node.target}[index]\n"
+    gen.c++
+    vardecl := "for_in_loop${gen.c} = ${gen.gen(node.target).split("of")[0]}"
+    mut code := "$vardecl\nfor_in_loop${gen.c}.each_index do |index|\n$node.container = for_in_loop${gen.c}[index]\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
     }

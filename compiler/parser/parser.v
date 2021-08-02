@@ -375,7 +375,7 @@ fn (mut parser Parser) for_in_loop() Expr {
     parser.expect(.kw_for)
     container := parser.expect(.identifier).value
     parser.expect(.kw_in)
-    target := parser.expect(.identifier).value
+    target := parser.expr()
     mut body := []Expr{}
     parser.expect(.open_curly)
 

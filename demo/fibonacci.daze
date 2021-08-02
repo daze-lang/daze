@@ -1,9 +1,9 @@
-is fib;
+is fibonacci;
 
-fn fib(num :: Int32) :: Int32 {
+fn fibonacci(num :: Int32) :: Int32 {
   if num <= 1 {
     ret 1;
   }
 
-  ret fib(num - 1) + fib(num - 2);
+  ret fibonacci(num - 1) + fibonacci(num - 2);
 }

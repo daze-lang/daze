@@ -57,7 +57,7 @@ fn to_crystal(source string) ?string {
     ast := parser.parse()
     mut checker := checker.Checker{ast, map[string]ast.FunctionDeclarationStatement, []string{}}
     checker.run()
-    mut codegen := codegen.CodeGenerator{ast, 0}
+    mut codegen := codegen.CodeGenerator{ast, 0, 0}
     mut code := codegen.run()
     return code
 }
@@ -78,7 +78,15 @@ fn main() {
         source += "\n$mod\n\n"
     }
     source += input_file
-    code := to_crystal(source)?
+    mut stripped_comments := ""
+    lines := source.split("\n")
+    for line in lines {
+        if !line.starts_with("#") {
+            stripped_comments += "${line}\n"
+        }
+    }
+
+    code := to_crystal(stripped_comments)?
 
     mut builtin_file := os.read_file("compiler/builtins/string.cr") or { panic("File not found") }
     compile(builtin_file + "\n" + code)

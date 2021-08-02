@@ -1,0 +1,16 @@
+is fizbuzz;
+
+fn fizbuzz() :: Void {
+  i = 0
+  for (i < 20) {
+    if (i % 15 == 0) {
+      Std.out("FizzBuzz");
+    } elif (i % 3 == 0) {
+      Std.out("Fizz");
+    } elif (i % 5 == 0) {
+      Std.out("Buzz");
+    } else {
+      Std.out(i);
+    }
+  }
+}

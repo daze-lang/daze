@@ -160,7 +160,7 @@ pub:
 pub struct ForInLoopExpr {
 pub:
     container string
-    target string
+    target Expr
     body []Expr
 }
 

@@ -32,6 +32,37 @@ fn input() :: String {
 
 fn type(val :: Any) :: Any {
   `raw
-  typeof(val)
+  DazeString.new(typeof(val).to_s)
+  `
+}
+
+fn range(max :: Int32) :: Any {
+  i = 0;
+  arr = []Int32{};
+  for (i < max) {
+    arr <- i;
+    i++;
+  }
+
+  ret arr;
+}
+fn range(min :: Int32, max :: Int32) :: Any {
+  i = min;
+  arr = []Int32{};
+  for (i < max) {
+    arr <- i;
+    i++;
+  }
+
+  ret arr;
+}
+
+fn string(num :: Int32) :: String {
+  ret "#{num}"
+}
+
+fn int(str :: String) :: Int32 {
+  `raw
+  str.to_i
   `
 }

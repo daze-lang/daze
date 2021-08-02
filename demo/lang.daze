@@ -2,21 +2,32 @@ is Main;
 
 use "daze::Std";
 
-fn fib(num :: Int32, a :: Int32) :: Int32 {
+# Fizzbuzz algorithm
+fn fizzbuzz() :: Void {
+  for i in Std.range(20) {
+    if (i % 15 == 0) {
+      Std.out("FizzBuzz");
+    } elif (i % 3 == 0) {
+      Std.out("Fizz");
+    } elif (i % 5 == 0) {
+      Std.out("Buzz");
+    } else {
+      Std.out(i);
+    }
+  }
+}
+
+# Fibonacci algorithm
+fn fibonacci(num :: Int32) :: Int32 {
   if (num <= 1) {
     ret 1;
   }
 
-  ret fib(num - 1) + fib(num - 2);
+  ret fibonacci(num - 1) + fibonacci(num - 2);
 }
-
 
 fn main() :: Void {
-  for c in []String{1, 2, 3} {
-    Std.out(c);
-  }
-
-  for c in "hello".split("") {
-    Std.out(c);
-  }
+  Std.out(5 == "5".int());
+  Std.out(Std.type("5".int()) == "Int32");
 }
+
