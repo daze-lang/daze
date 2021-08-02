@@ -1,5 +1,11 @@
 is Main;
 
-fn main() :: Void {
+use "daze::Std";
 
+fn hello() :: Int32 {
+  ret 5;
+}
+
+fn main() :: Void {
+  Std.out(5 + 1);
 }

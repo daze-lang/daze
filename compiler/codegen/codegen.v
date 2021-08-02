@@ -123,9 +123,14 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     for arg in node.args {
         args << gen.expr(arg)
     }
+    mut processed_args := ""
+    for arg in args {
+        processed_args += arg
+    }
+
     accessor := if node.name.contains(".") { "" } else {"self."}
     fn_name := "$accessor$node.name"
-    mut code := "${fn_name.replace("Self", "self")}(${args.join(", ")})\n"
+    mut code := "${fn_name.replace("Self", "self")}(${processed_args.trim_right("\n")})"
 
     return code
 }
@@ -141,7 +146,7 @@ fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) strin
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
-    return node.value.replace("Self.", "@") + "\n"
+    return node.value.replace("Self.", "@") + ""
 }
 
 fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
@@ -149,7 +154,11 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
-    return "${node.name.replace("Self.", "@")} = ${gen.gen(node.value)}\n"
+    mut body := ""
+    for expr in node.value {
+        body += "${gen.gen(expr)} "
+    }
+    return "${node.name.replace("Self.", "@")} = ${body}\n"
 }
 
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {

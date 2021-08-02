@@ -95,7 +95,7 @@ pub:
 pub struct VariableDecl {
 pub:
     name string
-    value Expr
+    value []Expr
     type_name string
 }
 

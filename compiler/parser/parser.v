@@ -69,16 +69,28 @@ fn (mut parser Parser) statement() Statement {
 
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
-    println(parser.lookahead())
+
     match parser.lookahead().kind {
-        // .open_paren {
-        //     if parser.check_for_binary_ops(3) || parser.check_for_binary_ops(2) {
-        //         parser.advance()
-        //         node = parser.parse_binary_ops()
-        //     }
-        // }
-        .plus {
-            panic("hello")
+        .open_paren {
+            panic("grouped")
+        }
+        .plus,
+        .minus,
+        .mod,
+        .div,
+        .and_and,
+        .not,
+        .not_equal,
+        .equal_equal,
+        .less_than,
+        .less_than_equal,
+        .greater_than,
+        .greater_than_equal,
+        .comma {
+            node = ast.VariableExpr{parser.advance().value}
+        }
+        .semicolon {
+            parser.advance()
         }
         .kw_make {
             parser.expect(.kw_make)
@@ -384,18 +396,23 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
         fn_name = "${fn_name}.new"
     }
 
-    for parser.lookahead().kind != .close_paren {
-        mut next := parser.expr()
-        args << next
-
-        if parser.lookahead().kind != .close_paren {
-            parser.expect(.comma)
+    // no args passed
+    if parser.lookahead().kind == .close_paren {
+        parser.advance()
+        return ast.FunctionCallExpr{
+            name: fn_name,
+            args: []ast.Expr{}
         }
+    }
+
+    for parser.lookahead().kind != .close_paren {
+        args << parser.expr()
     }
 
     parser.expect(.close_paren)
 
-    if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly {
+    // TODO add binary ops
+    if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly && parser.lookahead().kind != .plus {
         parser.expect(.semicolon)
     }
 
@@ -482,11 +499,20 @@ fn (mut parser Parser) variable_decl() Expr {
         type_name = parser.expect(.identifier).value
     }
     parser.expect(.equal)
-    value := parser.expr()
+
+    mut body := []Expr{}
+
+    for parser.lookahead().kind != .semicolon {
+        body << parser.expr()
+
+        // if !(value is ast.FunctionCallExpr) {
+        //     parser.expect(.semicolon)
+        // }
+    }
 
     return ast.VariableDecl {
         name: name,
-        value: value,
+        value: body,
         type_name: type_name
     }
 }
