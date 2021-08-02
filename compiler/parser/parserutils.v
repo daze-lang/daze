@@ -44,3 +44,25 @@ pub fn (mut parser Parser) expect(kind TokenType) Token {
     utils.syntax_error(found, expected, next.line, next.column)
     return Token{}
 }
+
+pub fn is_binary_op(op Token) bool {
+    if op.kind in [
+        .plus,
+        .minus,
+        .mod,
+        .div,
+        .and_and,
+        .not,
+        .not_equal,
+        .equal_equal,
+        .less_than,
+        .less_than_equal,
+        .greater_than,
+        .greater_than_equal,
+        ._or,
+        .comma] {
+            return true
+    }
+
+    return false
+}

@@ -18,8 +18,16 @@ class DazeString
     @value + other.value
   end
 
+  def ===(other : DazeString)
+    return @value === other.value
+  end
+
   def value
     @value
+  end
+
+  def includes(char : DazeString)
+    @value.includes? char.value
   end
 
   def len

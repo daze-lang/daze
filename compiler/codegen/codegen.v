@@ -188,7 +188,7 @@ fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
 
     if node.elseifs.len != 0 {
         for elsif in node.elseifs {
-            code += "elsif ${gen.expr(elsif.conditional)}\n"
+            code += " elsif ${gen.expr(elsif.conditional)}\n"
             for func in elsif.body {
                 code += gen.gen(func)
             }
@@ -196,7 +196,7 @@ fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
     }
 
     if node.else_branch.len != 0 {
-        code += "else\n"
+        code += " else\n"
         for func in node.else_branch {
             code += gen.gen(func)
         }

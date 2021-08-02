@@ -55,6 +55,13 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 tokens << Token{.comma, current, lexer.line, lexer.column}
                 continue
             }
+            "|" {
+                if lexer.lookahead() == "|" {
+                    tokens << Token{._or, "||", lexer.line, lexer.column}
+                    lexer.advance()
+                }
+                continue
+            }
             "+" {
                 if lexer.lookahead() == "+" {
                     tokens << Token{.plus_plus, "++", lexer.line, lexer.column}
@@ -112,7 +119,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
             }
             "=" {
                 if lexer.lookahead() == "=" {
-                    tokens << Token{.equal_equal, "==", lexer.line, lexer.column}
+                    tokens << Token{.equal_equal, "===", lexer.line, lexer.column}
                     lexer.advance()
                 } else {
                     tokens << Token{.equal, current, lexer.line, lexer.column}

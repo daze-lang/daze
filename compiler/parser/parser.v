@@ -90,6 +90,7 @@ fn (mut parser Parser) expr() Expr {
         .less_than_equal,
         .greater_than,
         .greater_than_equal,
+        ._or,
         .comma {
             node = ast.VariableExpr{parser.advance().value}
         }
@@ -403,7 +404,6 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
     if is_struct_initializer {
         fn_name = "${fn_name}.new"
     }
-
     // no args passed
     if parser.lookahead().kind == .close_paren {
         parser.advance()
@@ -420,7 +420,7 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
     parser.expect(.close_paren)
 
     // TODO add binary ops
-    if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly && parser.lookahead().kind != .plus {
+    if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly && !is_binary_op(parser.lookahead()) {
         parser.expect(.semicolon)
     }
 
@@ -522,20 +522,17 @@ fn (mut parser Parser) variable_decl() Expr {
         }
     }
 
-    if body[0] is ast.IfExpression {
-        panic("if")
-    }
-
     return ast.VariableDecl {
         name: name,
         value: body,
-        type_name: type_name
+        type_name: type_name,
     }
 }
 
 fn (mut parser Parser) if_statement() Expr {
     parser.expect(.kw_if)
     conditional := parser.expr()
+    println(conditional)
     parser.expect(.open_curly)
     mut body := []Expr{}
     mut else_body := []Expr{}

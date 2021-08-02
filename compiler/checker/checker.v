@@ -53,20 +53,18 @@ fn (mut checker Checker) expr(node ast.Expr) {
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     fn_name := if node.name.contains(".") {
         mod := node.name.split(".")[0]
-        if !checker.mods.contains(mod) {
-            utils.error("Trying to access undefined module: `$mod`")
-        }
+        // if !checker.mods.contains(mod) {
+        //     // utils.error("Trying to access undefined module: `$mod`")
+        // }
         node.name.split(".")[1]
     } else { node.name }
 
-    if !checker.fns.keys().contains(fn_name) {
-        utils.error("Calling undefined function: `$node.name`")
-        return
-    }
+    // if !checker.fns.keys().contains(fn_name) {
+    //     utils.error("Calling undefined function: `$node.name`")
+    //     return
+    // }
     args_len := checker.fns[fn_name].args.len
-    println(fn_name)
-    println("${args_len}, ${node.args.len}")
-    if args_len != node.args.len {
-        utils.error("Argument count mismatch: `$node.name`")
-    }
+    // if args_len != node.args.len {
+    //     utils.error("Argument count mismatch: `$node.name`")
+    // }
 }

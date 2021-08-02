@@ -91,6 +91,8 @@ pub:
     body []Expr
     elseifs []IfExpression
     else_branch []Expr
+mut:
+    assign_to string
 }
 
 pub struct VariableDecl {

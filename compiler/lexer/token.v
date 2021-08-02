@@ -23,6 +23,7 @@ pub enum TokenType {
     div                 // /
     mod                 // %
     and_and             // &&
+    _or                 // ||
     not_equal           // !=
     equal_equal         // ==
     greater_than        // >

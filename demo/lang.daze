@@ -12,10 +12,11 @@ fn fib(num :: Int32, a :: Int32) :: Int32 {
 
 
 fn main() :: Void {
-  res = if (true) {
-    "a";
-  } else {
-    "b";
+  for c in []String{1, 2, 3} {
+    Std.out(c);
   }
-  Std.out("Fibonacci of 42 is: #{res}");
+
+  for c in "hello".split("") {
+    Std.out(c);
+  }
 }
