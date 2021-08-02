@@ -2,10 +2,15 @@ is Main;
 
 use "daze::Std";
 
-fn hello() :: Int32 {
-  ret 5;
+fn fib(num :: Int32) :: Int32 {
+  if (num <= 1) {
+    ret 1;
+  }
+
+  ret fib(num - 1) + fib(num - 2);
 }
 
+
 fn main() :: Void {
-  Std.out(5 + 1);
+  Std.out("Fibonacci of 42 is: #{fib(42)}");
 }

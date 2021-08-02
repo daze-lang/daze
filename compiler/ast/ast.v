@@ -31,6 +31,7 @@ pub type Expr = FunctionCallExpr
     | VariableExpr
     | VariableDecl
     | ForLoopExpr
+    | GroupedExpr
     | ReturnExpr
     | NoOp
     | IfExpression
@@ -81,7 +82,7 @@ pub mut:
 
 pub struct ReturnExpr {
 pub:
-    value Expr
+    value []Expr
 }
 
 pub struct IfExpression {
@@ -108,6 +109,11 @@ pub:
 pub struct RawBinaryOpExpr {
 pub mut:
     value string
+}
+
+pub struct GroupedExpr {
+pub:
+    body []Expr
 }
 
 pub struct StringLiteralExpr {

@@ -34,7 +34,6 @@ pub fn (mut gen CodeGenerator) gen(node ast.Node) string {
 }
 
 fn (mut gen CodeGenerator) statement(node ast.Statement) string {
-    // println("Generating statement")
     mut code := ""
     if mut node is ast.FunctionDeclarationStatement {
         code = gen.fn_decl(node)
@@ -54,7 +53,6 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
 }
 
 fn (mut gen CodeGenerator) expr(node ast.Expr) string {
-    // println("Generating expr")
     mut code := ""
     if mut node is ast.StringLiteralExpr {
         code = gen.string_literal_expr(node)
@@ -88,6 +86,8 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
         code = gen.indexing(node)
     } else if mut node is ast.RawCrystalCodeExpr {
         code = node.value
+    } else if mut node is ast.GroupedExpr {
+        code = gen.grouped_expr(node)
     }
 
     return code
@@ -123,15 +123,10 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     for arg in node.args {
         args << gen.expr(arg)
     }
-    mut processed_args := ""
-    for arg in args {
-        processed_args += arg
-    }
 
     accessor := if node.name.contains(".") { "" } else {"self."}
     fn_name := "$accessor$node.name"
-    mut code := "${fn_name.replace("Self", "self")}(${processed_args.trim_right("\n")})"
-
+    mut code := "${fn_name.replace("Self", "self")}(${args.join("")})"
     return code
 }
 
@@ -146,11 +141,15 @@ fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) strin
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
-    return node.value.replace("Self.", "@") + ""
+    return node.value.replace("Self.", "@")
 }
 
 fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
-    return "return ${gen.gen(node.value)}\n"
+    mut body := ""
+    for expr in node.value {
+        body += gen.gen(expr)
+    }
+    return "return ${body}\n"
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
@@ -238,4 +237,14 @@ fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
 
 fn (mut gen CodeGenerator) indexing(node ast.IndexingExpr) string {
     return "$node.var[${gen.gen(node.body)}]"
+}
+
+fn (mut gen CodeGenerator) grouped_expr(node ast.GroupedExpr) string {
+    mut items := []string{}
+
+    for item in node.body {
+        items << gen.gen(item)
+    }
+
+    return "(${items.join(" ")})"
 }

@@ -4,6 +4,7 @@ import strconv
 
 import lexer{Token, is_keyword}
 import ast{AST, Statement, Expr, Node}
+import utils
 
 pub struct Parser {
     tokens []Token [required]
@@ -72,7 +73,10 @@ fn (mut parser Parser) expr() Expr {
 
     match parser.lookahead().kind {
         .open_paren {
-            panic("grouped")
+            node = parser.grouped_expr()
+        }
+        .close_paren {
+            utils.error("Unexpected `)` found.")
         }
         .plus,
         .minus,
@@ -303,8 +307,10 @@ fn (mut parser Parser) implement_block() {
     for mut func in fns {
         if func.name == "new" {
             func.name = "initialize"
+            mut value := []ast.Expr{}
+            value << ast.VariableExpr{"self"}
             func.body << ast.ReturnExpr{
-                value: ast.VariableExpr{"self"},
+                value: value,
             }
         }
         func.is_struct = true
@@ -313,7 +319,9 @@ fn (mut parser Parser) implement_block() {
 
     for field in parser.structs[name].fields {
         mut body := []ast.Expr{}
-        body << ast.ReturnExpr{ast.VariableExpr{"@$field.name"}}
+        mut ret := []ast.Expr{}
+        ret << ast.VariableExpr{"@$field.name"}
+        body << ast.ReturnExpr{ret}
         func := ast.FunctionDeclarationStatement{
             name: field.name,
             args: []ast.FunctionArgument{},
@@ -481,9 +489,14 @@ fn (mut parser Parser) use() Statement {
 
 fn (mut parser Parser) ret() Expr {
     parser.expect(.kw_return)
-    value := parser.expr()
-    if !(value is ast.FunctionCallExpr) {
-        parser.expect(.semicolon)
+    mut value := []Expr{}
+
+    for parser.lookahead().kind != .semicolon {
+        next := parser.expr()
+        value << next
+        if next is ast.NoOp {
+            break
+        }
     }
 
     return ast.ReturnExpr{
@@ -595,4 +608,16 @@ fn (mut parser Parser) indexing() ast.IndexingExpr {
         var: var_name,
         body: body
     }
+}
+
+fn (mut parser Parser) grouped_expr() ast.GroupedExpr {
+    parser.expect(.open_paren)
+    mut body := []ast.Expr{}
+
+    for parser.lookahead().kind != .close_paren {
+        body << parser.expr()
+    }
+
+    parser.expect(.close_paren)
+    return ast.GroupedExpr{body}
 }
