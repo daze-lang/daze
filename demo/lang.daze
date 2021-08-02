@@ -1,8 +1,9 @@
 is Main;
 
 use "daze::Std";
+use "daze::Math";
 
 fn main() :: Void {
-  Std.out(1.23456789);
+  Std.out(Math.pi() / 2);
 }
 
