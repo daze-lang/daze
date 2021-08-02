@@ -43,6 +43,10 @@ fn (mut checker Checker) statement(node ast.Statement) {
 fn (mut checker Checker) expr(node ast.Expr) {
     if node is ast.FunctionCallExpr {
         checker.fn_call(node)
+    } else if node is ast.VariableDecl {
+        for body in node.value {
+            checker.check(body)
+        }
     }
 }
 
@@ -58,5 +62,11 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     if !checker.fns.keys().contains(fn_name) {
         utils.error("Calling undefined function: `$node.name`")
         return
+    }
+    args_len := checker.fns[fn_name].args.len
+    println(fn_name)
+    println("${args_len}, ${node.args.len}")
+    if args_len != node.args.len {
+        utils.error("Argument count mismatch: `$node.name`")
     }
 }

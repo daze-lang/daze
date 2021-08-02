@@ -2,7 +2,7 @@ is Main;
 
 use "daze::Std";
 
-fn fib(num :: Int32) :: Int32 {
+fn fib(num :: Int32, a :: Int32) :: Int32 {
   if (num <= 1) {
     ret 1;
   }
@@ -12,5 +12,10 @@ fn fib(num :: Int32) :: Int32 {
 
 
 fn main() :: Void {
-  Std.out("Fibonacci of 42 is: #{fib(42)}");
+  res = if (true) {
+    "a";
+  } else {
+    "b";
+  }
+  Std.out("Fibonacci of 42 is: #{res}");
 }

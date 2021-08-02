@@ -157,6 +157,7 @@ fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
     for expr in node.value {
         body += "${gen.gen(expr)} "
     }
+
     return "${node.name.replace("Self.", "@")} = ${body}\n"
 }
 

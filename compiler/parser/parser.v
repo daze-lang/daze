@@ -514,13 +514,16 @@ fn (mut parser Parser) variable_decl() Expr {
     parser.expect(.equal)
 
     mut body := []Expr{}
+    for parser.lookahead_by(0).kind != .semicolon {
+        next := parser.expr()
+        body << next
+        if next is ast.NoOp {
+            break
+        }
+    }
 
-    for parser.lookahead().kind != .semicolon {
-        body << parser.expr()
-
-        // if !(value is ast.FunctionCallExpr) {
-        //     parser.expect(.semicolon)
-        // }
+    if body[0] is ast.IfExpression {
+        panic("if")
     }
 
     return ast.VariableDecl {
