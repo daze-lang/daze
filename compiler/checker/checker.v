@@ -7,6 +7,7 @@ pub struct Checker {
     ast ast.AST
 mut:
     fns map[string]ast.FunctionDeclarationStatement
+    structs map[string]ast.StructDeclarationStatement
     vars map[string]ast.VariableDecl
     mods []string
 }
@@ -32,6 +33,9 @@ fn (mut checker Checker) statement(node ast.Statement) {
         for body in node.body {
             checker.check(body)
         }
+    } else if node is ast.StructDeclarationStatement {
+        println("got struct decl")
+        checker.structs[node.name] = node
     } else if node is ast.ModuleDeclarationStatement {
         if node.name != node.name.capitalize() {
             utils.error("Module names must be capitalized, found: `$node.name`")
@@ -54,24 +58,60 @@ fn (mut checker Checker) expr(node ast.Expr) {
 }
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
-    mut mod := ""
-    fn_name := if node.name.contains(".") {
-        mod = node.name.split(".")[0]
-        if !checker.mods.contains(mod) && !checker.vars.keys().contains(mod) {
-            utils.error("Trying to access undefined module / variable: `$mod`")
+    call_parts := node.name.split(".")
+    mut check_against := ""
+
+    // trying to access a module
+    if checker.mods.contains(call_parts[0]) {
+        // trying to access struct inside module
+        if !checker.structs.keys().contains(call_parts[1]) && !checker.fns.keys().contains(call_parts[1]) {
+            utils.error("Trying to access struct/function `${call_parts[1]}` in module `${call_parts[0]}`, but its undefined.")
         }
-        node.name.split(".")[1]
-    } else { node.name }
+        check_against = call_parts[1]
+    } else {
+        // trying to call function defined in the current module
+        if call_parts.len == 1 {
+            if !checker.fns.keys().contains(call_parts[0]) {
+                utils.error("Trying to call `${call_parts[0]}` but its undefined.")
+            }
+            check_against = call_parts[0]
+        }
+       // trying to access a variable
+       println(checker.structs.keys())
+       if !checker.vars.keys().contains(call_parts[0]) && !checker.structs.keys().contains(call_parts[0]) {
+            if call_parts.len > 1 {
+                utils.error("Trying to access variable `${call_parts[0]}`, but its undefined.")
+            }
+            check_against = call_parts[0]
+       } else {
+            // trying to call on variable
+            if !checker.fns.keys().contains(call_parts[1]) {
+                utils.error("Trying to call `${call_parts[1]}`, on `${call_parts[0]}` but its undefined.")
+            }
+            check_against = call_parts[1]
+       }
+    }
 
-    // if fn_name != "new" && !checker.mods.contains(mod) {
-    //     println(checker.fns.keys())
-    //     if !checker.fns.keys().contains(fn_name) && !checker.vars.keys().contains(fn_name) {
-    //         utils.error("Calling undefined function: `$node.name`")
-    //     }
-    // }
+    calling_with_args := node.args
+    fn_def_args := checker.fns[node.name].args
 
-    // args_len := checker.fns[fn_name].args.len
-    // if args_len != node.args.len {
-    //     utils.error("Argument count mismatch: `$node.name`")
-    // }
+    // Checking argument count
+    if calling_with_args.len < fn_def_args.len {
+        utils.error("Too few arguments to call `$check_against`, got ${calling_with_args.len}, expected ${fn_def_args.len}.")
+    } else if calling_with_args.len > fn_def_args.len {
+        utils.error("Too many arguments to call `$check_against`, got ${calling_with_args.len}, expected ${fn_def_args.len}.")
+    }
+
+    // checking argument types
+    // panic(calling_with_args)
+    for i, def_type in fn_def_args {
+        // panic(calling_with_args[i].type_name())
+        arg := calling_with_args[i]
+        type_str := utils.get_raw_type(arg)
+        if type_str != def_type.type_name {
+            if def_type.type_name != "Any" {
+                utils.error("Argument `$def_type.name`, expects type ${def_type.type_name}, got ${type_str}.")
+            }
+        }
+    }
 }

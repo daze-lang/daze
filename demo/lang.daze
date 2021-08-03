@@ -1,12 +1,7 @@
 is Main;
 
-use "daze::Collections";
 use "daze::Std";
-use "daze::List";
-use "daze::Math";
 
 fn main() :: Void {
-  st = make Collections.Stack<Int>();
-  st.push(Math.pi());
-  Std.out(st);
+  out("hello world.");
 }

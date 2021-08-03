@@ -13,9 +13,7 @@ pub struct Parser {
         index int = -1
         current Token
         previous Token
-        structs map[string]ast.StructDeclarationStatement = map[string]ast.StructDeclarationStatement{}
         statements []ast.Statement
-        write_structs bool
 }
 
 pub fn (mut parser Parser) parse() AST {
@@ -27,16 +25,7 @@ pub fn (mut parser Parser) parse() AST {
 fn (mut parser Parser) statements() []Statement {
     mut statements := []Statement{}
     for parser.lookahead().kind != .eof {
-        next := parser.statement()
-        if parser.write_structs {
-            for _, v in parser.structs {
-                println("Adding structs")
-                statements << v
-            }
-            parser.structs = map{}
-            parser.write_structs = false
-        }
-        statements << next
+        statements << parser.statement()
     }
     return statements
 }
@@ -49,7 +38,8 @@ fn (mut parser Parser) statement() Statement {
             panic("For not allowed at top level")
         }
         .kw_implement {
-            parser.implement_block()
+            // TODO
+            // node = parser.implement_block()
         }
         .raw_crystal_code {
             node = ast.RawCrystalCodeStatement{parser.advance().value}
@@ -63,14 +53,10 @@ fn (mut parser Parser) statement() Statement {
         .kw_is {
             if parser.lookahead_by(2).kind == .identifier {
                 node = parser.module_decl()
-                parser.write_structs = true
-                println("found module")
             }
         }
         .kw_struct {
-            construct := parser.construct()
-            println("found struct")
-            parser.structs[construct.name] = construct
+            node = parser.construct()
         }
         else {}
     }
@@ -310,45 +296,45 @@ fn (mut parser Parser) check_for_binary_ops(lookahead_by_amount int) bool {
 }
 
 fn (mut parser Parser) implement_block() {
-    parser.expect(.kw_implement)
-    name := parser.expect(.identifier).value
-    parser.expect(.open_curly)
+    // parser.expect(.kw_implement)
+    // name := parser.expect(.identifier).value
+    // parser.expect(.open_curly)
 
-    mut fns := []ast.FunctionDeclarationStatement{}
-    for parser.lookahead().kind != .close_curly {
-        fns << parser.fn_decl()
-    }
+    // mut fns := []ast.FunctionDeclarationStatement{}
+    // for parser.lookahead().kind != .close_curly {
+    //     fns << parser.fn_decl()
+    // }
 
-    for mut func in fns {
-        if func.name == "new" {
-            func.name = "initialize"
-            mut value := []ast.Expr{}
-            value << ast.VariableExpr{"self"}
-            func.body << ast.ReturnExpr{
-                value: value,
-            }
-        }
-        func.is_struct = true
-    }
+    // for mut func in fns {
+    //     if func.name == "new" {
+    //         func.name = "initialize"
+    //         mut value := []ast.Expr{}
+    //         value << ast.VariableExpr{"self"}
+    //         func.body << ast.ReturnExpr{
+    //             value: value,
+    //         }
+    //     }
+    //     func.is_struct = true
+    // }
 
 
-    for field in parser.structs[name].fields {
-        mut body := []ast.Expr{}
-        mut ret := []ast.Expr{}
-        ret << ast.VariableExpr{"@$field.name"}
-        body << ast.ReturnExpr{ret}
-        func := ast.FunctionDeclarationStatement{
-            name: field.name,
-            args: []ast.FunctionArgument{},
-            body: body,
-            return_type: field.type_name,
-            is_struct: true
-        }
-        fns << func
-    }
+    // for field in parser.structs[name].fields {
+    //     mut body := []ast.Expr{}
+    //     mut ret := []ast.Expr{}
+    //     ret << ast.VariableExpr{"@$field.name"}
+    //     body << ast.ReturnExpr{ret}
+    //     func := ast.FunctionDeclarationStatement{
+    //         name: field.name,
+    //         args: []ast.FunctionArgument{},
+    //         body: body,
+    //         return_type: field.type_name,
+    //         is_struct: true
+    //     }
+    //     fns << func
+    // }
 
-    parser.expect(.close_curly)
-    parser.structs[name].fns = fns
+    // parser.expect(.close_curly)
+    // parser.structs[name].fns = fns
 }
 
 fn (mut parser Parser) array_push() Expr {

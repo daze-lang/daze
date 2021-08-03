@@ -57,9 +57,7 @@ fn to_crystal(source string) ?string {
         -1,
         Token{},
         Token{},
-        map[string]ast.StructDeclarationStatement{},
         []ast.Statement,
-        false
     }
     ast := parser.parse()
     // panic(ast)
@@ -67,7 +65,9 @@ fn to_crystal(source string) ?string {
     mut checker := checker.Checker{
         ast,
         map[string]ast.FunctionDeclarationStatement,
-        map[string]ast.VariableDecl{}, []string{}
+        map[string]ast.StructDeclarationStatement{},
+        map[string]ast.VariableDecl{},
+        []string{}
     }
     checker.run()
     mut codegen := codegen.CodeGenerator{ast, 0, []string{}, 0}

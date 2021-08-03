@@ -42,7 +42,7 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.FunctionArgument {
         code = gen.fn_arg(node)
     } else if mut node is ast.ModuleDeclarationStatement {
-        code = "end\nmodule $node.name\n"
+        code = "end\nmodule $node.name\nextend self\n"
         gen.mods << node.name
         println("got module")
         gen.mod_count++
@@ -51,6 +51,8 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
         println("got struct decl")
     } else if mut node is ast.RawCrystalCodeStatement {
         code = node.value
+    } else if mut node is ast.ModuleUseStatement {
+        code = "include ${node.path.replace("daze::", "")}\n"
     }
 
     return code
@@ -103,7 +105,7 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
         args << gen.fn_arg(arg)
     }
     suffix := if node.gen_type != "" { " forall $node.gen_type" } else { "" }
-    prefix := if node.name == "initialize" { "" } else { if node.is_struct { "" } else { "self." } }
+    prefix := if node.name == "initialize" { "" } else { if node.is_struct { "" } else { "" } }
     mut code := "def $prefix${node.name}(${args.join(", ")})$suffix\n"
     for expr in node.body {
         code += gen.gen(expr)
@@ -128,7 +130,7 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
         args << gen.expr(arg)
     }
 
-    accessor := if node.name.contains(".") { "" } else {"self."}
+    accessor := if node.name.contains(".") { "" } else {""}
     type_data := if node.gen_type != "" { "($node.gen_type)" } else { "" }
     mut fn_name := "$accessor$node.name"
     if fn_name.contains(".new") {
