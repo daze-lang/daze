@@ -466,6 +466,12 @@ fn (mut parser Parser) module_decl() Statement {
 fn (mut parser Parser) construct() ast.StructDeclarationStatement {
     parser.expect(.kw_struct)
     struct_name := parser.expect(.identifier).value
+    mut gen_type := ""
+    if parser.lookahead().kind == .less_than {
+        parser.expect(.less_than)
+        gen_type = parser.expect(.identifier).value
+        parser.expect(.greater_than)
+    }
     parser.expect(.open_curly)
     fields := parser.fn_args(.close_curly)
     parser.expect(.close_curly)
@@ -474,6 +480,7 @@ fn (mut parser Parser) construct() ast.StructDeclarationStatement {
         name: struct_name,
         fields: fields,
         fns: []ast.FunctionDeclarationStatement{},
+        gen_type: gen_type
     }
 }
 

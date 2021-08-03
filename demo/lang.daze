@@ -2,17 +2,11 @@ is Main;
 
 use "daze::Std";
 
-fn test(a :: String) :: Void {
-  Std.out("Test 1");
-}
-
-fn test(a :: String, b :: String) :: Void {
-  Std.out("Test 2");
+struct Person<T> {
+  name :: T
 }
 
 fn main() :: Void {
-  test("1");
-  test("1", "2");
-
+  me :: Person = make Person("Mark");
 }
 

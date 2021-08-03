@@ -76,6 +76,7 @@ pub struct StructDeclarationStatement {
 pub:
     name string
     fields []FunctionArgument
+    gen_type string
 pub mut:
     fns []FunctionDeclarationStatement
 }
