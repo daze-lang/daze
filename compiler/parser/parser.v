@@ -14,22 +14,29 @@ pub struct Parser {
         current Token
         previous Token
         structs map[string]ast.StructDeclarationStatement = map[string]ast.StructDeclarationStatement{}
+        statements []ast.Statement
+        write_structs bool
 }
 
 pub fn (mut parser Parser) parse() AST {
-    mut statements := parser.statements()
-    for _, v in parser.structs {
-        statements << v
-    }
-
-    ast := AST{"TopLevel", statements}
+    parser.statements << parser.statements()
+    ast := AST{"TopLevel", parser.statements}
     return ast
 }
 
 fn (mut parser Parser) statements() []Statement {
     mut statements := []Statement{}
     for parser.lookahead().kind != .eof {
-        statements << parser.statement()
+        next := parser.statement()
+        if parser.write_structs {
+            for _, v in parser.structs {
+                println("Adding structs")
+                statements << v
+            }
+            parser.structs = map{}
+            parser.write_structs = false
+        }
+        statements << next
     }
     return statements
 }
@@ -50,17 +57,20 @@ fn (mut parser Parser) statement() Statement {
         .kw_use {
             node = parser.use()
         }
-        .kw_struct {
-            construct := parser.construct()
-            parser.structs[construct.name] = construct
-        }
         .kw_fn {
             node = parser.fn_decl()
         }
         .kw_is {
             if parser.lookahead_by(2).kind == .identifier {
                 node = parser.module_decl()
+                parser.write_structs = true
+                println("found module")
             }
+        }
+        .kw_struct {
+            construct := parser.construct()
+            println("found struct")
+            parser.structs[construct.name] = construct
         }
         else {}
     }
@@ -135,11 +145,7 @@ fn (mut parser Parser) expr() Expr {
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
-                        node = parser.fn_call(false)
-                    // if parser.check_for_binary_ops(4) {
-                    //     return parser.parse_binary_ops()
-                    // } else {
-                    // }
+                    node = parser.fn_call(false)
                 }
                 .arrow_left {
                     node = parser.array_push()
@@ -167,11 +173,6 @@ fn (mut parser Parser) expr() Expr {
             node = ast.NoOp{}
         }
     }
-
-    // if parser.check_for_binary_ops(1) {
-    //     return parser.parse_binary_ops()
-    // }
-
 
     return node
 }

@@ -1,13 +1,12 @@
 is Main;
 
-use "daze::Stack";
+use "daze::Collections";
 use "daze::Std";
+use "daze::List";
+use "daze::Math";
 
 fn main() :: Void {
-  test_stack = make Stack<Int>();
-  test_stack.push(1);
-  test_stack.push(2);
-  test_stack.push(3);
-  Std.out(test_stack.pop());
+  st = make Collections.Stack<Int>();
+  st.push(Math.pi());
+  Std.out(st);
 }
-

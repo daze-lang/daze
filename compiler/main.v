@@ -4,7 +4,7 @@ import os
 import pcre
 
 import lexer{Token}
-import ast{StructDeclarationStatement}
+import ast
 import parser
 import checker
 import codegen
@@ -44,7 +44,6 @@ fn load_imports(code string) ?[]string {
         mut module_file := os.read_file("${module_path}.daze") or { panic("File not found") }
         compiled_modules << module_file
         compiled_modules << load_imports(module_file)?
-        // compiled_modules << to_crystal(module_file)?
     }
 
     return compiled_modules
@@ -53,11 +52,25 @@ fn load_imports(code string) ?[]string {
 fn to_crystal(source string) ?string {
     mut lexer := lexer.Lexer{input: source.split('')}
     tokens := lexer.lex()?
-    mut parser := parser.Parser{tokens, -1, Token{}, Token{}, map[string]StructDeclarationStatement{}}
+    mut parser := parser.Parser{
+        tokens,
+        -1,
+        Token{},
+        Token{},
+        map[string]ast.StructDeclarationStatement{},
+        []ast.Statement,
+        false
+    }
     ast := parser.parse()
-    mut checker := checker.Checker{ast, map[string]ast.FunctionDeclarationStatement, []string{}}
+    // panic(ast)
+
+    mut checker := checker.Checker{
+        ast,
+        map[string]ast.FunctionDeclarationStatement,
+        map[string]ast.VariableDecl{}, []string{}
+    }
     checker.run()
-    mut codegen := codegen.CodeGenerator{ast, 0, 0}
+    mut codegen := codegen.CodeGenerator{ast, 0, []string{}, 0}
     mut code := codegen.run()
     return code
 }
@@ -85,9 +98,10 @@ fn main() {
             stripped_comments += "${line}\n"
         }
     }
-
+    // panic(stripped_comments)
     code := to_crystal(stripped_comments)?
 
     mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
     compile(builtin_file + "\n" + code)
+    // compile(code)
 }

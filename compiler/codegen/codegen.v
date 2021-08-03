@@ -8,6 +8,7 @@ pub:
     ast ast.AST
 pub mut:
     mod_count int
+    mods []string
     c int
 }
 
@@ -18,9 +19,8 @@ pub fn (mut gen CodeGenerator) run() string {
         code += gen.gen(node)
     }
 
-    // code += "end\n".repeat(gen.mod_count)
-    code += "\nend\nMain.main()"
-    return code
+    code += "\nend\nMain.main()".trim_space()
+    return code.trim_left("end")
 }
 
 pub fn (mut gen CodeGenerator) gen(node ast.Node) string {
@@ -41,12 +41,14 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
         code = gen.fn_decl(node)
     } else if mut node is ast.FunctionArgument {
         code = gen.fn_arg(node)
+    } else if mut node is ast.ModuleDeclarationStatement {
+        code = "end\nmodule $node.name\n"
+        gen.mods << node.name
+        println("got module")
+        gen.mod_count++
     } else if mut node is ast.StructDeclarationStatement {
         code = gen.struct_decl(node)
-    } else if mut node is ast.ModuleDeclarationStatement {
-        prefix := if gen.mod_count > 0 {"\nend\n"} else {""}
-        code = "${prefix}module $node.name\n"
-        gen.mod_count++
+        println("got struct decl")
     } else if mut node is ast.RawCrystalCodeStatement {
         code = node.value
     }
@@ -100,7 +102,7 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
     for arg in node.args {
         args << gen.fn_arg(arg)
     }
-    suffix := if node.gen_type != "" { "forall $node.gen_type" } else { "" }
+    suffix := if node.gen_type != "" { " forall $node.gen_type" } else { "" }
     prefix := if node.name == "initialize" { "" } else { if node.is_struct { "" } else { "self." } }
     mut code := "def $prefix${node.name}(${args.join(", ")})$suffix\n"
     for expr in node.body {
@@ -138,6 +140,9 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
         fn_name = node.name.replace("@", "")
     }
 
+    if gen.mods.contains(fn_name.split(".")[0]) && fn_name.split(".").len > 2 {
+        fn_name = fn_name.replace_once(".", "::")
+    }
     mut code := "\n${fn_name.replace("Self", "self")}(${args.join("")})"
     return code
 }
@@ -163,7 +168,7 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
     for expr in node.value {
         body += gen.gen(expr)
     }
-    return "return ${body}\n"
+    return "\nreturn ${body}\n"
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
