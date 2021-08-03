@@ -19,7 +19,7 @@ class DazeString
   end
 
   def ===(other : DazeString)
-    return @value === other.value
+    @value === other.value
   end
 
   def value
@@ -45,6 +45,30 @@ class DazeInt
 
   def value
     @value
+  end
+
+  def ===(other : DazeInt)
+    @value === other.value
+  end
+
+  def !=(other : DazeInt)
+    @value != other.value
+  end
+
+  def >=(other : DazeInt)
+    @value >= other.value
+  end
+
+  def <=(other : DazeInt)
+    @value <= other.value
+  end
+
+  def >(other : DazeInt)
+    @value > other.value
+  end
+
+  def <(other : DazeInt)
+    @value < other.value
   end
 end
 
