@@ -1,12 +1,13 @@
 is Main;
 
+use "daze::Stack";
 use "daze::Std";
 
-struct Person<T> {
-  name :: T
-}
-
 fn main() :: Void {
-  me :: Person = make Person("Mark");
+  test_stack = make Stack<Int>();
+  test_stack.push(1);
+  test_stack.push(2);
+  test_stack.push(3);
+  Std.out(test_stack.pop());
 }
 

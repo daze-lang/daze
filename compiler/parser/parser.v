@@ -214,6 +214,7 @@ fn (mut parser Parser) parse_binary_ops() ast.RawBinaryOpExpr {
 fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     parser.expect(.kw_fn)
     fn_name := parser.expect(.identifier).value
+    gen_type := parser.generic()
     parser.expect(.open_paren)
     mut args := []ast.FunctionArgument{}
     if parser.lookahead().kind == .identifier {
@@ -222,7 +223,18 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     parser.expect(.close_paren)
     parser.expect(.double_colon)
 
-    ret_type := parser.expect(.identifier).value
+    mut is_arr := false
+    if parser.lookahead().kind == .open_square {
+        is_arr = true
+        parser.expect(.open_square)
+        parser.expect(.close_square)
+    }
+
+    mut ret_type := parser.expect(.identifier).value
+    if is_arr {
+        ret_type = "Array($ret_type)"
+    }
+    println(ret_type)
     parser.expect(.open_curly)
 
     mut body := []Expr{}
@@ -236,7 +248,8 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
         args: args,
         body: body,
         return_type: ret_type,
-        is_struct: false
+        is_struct: false,
+        gen_type: gen_type
     }
 }
 
@@ -398,6 +411,7 @@ fn (mut parser Parser) for_in_loop() Expr {
 
 fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
     mut fn_name := parser.expect(.identifier).value
+    gen_type := parser.generic()
     parser.expect(.open_paren)
     mut args := []Expr{}
 
@@ -409,7 +423,8 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
         parser.advance()
         return ast.FunctionCallExpr{
             name: fn_name,
-            args: []ast.Expr{}
+            args: []ast.Expr{},
+            gen_type: gen_type
         }
     }
 
@@ -463,15 +478,31 @@ fn (mut parser Parser) module_decl() Statement {
     return node
 }
 
-fn (mut parser Parser) construct() ast.StructDeclarationStatement {
-    parser.expect(.kw_struct)
-    struct_name := parser.expect(.identifier).value
+fn (mut parser Parser) generic() string {
     mut gen_type := ""
     if parser.lookahead().kind == .less_than {
         parser.expect(.less_than)
-        gen_type = parser.expect(.identifier).value
+        for parser.lookahead().kind != .greater_than {
+            if parser.lookahead().kind == .identifier {
+                gen_type += parser.expect(.identifier).value
+            } else if parser.lookahead().kind == .comma {
+                gen_type += parser.expect(.comma).value
+            } else {
+                break
+            }
+        }
         parser.expect(.greater_than)
     }
+
+    return gen_type
+}
+
+fn (mut parser Parser) construct() ast.StructDeclarationStatement {
+    parser.expect(.kw_struct)
+    struct_name := parser.expect(.identifier).value
+
+    gen_type := parser.generic()
+
     parser.expect(.open_curly)
     fields := parser.fn_args(.close_curly)
     parser.expect(.close_curly)

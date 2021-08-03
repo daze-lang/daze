@@ -45,6 +45,7 @@ pub mut:
     body []Expr
     return_type string
     is_struct bool
+    gen_type string
 }
 
 pub struct ModuleDeclarationStatement {
@@ -107,6 +108,7 @@ pub struct FunctionCallExpr {
 pub:
     name string
     args []Expr
+    gen_type string
 }
 
 pub struct RawBinaryOpExpr {

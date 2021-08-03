@@ -64,7 +64,7 @@ fn to_crystal(source string) ?string {
 
 fn compile(code string) {
     os.write_file("/tmp/lang.cr", code) or { panic("Failed writing file") }
-    os.execute("crystal tool format /tmp/lang.cr")
+    // os.execute("crystal tool format /tmp/lang.cr")
     println(os.execute("crystal build /tmp/lang.cr").output)
     println("==========================================")
 }

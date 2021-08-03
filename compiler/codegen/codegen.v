@@ -77,11 +77,11 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
     } else if mut node is ast.ArrayDefinition {
         code = gen.array(node)
     } else if mut node is ast.ArrayPushExpr {
-        code = "$node.target << ${gen.gen(node.value)}\n"
+        code = "${node.target.replace("Self.", "@")} << ${gen.gen(node.value)}\n"
     } else if mut node is ast.IncrementExpr {
-        code = "$node.target += 1\n"
+        code = "${node.target.replace("Self.", "@")} += DazeInt.new(1)\n"
     } else if mut node is ast.DecrementExpr {
-        code = "$node.target -= 1\n"
+        code = "${node.target.replace("Self.", "@")} -= DazeInt.new(1)\n"
     } else if mut node is ast.ForInLoopExpr {
         code = gen.for_in_loop(node)
     } else if mut node is ast.IndexingExpr {
@@ -100,9 +100,9 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
     for arg in node.args {
         args << gen.fn_arg(arg)
     }
-
+    suffix := if node.gen_type != "" { "forall $node.gen_type" } else { "" }
     prefix := if node.name == "initialize" { "" } else { if node.is_struct { "" } else { "self." } }
-    mut code := "def $prefix${node.name}(${args.join(", ")})\n"
+    mut code := "def $prefix${node.name}(${args.join(", ")})$suffix\n"
     for expr in node.body {
         code += gen.gen(expr)
     }
@@ -117,18 +117,22 @@ fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
         return "$node.name"
     }
 
-    return "$node.name : $typ?"
+    return "$node.name : $typ"
 }
 
 fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
-
     mut args := []string{}
     for arg in node.args {
         args << gen.expr(arg)
     }
 
     accessor := if node.name.contains(".") { "" } else {"self."}
+    type_data := if node.gen_type != "" { "($node.gen_type)" } else { "" }
     mut fn_name := "$accessor$node.name"
+    if fn_name.contains(".new") {
+        fn_name_without_new := fn_name.replace(".new", "")
+        fn_name = "${fn_name_without_new}${type_data}.new"
+    }
 
     if node.name.starts_with("@") {
         fn_name = node.name.replace("@", "")
@@ -172,7 +176,8 @@ fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
 }
 
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
-    mut code := "class ${node.name}\n"
+    generic_type := if node.gen_type != "" { "($node.gen_type)" } else { "" }
+    mut code := "class ${node.name}$generic_type\n"
     for arg in node.fields {
         code += "@${gen.fn_arg(arg)}\n"
     }
@@ -230,7 +235,7 @@ fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
 fn (mut gen CodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
     gen.c++
     vardecl := "for_in_loop${gen.c} = ${gen.gen(node.target).split("of")[0]}"
-    mut code := "$vardecl\nfor_in_loop${gen.c}.each_index do |index|\n$node.container = for_in_loop${gen.c}[index]\n"
+    mut code := "\n$vardecl\nfor_in_loop${gen.c}.each_index do |index|\n$node.container = for_in_loop${gen.c}[index]\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
     }
@@ -251,7 +256,7 @@ fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
 }
 
 fn (mut gen CodeGenerator) indexing(node ast.IndexingExpr) string {
-    return "$node.var[${gen.gen(node.body)}]"
+    return "${node.var.replace("Self.", "@")}[${gen.gen(node.body)}]"
 }
 
 fn (mut gen CodeGenerator) grouped_expr(node ast.GroupedExpr) string {

@@ -47,28 +47,48 @@ class DazeInt
     @value
   end
 
+  def int
+    @value.to_i
+  end
+
+  def +(other : DazeInt)
+    @value += other.value
+    self
+  end
+
+  def -(other : DazeInt)
+    @value -= other.value
+    self
+  end
+
   def ===(other : DazeInt)
     @value === other.value
+    self
   end
 
   def !=(other : DazeInt)
     @value != other.value
+    self
   end
 
   def >=(other : DazeInt)
     @value >= other.value
+    self
   end
 
   def <=(other : DazeInt)
     @value <= other.value
+    self
   end
 
   def >(other : DazeInt)
     @value > other.value
+    self
   end
 
   def <(other : DazeInt)
     @value < other.value
+    self
   end
 end
 

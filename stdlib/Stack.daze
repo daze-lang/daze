@@ -1,0 +1,29 @@
+is Stack;
+
+struct Stack<T> {
+  contents :: []T,
+  size :: Int
+}
+
+implement Stack {
+  fn new<T>() :: Self {
+    Self.contents = []T{};
+    Self.size = 0;
+  }
+
+  fn push(value :: T) :: Self {
+    Self.contents <- value;
+    Self.size++;
+  }
+
+  fn pop() :: Int {
+    # This doesnt work
+    # ret Self.contents[Self.size.int() - 1];
+    index := Self.size.int() - 1;
+    ret Self.contents[index];
+  }
+
+  fn size() :: Int {
+    ret Self.size;
+  }
+}
