@@ -184,10 +184,7 @@ fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
 
 fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
     generic_type := if node.gen_type != "" { "($node.gen_type)" } else { "" }
-    mut code := "class ${node.name}$generic_type\n"
-    for arg in node.fields {
-        code += "@${gen.fn_arg(arg)}\n"
-    }
+    mut code := "struct ${node.name}$generic_type\n"
 
     for func in node.fns {
         code += "${gen.fn_decl(func)}\n"

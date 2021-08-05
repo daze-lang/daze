@@ -2,6 +2,10 @@ is Main;
 
 use "daze::Std";
 
+struct Person {
+  name :: String
+}
+
 fn main() :: Void {
-  out("hello world.");
+  me = make Person("Mark");
 }

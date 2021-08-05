@@ -34,7 +34,6 @@ fn (mut checker Checker) statement(node ast.Statement) {
             checker.check(body)
         }
     } else if node is ast.StructDeclarationStatement {
-        println("got struct decl")
         checker.structs[node.name] = node
     } else if node is ast.ModuleDeclarationStatement {
         if node.name != node.name.capitalize() {
@@ -85,7 +84,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
             check_against = call_parts[0]
        } else {
             // trying to call on variable
-            if !checker.fns.keys().contains(call_parts[1]) {
+            if !checker.fns.keys().contains(call_parts[1]) && !checker.structs.keys().contains(call_parts[0]) {
                 utils.error("Trying to call `${call_parts[1]}`, on `${call_parts[0]}` but its undefined.")
             }
             check_against = call_parts[1]
@@ -99,13 +98,13 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     if calling_with_args.len < fn_def_args.len {
         utils.error("Too few arguments to call `$check_against`, got ${calling_with_args.len}, expected ${fn_def_args.len}.")
     } else if calling_with_args.len > fn_def_args.len {
+        println(fn_def_args)
         utils.error("Too many arguments to call `$check_against`, got ${calling_with_args.len}, expected ${fn_def_args.len}.")
     }
 
     // checking argument types
     // panic(calling_with_args)
     for i, def_type in fn_def_args {
-        // panic(calling_with_args[i].type_name())
         arg := calling_with_args[i]
         type_str := utils.get_raw_type(arg)
         if type_str != def_type.type_name {
