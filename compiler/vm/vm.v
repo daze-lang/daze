@@ -8,6 +8,7 @@ enum Kind {
     sub
     div
     mul
+    dup
 }
 
 struct Instruction {
@@ -78,6 +79,9 @@ fn (mut vm VM) exec(inst Instruction) {
             } else if left is string && mut right is string {
                 vm.push(0)
             }
+        }
+        .dup {
+            vm.stack[vm.stack.len] = vm.stack[vm.stack.len - inst.op]
         }
     }
 }

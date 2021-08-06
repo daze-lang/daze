@@ -11,9 +11,9 @@ import codegen
 import utils
 
 // loading and adding module files recursively
-fn load_imports(code string) ?[]string {
+fn load_modules(code string) ?[]string {
     matches := utils.match_all(code, "use (.*?);")
-    mut compiled_modules := []string{}
+    mut modules := []string{}
 
     for m in matches {
         mut module_path := m.replace("\"", "").replace("use ", "").replace(";", "")
@@ -25,18 +25,17 @@ fn load_imports(code string) ?[]string {
             }
         }
 
-
         mut module_file := os.read_file("${module_path}.daze") or { panic("File not found") }
-        compiled_modules << module_file
-        compiled_modules << load_imports(module_file)?
+        modules << module_file
+        modules << load_modules(module_file)?
     }
 
-    return compiled_modules
+    return modules
 }
 
 // compiles down daze source code to crystal
 fn to_crystal(source string) ?string {
-    mut lexer := lexer.Lexer{input: source.split('')}
+    mut lexer := lexer.Lexer{input: source.split("")}
     tokens := lexer.lex()?
     mut parser := parser.Parser{
         tokens,
@@ -56,7 +55,7 @@ fn to_crystal(source string) ?string {
         []string{}
     }
     // checker.run()
-    mut codegen := codegen.CodeGenerator{ast, 0, []string{}, 0}
+    mut codegen := codegen.CrystalCodeGenerator{ast, 0, []string{}, 0}
     mut code := codegen.run()
     return code
 }
@@ -75,25 +74,26 @@ fn strip_comments(source string) string {
     return stripped_comments
 }
 
+fn crystal(file_name string, code string) {
+    os.write_file("/tmp/daze/${file_name}.cr", code) or { panic("Failed writing file") }
+    println(os.execute("crystal build /tmp/daze/${file_name}.cr").output)
+}
+
 // compiles the main entry point & writes it to file
 fn compile_main(path string) ? {
     mut input_file := os.read_file(path) or { panic("File not found") }
-    compiled_modules := load_imports(input_file)?
+    modules := load_modules(input_file)?
 
     mut source := ""
-    for mod in compiled_modules {
+    for mod in modules {
         source += "\n$mod\n\n"
     }
+
     source += input_file
     code := to_crystal(strip_comments(source))?
-
     output_file_name := os.file_name(path).replace(".daze", "")
 
-    // mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
-    os.write_file("/tmp/daze/${output_file_name}.cr", code) or { panic("Failed writing file") }
-    // os.execute("crystal tool format /tmp/lang.cr")
-    println(os.execute("crystal build /tmp/daze/${output_file_name}.cr").output)
-    println("==========================================")
+    crystal(output_file_name, code)
 }
 
 fn help() {
@@ -112,9 +112,23 @@ fn main() {
 
     match os.args[1] {
         "build" {
-            println(os.args[2])
+            if os.args.len != 3 {
+                utils.error("Too few arguments for command `build`.")
+            }
+
             compile_main(os.args[2])?
         }
+
+        "run" {
+            if os.args.len != 3 {
+                utils.error("Too few arguments for command `run`.")
+            }
+
+            compile_main(os.args[2])?
+            executable := os.file_name(os.args[2]).replace(".daze", "")
+            println(os.execute("./${executable}").output)
+        }
+
         else {
             help()
         }

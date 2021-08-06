@@ -3,7 +3,7 @@ module codegen
 import ast
 import parser{is_binary_op}
 
-pub struct CodeGenerator {
+pub struct CrystalCodeGenerator {
 pub:
     ast ast.AST
 pub mut:
@@ -12,7 +12,7 @@ pub mut:
     c int
 }
 
-pub fn (mut gen CodeGenerator) run() string {
+pub fn (mut gen CrystalCodeGenerator) run() string {
     mut code := ""
 
     for node in gen.ast.nodes {
@@ -23,7 +23,7 @@ pub fn (mut gen CodeGenerator) run() string {
     return code.trim_left("end")
 }
 
-pub fn (mut gen CodeGenerator) gen(node ast.Node) string {
+pub fn (mut gen CrystalCodeGenerator) gen(node ast.Node) string {
     mut code := ""
 
     if mut node is ast.Statement {
@@ -35,7 +35,7 @@ pub fn (mut gen CodeGenerator) gen(node ast.Node) string {
     return code
 }
 
-fn (mut gen CodeGenerator) statement(node ast.Statement) string {
+fn (mut gen CrystalCodeGenerator) statement(node ast.Statement) string {
     mut code := ""
     if mut node is ast.FunctionDeclarationStatement {
         code = gen.fn_decl(node)
@@ -56,7 +56,7 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
     return code
 }
 
-fn (mut gen CodeGenerator) expr(node ast.Expr) string {
+fn (mut gen CrystalCodeGenerator) expr(node ast.Expr) string {
     mut code := ""
     if mut node is ast.StringLiteralExpr {
         code = gen.string_literal_expr(node)
@@ -97,7 +97,7 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
     return code
 }
 
-fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string {
+fn (mut gen CrystalCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string {
     mut args := []string{}
     for arg in node.args {
         args << gen.fn_arg(arg)
@@ -113,7 +113,7 @@ fn (mut gen CodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string
     return code
 }
 
-fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
+fn (mut gen CrystalCodeGenerator) fn_arg(node ast.FunctionArgument) string {
     typ := if node.type_name == "string" { "String" } else { node.type_name }
     if node.type_name == "Any" {
         return "$node.name"
@@ -122,7 +122,7 @@ fn (mut gen CodeGenerator) fn_arg(node ast.FunctionArgument) string {
     return "$node.name : $typ"
 }
 
-fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
+fn (mut gen CrystalCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     mut args := []string{}
     for arg in node.args {
         args << gen.expr(arg)
@@ -147,23 +147,23 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     return code
 }
 
-fn (mut gen CodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
+fn (mut gen CrystalCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
     val := node.value.replace("Self.", "@")
     return "\"$val\""
 }
 
-fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
+fn (mut gen CrystalCodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
     return "$node.value"
 }
 
-fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {
+fn (mut gen CrystalCodeGenerator) variable_expr(node ast.VariableExpr) string {
     if node.value == "===" {
         return " ${node.value.replace("Self.", "@")} "
     }
     return node.value.replace("Self.", "@")
 }
 
-fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
+fn (mut gen CrystalCodeGenerator) return_expr(node ast.ReturnExpr) string {
     mut body := ""
     for expr in node.value {
         body += gen.gen(expr)
@@ -171,7 +171,7 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
     return "\nreturn ${body.replace("\n", " ")}\n"
 }
 
-fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
+fn (mut gen CrystalCodeGenerator) variable_decl(node ast.VariableDecl) string {
     mut body := ""
     for expr in node.value {
         body += "${gen.gen(expr)} "
@@ -180,7 +180,7 @@ fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
     return "${node.name.replace("Self.", "@")} = ${body}\n"
 }
 
-fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
+fn (mut gen CrystalCodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
     generic_type := if node.gen_type != "" { "($node.gen_type)" } else { "" }
     mut code := "struct ${node.name}$generic_type\n"
 
@@ -193,11 +193,11 @@ fn (mut gen CodeGenerator) struct_decl(node ast.StructDeclarationStatement) stri
     return code
 }
 
-fn (mut gen CodeGenerator) set_module(name string) {
+fn (mut gen CrystalCodeGenerator) set_module(name string) {
     // gen.mod = name
 }
 
-fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
+fn (mut gen CrystalCodeGenerator) if_statement(node ast.IfExpression) string {
     mut code := "if ${gen.expr(node.conditional)}\n"
     for func in node.body {
         code += gen.gen(func)
@@ -223,7 +223,7 @@ fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
     return code
 }
 
-fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
+fn (mut gen CrystalCodeGenerator) for_loop(node ast.ForLoopExpr) string {
     mut code := "\nwhile ${gen.gen(node.conditional)}\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
@@ -232,7 +232,7 @@ fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
     return code
 }
 
-fn (mut gen CodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
+fn (mut gen CrystalCodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
     gen.c++
     vardecl := "for_in_loop${gen.c} = ${gen.gen(node.target).split("of")[0]}"
     mut code := "\n$vardecl\nfor_in_loop${gen.c}.each_index do |index|\n$node.container = for_in_loop${gen.c}[index]\n"
@@ -243,7 +243,7 @@ fn (mut gen CodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
     return code
 }
 
-fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
+fn (mut gen CrystalCodeGenerator) array(node ast.ArrayDefinition) string {
     mut code := "["
     mut items := []string{}
 
@@ -255,11 +255,11 @@ fn (mut gen CodeGenerator) array(node ast.ArrayDefinition) string {
     return code
 }
 
-fn (mut gen CodeGenerator) indexing(node ast.IndexingExpr) string {
+fn (mut gen CrystalCodeGenerator) indexing(node ast.IndexingExpr) string {
     return "${node.var.replace("Self.", "@")}[${gen.gen(node.body)}]"
 }
 
-fn (mut gen CodeGenerator) grouped_expr(node ast.GroupedExpr) string {
+fn (mut gen CrystalCodeGenerator) grouped_expr(node ast.GroupedExpr) string {
     mut items := []string{}
 
     for item in node.body {

@@ -9,6 +9,12 @@ pub fn syntax_error(found string, expected string, line int, column int) {
     exit(1)
 }
 
+pub fn parser_error(message string) {
+    msg := term.bold(term.white(message))
+    println("${term.bold(term.red("PARSER ERROR: "))}$msg")
+    exit(1)
+}
+
 pub fn error(message string) {
     msg := term.bold(term.white(message))
     println("${term.bold(term.red("ERROR: "))}$msg")

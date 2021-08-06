@@ -3,5 +3,5 @@ is Main;
 use "daze::Std";
 
 fn main() :: Void {
-  out("Hello world.");
+  Std.out("Hello world.");
 }
