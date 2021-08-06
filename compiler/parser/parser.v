@@ -41,23 +41,15 @@ fn (mut parser Parser) statement() Statement {
             // TODO
             // node = parser.implement_block()
         }
-        .raw_crystal_code {
-            node = ast.RawCrystalCodeStatement{parser.advance().value}
-        }
-        .kw_use {
-            node = parser.use()
-        }
-        .kw_fn {
-            node = parser.fn_decl()
-        }
+        .raw_crystal_code { node = ast.RawCrystalCodeStatement{parser.advance().value} }
+        .kw_use { node = parser.use() }
+        .kw_fn { node = parser.fn_decl() }
         .kw_is {
             if parser.lookahead_by(2).kind == .identifier {
                 node = parser.module_decl()
             }
         }
-        .kw_struct {
-            node = parser.construct()
-        }
+        .kw_struct { node = parser.construct() }
         else {}
     }
 
@@ -68,12 +60,8 @@ fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
 
     match parser.lookahead().kind {
-        .open_paren {
-            node = parser.grouped_expr()
-        }
-        .close_paren {
-            utils.error("Unexpected `)` found.")
-        }
+        .open_paren { node = parser.grouped_expr() }
+        .close_paren { utils.error("Unexpected `)` found.") }
         .plus,
         .minus,
         .mod,
@@ -87,22 +75,14 @@ fn (mut parser Parser) expr() Expr {
         .greater_than,
         .greater_than_equal,
         ._or,
-        .comma {
-            node = ast.VariableExpr{parser.advance().value}
-        }
-        .semicolon {
-            parser.advance()
-        }
+        .comma { node = ast.VariableExpr{parser.advance().value} }
+        .semicolon { parser.advance() }
         .kw_make {
             parser.expect(.kw_make)
             node = parser.fn_call(true)
         }
-        .raw_crystal_code {
-            node = ast.RawCrystalCodeExpr{parser.advance().value}
-        }
-        .open_square {
-            node = parser.array()
-        }
+        .raw_crystal_code { node = ast.RawCrystalCodeExpr{parser.advance().value} }
+        .open_square { node = parser.array() }
         .kw_for {
             if parser.lookahead_by(3).kind == .kw_in {
                 node = parser.for_in_loop()
@@ -114,9 +94,7 @@ fn (mut parser Parser) expr() Expr {
             node = ast.VariableExpr{parser.advance().value}
             parser.expect(.semicolon)
         }
-        .kw_if {
-            node = parser.if_statement()
-        }
+        .kw_if { node = parser.if_statement() }
         .string {
             node = ast.StringLiteralExpr{parser.lookahead().value, "String"}
             parser.advance()
@@ -125,9 +103,7 @@ fn (mut parser Parser) expr() Expr {
             node = ast.NumberLiteralExpr{strconv.atof64(parser.lookahead().value), "Int"}
             parser.advance()
         }
-        .kw_return {
-            node = parser.ret()
-        }
+        .kw_return { node = parser.ret() }
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
@@ -155,9 +131,7 @@ fn (mut parser Parser) expr() Expr {
                 }
             }
         }
-        else {
-            node = ast.NoOp{}
-        }
+        else { node = ast.NoOp{} }
     }
 
     return node
