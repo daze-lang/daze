@@ -232,8 +232,6 @@ fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
     return code
 }
 
-// TODO: this is bad because it evaluates the expression twice
-// we should save it into a temporary variable
 fn (mut gen CodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
     gen.c++
     vardecl := "for_in_loop${gen.c} = ${gen.gen(node.target).split("of")[0]}"

@@ -10,6 +10,7 @@ import checker
 import codegen
 import utils
 
+// loading and adding module files recursively
 fn load_imports(code string) ?[]string {
     matches := utils.match_all(code, "use (.*?);")
     mut compiled_modules := []string{}
@@ -33,6 +34,7 @@ fn load_imports(code string) ?[]string {
     return compiled_modules
 }
 
+// compiles down daze source code to crystal
 fn to_crystal(source string) ?string {
     mut lexer := lexer.Lexer{input: source.split('')}
     tokens := lexer.lex()?
@@ -59,6 +61,7 @@ fn to_crystal(source string) ?string {
     return code
 }
 
+// removes comments from daze source code
 fn strip_comments(source string) string {
     mut stripped_comments := ""
 
@@ -72,6 +75,7 @@ fn strip_comments(source string) string {
     return stripped_comments
 }
 
+// compiles the main entry point & writes it to file
 fn compile_main(path string) ? {
     mut input_file := os.read_file(path) or { panic("File not found") }
     compiled_modules := load_imports(input_file)?
@@ -83,10 +87,12 @@ fn compile_main(path string) ? {
     source += input_file
     code := to_crystal(strip_comments(source))?
 
+    output_file_name := os.file_name(path).replace(".daze", "")
+
     mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
-    os.write_file("/tmp/lang.cr", builtin_file + "\n" + code) or { panic("Failed writing file") }
+    os.write_file("/tmp/daze/${output_file_name}.cr", builtin_file + "\n" + code) or { panic("Failed writing file") }
     // os.execute("crystal tool format /tmp/lang.cr")
-    println(os.execute("crystal build /tmp/lang.cr").output)
+    println(os.execute("crystal build /tmp/${output_file_name}.cr").output)
     println("==========================================")
 }
 
