@@ -221,7 +221,7 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     if is_arr {
         ret_type = "Array($ret_type)"
     }
-    println(ret_type)
+
     parser.expect(.open_curly)
 
     mut body := []Expr{}

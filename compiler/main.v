@@ -1,7 +1,7 @@
 module main
 
 import os
-import pcre
+import term
 
 import lexer{Token}
 import ast
@@ -10,24 +10,8 @@ import checker
 import codegen
 import utils
 
-fn match_all(text string, regexp string) []string {
-    mut matches := []string{}
-    mut str_copy := text
-
-    mut re := pcre.new_regex(regexp, 0) or { panic(err) }
-
-    for {
-        m := re.match_str(str_copy, 0, 0) or { break }
-        matched := m.get(0) or { break }
-        str_copy = str_copy.replace_once(matched, '')
-        matches << matched
-    }
-
-    return matches
-}
-
 fn load_imports(code string) ?[]string {
-    matches := match_all(code, "use (.*?);")
+    matches := utils.match_all(code, "use (.*?);")
     mut compiled_modules := []string{}
 
     for m in matches {
@@ -57,7 +41,7 @@ fn to_crystal(source string) ?string {
         -1,
         Token{},
         Token{},
-        []ast.Statement,
+        []ast.Statement{},
     }
     ast := parser.parse()
     // panic(ast)
@@ -75,15 +59,21 @@ fn to_crystal(source string) ?string {
     return code
 }
 
-fn compile(code string) {
-    os.write_file("/tmp/lang.cr", code) or { panic("Failed writing file") }
-    // os.execute("crystal tool format /tmp/lang.cr")
-    println(os.execute("crystal build /tmp/lang.cr").output)
-    println("==========================================")
+fn strip_comments(source string) string {
+    mut stripped_comments := ""
+
+    lines := source.split("\n")
+    for line in lines {
+        if !line.starts_with("#") {
+            stripped_comments += "${line}\n"
+        }
+    }
+
+    return stripped_comments
 }
 
-fn main() {
-    mut input_file := os.read_file("demo/lang.daze") or { panic("File not found") }
+fn compile_main(path string) ? {
+    mut input_file := os.read_file(path) or { panic("File not found") }
     compiled_modules := load_imports(input_file)?
 
     mut source := ""
@@ -91,17 +81,36 @@ fn main() {
         source += "\n$mod\n\n"
     }
     source += input_file
-    mut stripped_comments := ""
-    lines := source.split("\n")
-    for line in lines {
-        if !line.starts_with("#") {
-            stripped_comments += "${line}\n"
-        }
-    }
-    // panic(stripped_comments)
-    code := to_crystal(stripped_comments)?
+    code := to_crystal(strip_comments(source))?
 
     mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
-    compile(builtin_file + "\n" + code)
-    // compile(code)
+    os.write_file("/tmp/lang.cr", builtin_file + "\n" + code) or { panic("Failed writing file") }
+    // os.execute("crystal tool format /tmp/lang.cr")
+    println(os.execute("crystal build /tmp/lang.cr").output)
+    println("==========================================")
+}
+
+fn help() {
+    println(term.bold(term.bright_blue("Daze Compiler v0.0.1\n")))
+
+    println(term.bold(term.white("Available subcommands:\n")))
+    println(" ".repeat(4) + " - build <main_file>       Builds an executable")
+    println(" ".repeat(4) + " - run <main_file>         Builds an executable & runs the produced binary")
+}
+
+fn main() {
+    if os.args.len == 1 {
+        help()
+        return
+    }
+
+    match os.args[1] {
+        "build" {
+            println(os.args[2])
+            compile_main(os.args[2])?
+        }
+        else {
+            help()
+        }
+    }
 }

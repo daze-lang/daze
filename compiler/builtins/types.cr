@@ -40,7 +40,7 @@ class DazeString
 end
 
 class DazeInt
-  def initialize(@value : Float64)
+  def initialize(@value : Int64)
   end
 
   def value
@@ -68,27 +68,30 @@ class DazeInt
 
   def !=(other : DazeInt)
     @value != other.value
-    self
   end
 
   def >=(other : DazeInt)
     @value >= other.value
-    self
   end
 
   def <=(other : DazeInt)
-    @value <= other.value
-    self
+    return @value <= other.value
   end
 
   def >(other : DazeInt)
     @value > other.value
-    self
   end
 
   def <(other : DazeInt)
     @value < other.value
-    self
+  end
+
+  def %(other : DazeInt)
+    @value % other.value
+  end
+
+  def /(other : DazeInt)
+    @value / other.value
   end
 end
 

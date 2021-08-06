@@ -44,11 +44,9 @@ fn (mut gen CodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.ModuleDeclarationStatement {
         code = "end\nmodule $node.name\nextend self\n"
         gen.mods << node.name
-        println("got module")
         gen.mod_count++
     } else if mut node is ast.StructDeclarationStatement {
         code = gen.struct_decl(node)
-        println("got struct decl")
     } else if mut node is ast.RawCrystalCodeStatement {
         code = node.value
     } else if mut node is ast.ModuleUseStatement {
@@ -170,7 +168,7 @@ fn (mut gen CodeGenerator) return_expr(node ast.ReturnExpr) string {
     for expr in node.value {
         body += gen.gen(expr)
     }
-    return "\nreturn ${body}\n"
+    return "\nreturn ${body.replace("\n", " ")}\n"
 }
 
 fn (mut gen CodeGenerator) variable_decl(node ast.VariableDecl) string {
@@ -226,7 +224,7 @@ fn (mut gen CodeGenerator) if_statement(node ast.IfExpression) string {
 }
 
 fn (mut gen CodeGenerator) for_loop(node ast.ForLoopExpr) string {
-    mut code := "while ${gen.gen(node.conditional)}\n"
+    mut code := "\nwhile ${gen.gen(node.conditional)}\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
     }

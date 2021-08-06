@@ -1,6 +1,8 @@
-is fizbuzz;
+is Main;
 
-fn fizbuzz() :: Void {
+use "daze::Std";
+
+fn fizzbuzz() :: Void {
   i = 0
   for (i < 20) {
     if (i % 15 == 0) {
@@ -12,5 +14,12 @@ fn fizbuzz() :: Void {
     } else {
       Std.out(i);
     }
+
+    i++;
   }
+
+}
+
+fn main() :: Void {
+  fizzbuzz();
 }

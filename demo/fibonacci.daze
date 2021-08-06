@@ -1,9 +1,15 @@
-is fibonacci;
+is Main;
 
-fn fibonacci(num :: Int32) :: Int32 {
-  if num <= 1 {
+use "daze::Std";
+
+fn fibonacci(num :: Int) :: Int {
+  if (num <= 1) {
     ret 1;
   }
 
   ret fibonacci(num - 1) + fibonacci(num - 2);
+}
+
+fn main() :: Void {
+  Std.out(fibonacci(20));
 }
