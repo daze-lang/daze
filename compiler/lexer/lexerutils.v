@@ -43,11 +43,11 @@ fn (mut lexer Lexer) read_identifier(c string) string {
     }
 
     // Custom types
-    if id == "String" {
-        id = "DazeString"
-    } else if id == "Int" {
-        id = "DazeInt"
-    }
+    // if id == "String" {
+    //     id = "DazeString"
+    // } else if id == "Int" {
+    //     id = "DazeInt"
+    // }
 
     return id
 }

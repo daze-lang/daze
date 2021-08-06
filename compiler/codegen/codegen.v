@@ -81,9 +81,9 @@ fn (mut gen CodeGenerator) expr(node ast.Expr) string {
     } else if mut node is ast.ArrayPushExpr {
         code = "${node.target.replace("Self.", "@")} << ${gen.gen(node.value)}\n"
     } else if mut node is ast.IncrementExpr {
-        code = "${node.target.replace("Self.", "@")} += DazeInt.new(1)\n"
+        code = "${node.target.replace("Self.", "@")} += 1\n"
     } else if mut node is ast.DecrementExpr {
-        code = "${node.target.replace("Self.", "@")} -= DazeInt.new(1)\n"
+        code = "${node.target.replace("Self.", "@")} -= 1\n"
     } else if mut node is ast.ForInLoopExpr {
         code = gen.for_in_loop(node)
     } else if mut node is ast.IndexingExpr {
@@ -149,11 +149,11 @@ fn (mut gen CodeGenerator) fn_call(node ast.FunctionCallExpr) string {
 
 fn (mut gen CodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
     val := node.value.replace("Self.", "@")
-    return "DazeString.new(\"$val\")"
+    return "\"$val\""
 }
 
 fn (mut gen CodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
-    return "DazeInt.new(${node.value})"
+    return "$node.value"
 }
 
 fn (mut gen CodeGenerator) variable_expr(node ast.VariableExpr) string {

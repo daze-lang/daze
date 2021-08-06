@@ -2,31 +2,19 @@ is Std;
 
 fn out(value :: String) :: Void {
   `raw
-  puts(value.value())
+  puts(value)
   `
 }
 
 fn out(value :: Int) :: Void {
   `raw
-  puts(value.value())
+  puts(value)
   `
 }
 
 fn out(value :: Any) :: Void {
   `raw
   puts(value)
-  `
-}
-
-fn out_raw(value :: String) :: Void {
-  `raw
-  printf(value.value())
-  `
-}
-
-fn out_raw(value :: Any) :: Void {
-  `raw
-  printf(value)
   `
 }
 
@@ -38,11 +26,11 @@ fn input() :: String {
 
 fn type(val :: Any) :: Any {
   `raw
-  DazeString.new(typeof(val).to_s)
+  typeof(val).to_s
   `
 }
 
-fn range(max :: Int32) :: Any {
+fn range(max :: Int) :: Any {
   i = 0;
   arr = []Int32{};
   for (i < max) {
@@ -52,9 +40,9 @@ fn range(max :: Int32) :: Any {
 
   ret arr;
 }
-fn range(min :: Int32, max :: Int32) :: Any {
+fn range(min :: Int, max :: Int) :: Any {
   i = min;
-  arr = []Int32{};
+  arr = []Int{};
   for (i < max) {
     arr <- i;
     i++;
@@ -63,11 +51,11 @@ fn range(min :: Int32, max :: Int32) :: Any {
   ret arr;
 }
 
-fn string(num :: Int32) :: String {
+fn string(num :: Int) :: String {
   ret "#{num}"
 }
 
-fn int(str :: String) :: Int32 {
+fn int(str :: String) :: Int {
   `raw
   str.to_i
   `

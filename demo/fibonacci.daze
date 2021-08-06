@@ -11,5 +11,5 @@ fn fibonacci(num :: Int) :: Int {
 }
 
 fn main() :: Void {
-  Std.out(fibonacci(20));
+  out(fibonacci(20));
 }

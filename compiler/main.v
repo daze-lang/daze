@@ -89,10 +89,10 @@ fn compile_main(path string) ? {
 
     output_file_name := os.file_name(path).replace(".daze", "")
 
-    mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
-    os.write_file("/tmp/daze/${output_file_name}.cr", builtin_file + "\n" + code) or { panic("Failed writing file") }
+    // mut builtin_file := os.read_file("compiler/builtins/types.cr") or { panic("File not found") }
+    os.write_file("/tmp/daze/${output_file_name}.cr", code) or { panic("Failed writing file") }
     // os.execute("crystal tool format /tmp/lang.cr")
-    println(os.execute("crystal build /tmp/${output_file_name}.cr").output)
+    println(os.execute("crystal build /tmp/daze/${output_file_name}.cr").output)
     println("==========================================")
 }
 
