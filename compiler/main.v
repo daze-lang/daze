@@ -54,7 +54,7 @@ fn to_crystal(source string) ?string {
         map[string]ast.VariableDecl{},
         []string{}
     }
-    // checker.run()
+    checker.run()
     mut codegen := codegen.CrystalCodeGenerator{ast, 0, []string{}, 0}
     mut code := codegen.run()
     return code

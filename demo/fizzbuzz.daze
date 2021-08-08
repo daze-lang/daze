@@ -3,7 +3,7 @@ is Main;
 use "daze::Std";
 
 fn fizzbuzz() :: Void {
-  i = 0
+  i :: Int := 0
   for (i < 20) {
     if (i % 15 == 0) {
       Std.out("FizzBuzz");

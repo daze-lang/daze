@@ -3,5 +3,6 @@ is Main;
 use "daze::Std";
 
 fn main() :: Void {
-  Std.out("Hello world.");
+  name :: String := "Mark";
+  out(name);
 }

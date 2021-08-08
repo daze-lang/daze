@@ -523,8 +523,10 @@ fn (mut parser Parser) variable_decl() Expr {
     if parser.lookahead().kind == .double_colon {
         parser.expect(.double_colon)
         type_name = parser.expect(.identifier).value
+        parser.expect(.colon_equal)
+    } else {
+        parser.expect(.equal)
     }
-    parser.expect(.equal)
 
     mut body := []Expr{}
     for parser.lookahead_by(0).kind != .semicolon {

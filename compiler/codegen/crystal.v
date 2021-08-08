@@ -177,7 +177,11 @@ fn (mut gen CrystalCodeGenerator) variable_decl(node ast.VariableDecl) string {
         body += "${gen.gen(expr)} "
     }
 
-    return "${node.name.replace("Self.", "@")} = ${body}\n"
+    if node.type_name != "" {
+        return "\n${node.name.replace("Self.", "@")} : $node.type_name = ${body}\n"
+    } else {
+        return "\n${node.name.replace("Self.", "@")} = ${body}\n"
+    }
 }
 
 fn (mut gen CrystalCodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
