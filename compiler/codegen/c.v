@@ -13,7 +13,7 @@ pub fn new_c(ast ast.AST) CCodeGenerator {
 }
 
 pub fn (mut gen CCodeGenerator) run() string {
-    mut code := "#include <stdio.h>\n#include <stdlib.h>\n\n"
+    mut code := "#include <stdio.h>\n#include <stdlib.h>\n#include \"tgc.h\"\n\nstatic tgc_t gc;\n\n"
 
     for node in gen.ast.nodes {
         code += gen.gen(node)
@@ -94,6 +94,10 @@ fn (mut gen CCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) strin
     args_str := if args.len == 0 { "void" } else { args.join(", ") }
     return_type := node.return_type.to_lower()
     mut code := "$return_type ${node.name}($args_str) {\n"
+    if node.name == "main" {
+        code += "tgc_start(&gc, 0);\n"
+    }
+
     for expr in node.body {
         code += gen.gen(expr)
     }

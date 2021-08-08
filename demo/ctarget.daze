@@ -9,8 +9,5 @@ fn test(a :: Int, b :: Int) :: Int {
 }
 
 fn main() :: Void {
-  age :: Int := 5;
-  if (age == 5 && (age == 4 && age != 4)) {
-    printf("%d", age);
-  }
+  printf("Hello, world\n");
 }

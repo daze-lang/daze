@@ -69,7 +69,7 @@ fn crystal(file_name string, code string) {
 
 fn c(file_name string, code string) {
     os.write_file("/tmp/daze/${file_name}.c", code) or { panic("Failed writing file") }
-    println(os.execute("gcc /tmp/daze/${file_name}.c -o ./$file_name").output)
+    println(os.execute("gcc /tmp/daze/${file_name}.c /tmp/daze/tgc.c -o ./$file_name").output)
 }
 
 // compiles the main entry point & writes it to file
