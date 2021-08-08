@@ -16,6 +16,16 @@ pub struct Parser {
         statements []ast.Statement
 }
 
+pub fn new(tokens []Token) Parser {
+    return Parser{
+        tokens,
+        -1,
+        Token{},
+        Token{},
+        []ast.Statement{}
+    }
+}
+
 pub fn (mut parser Parser) parse() AST {
     parser.statements << parser.statements()
     ast := AST{"TopLevel", parser.statements}

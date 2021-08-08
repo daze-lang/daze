@@ -1,13 +1,20 @@
 module lexer
 
-import strconv
-
 pub struct Lexer {
     input []string [required]
     mut:
-        index int = -1
-        line int = 1
+        index int
+        line int
         column int
+}
+
+pub fn new(source string) Lexer {
+    return Lexer{
+        source.split(""),
+        -1,
+        1,
+        0
+    }
 }
 
 pub fn (mut lexer Lexer) lex() ?[]Token {

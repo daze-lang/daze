@@ -4,7 +4,6 @@ import os
 import term
 
 import lexer{Token}
-import ast
 import parser
 import checker
 import codegen
@@ -35,27 +34,15 @@ fn load_modules(code string) ?[]string {
 
 // compiles down daze source code to crystal
 fn to_crystal(source string) ?string {
-    mut lexer := lexer.Lexer{input: source.split("")}
+    mut lexer := lexer.new(source)
     tokens := lexer.lex()?
-    mut parser := parser.Parser{
-        tokens,
-        -1,
-        Token{},
-        Token{},
-        []ast.Statement{},
-    }
+    mut parser := parser.new(tokens)
     ast := parser.parse()
     // panic(ast)
 
-    mut checker := checker.Checker{
-        ast,
-        map[string]ast.FunctionDeclarationStatement,
-        map[string]ast.StructDeclarationStatement{},
-        map[string]ast.VariableDecl{},
-        []string{}
-    }
+    mut checker := checker.new(ast)
     checker.run()
-    mut codegen := codegen.CrystalCodeGenerator{ast, 0, []string{}, 0}
+    mut codegen := codegen.new_crystal(ast)
     mut code := codegen.run()
     return code
 }

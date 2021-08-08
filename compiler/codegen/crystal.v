@@ -12,6 +12,10 @@ pub mut:
     c int
 }
 
+pub fn new_crystal(ast ast.AST) CrystalCodeGenerator {
+    return CrystalCodeGenerator{ast, 0, []string{}, 0}
+}
+
 pub fn (mut gen CrystalCodeGenerator) run() string {
     mut code := ""
 

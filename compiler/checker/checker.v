@@ -12,6 +12,16 @@ mut:
     mods []string
 }
 
+pub fn new(ast ast.AST) Checker {
+    return Checker{
+        ast,
+        map[string]ast.FunctionDeclarationStatement,
+        map[string]ast.StructDeclarationStatement{},
+        map[string]ast.VariableDecl{},
+        []string{}
+    }
+}
+
 pub fn (mut checker Checker) run() {
     for node in checker.ast.nodes {
         checker.check(node)
