@@ -1,7 +1,6 @@
 module codegen
 
 import ast
-import parser{is_binary_op}
 
 pub struct CrystalCodeGenerator {
 pub:

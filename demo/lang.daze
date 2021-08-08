@@ -2,7 +2,11 @@ is Main;
 
 use "daze::Std";
 
+fn var() :: String {
+  ret "hi";
+}
+
 fn main() :: Void {
   name :: String := "Mark";
-  out(name);
+  out(name + var());
 }

@@ -1,0 +1,16 @@
+is main;
+
+fn test2(a :: Int, b :: Int) :: Int {
+  ret a + b;
+}
+
+fn test(a :: Int, b :: Int) :: Int {
+  ret test2(a + b, 1);
+}
+
+fn main() :: Void {
+  age :: Int := 5;
+  if (age == 5 && (age == 4 && age != 4)) {
+    printf("%d", age);
+  }
+}

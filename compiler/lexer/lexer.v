@@ -126,7 +126,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
             }
             "=" {
                 if lexer.lookahead() == "=" {
-                    tokens << Token{.equal_equal, "===", lexer.line, lexer.column}
+                    tokens << Token{.equal_equal, "==", lexer.line, lexer.column}
                     lexer.advance()
                 } else {
                     tokens << Token{.equal, current, lexer.line, lexer.column}

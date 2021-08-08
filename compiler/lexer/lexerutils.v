@@ -43,9 +43,9 @@ fn (mut lexer Lexer) read_identifier(c string) string {
     }
 
     // Custom types
-    if id == "Int" {
-        id = "Int64"
-    }
+    // if id == "Int" {
+    //     id = "Int64"
+    // }
 
     return id
 }

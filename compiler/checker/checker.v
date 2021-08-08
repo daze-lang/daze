@@ -47,7 +47,7 @@ fn (mut checker Checker) statement(node ast.Statement) {
         checker.structs[node.name] = node
     } else if node is ast.ModuleDeclarationStatement {
         if node.name != node.name.capitalize() {
-            utils.error("Module names must be capitalized, found: `$node.name`")
+            // utils.error("Module names must be capitalized, found: `$node.name`")
         }
         checker.mods << node.name
     }

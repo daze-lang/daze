@@ -42,7 +42,8 @@ fn to_crystal(source string) ?string {
 
     mut checker := checker.new(ast)
     checker.run()
-    mut codegen := codegen.new_crystal(ast)
+    // mut codegen := codegen.new_crystal(ast)
+    mut codegen := codegen.new_c(ast)
     mut code := codegen.run()
     return code
 }
@@ -66,6 +67,11 @@ fn crystal(file_name string, code string) {
     println(os.execute("crystal build /tmp/daze/${file_name}.cr").output)
 }
 
+fn c(file_name string, code string) {
+    os.write_file("/tmp/daze/${file_name}.c", code) or { panic("Failed writing file") }
+    println(os.execute("gcc /tmp/daze/${file_name}.c -o ./$file_name").output)
+}
+
 // compiles the main entry point & writes it to file
 fn compile_main(path string) ? {
     mut input_file := os.read_file(path) or { panic("File not found") }
@@ -80,7 +86,8 @@ fn compile_main(path string) ? {
     code := to_crystal(strip_comments(source))?
     output_file_name := os.file_name(path).replace(".daze", "")
 
-    crystal(output_file_name, code)
+    // crystal(output_file_name, code)
+    c(output_file_name, code)
 }
 
 fn help() {
