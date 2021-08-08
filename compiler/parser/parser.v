@@ -413,7 +413,6 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
 
     parser.expect(.close_paren)
 
-    // TODO add binary ops
     if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly && !is_binary_op(parser.lookahead()) {
         parser.expect(.semicolon)
     }

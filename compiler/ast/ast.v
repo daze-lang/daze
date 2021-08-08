@@ -6,8 +6,6 @@ pub mut:
     nodes []Statement
 }
 
-// TODO (mark): Ditch Statements & Exprs for `Node`
-
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
