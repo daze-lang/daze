@@ -84,7 +84,7 @@ fn (mut parser Parser) expr() Expr {
         .less_than_equal,
         .greater_than,
         .greater_than_equal,
-        ._or,
+        ._or {  node = ast.BinaryOp{parser.advance().value} }
         .comma { node = ast.VariableExpr{parser.advance().value} }
         .semicolon { parser.advance() }
         .kw_make {

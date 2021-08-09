@@ -28,11 +28,12 @@ pub type Expr = FunctionCallExpr
     | IndexingExpr
     | VariableExpr
     | VariableDecl
+    | IfExpression
     | ForLoopExpr
     | GroupedExpr
     | ReturnExpr
+    | BinaryOp
     | NoOp
-    | IfExpression
 
 pub type Node = Statement | Expr
 
@@ -143,6 +144,11 @@ pub:
 }
 
 pub struct VariableExpr {
+pub:
+    value string
+}
+
+pub struct BinaryOp {
 pub:
     value string
 }

@@ -70,6 +70,8 @@ fn (mut gen CrystalCodeGenerator) expr(node ast.Expr) string {
         code = gen.fn_call(node)
     } else if mut node is ast.VariableExpr {
         code = gen.variable_expr(node)
+    } else if mut node is ast.BinaryOp {
+        code = "$node.value"
     } else if mut node is ast.ReturnExpr {
         code = gen.return_expr(node)
     } else if mut node is ast.VariableDecl {

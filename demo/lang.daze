@@ -3,6 +3,5 @@ is Main;
 use "daze::Std";
 
 fn main() :: Void {
-  name :: String := "Mark";
-  out(name);
+  out((10 + 5) / 2);
 }
