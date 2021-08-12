@@ -27,5 +27,5 @@ fn main() :: Int {
   someone2 := make Person("Mark");
   someone2 |> .get_name |> greet |> say;
 
-  get_person |> .get_name |> greet |> say;
+  out(get_person |> .get_name |> greet);
 }

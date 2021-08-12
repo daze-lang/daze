@@ -700,13 +700,16 @@ fn (mut parser Parser) pipe(prev ast.Expr) ast.PipeExpr {
     mut body := []Expr{}
     body << prev
 
-    for parser.lookahead().kind != .semicolon {
+    for parser.lookahead().kind !in [.semicolon, .close_paren] {
         parser.expect(.pipe)
         next := parser.expr()
         body << next
     }
 
-    parser.expect(.semicolon)
+    if parser.lookahead().kind == .semicolon {
+        parser.expect(.semicolon)
+    }
+
     parser.parsing_pipe = false
     return ast.PipeExpr{
         body: body
