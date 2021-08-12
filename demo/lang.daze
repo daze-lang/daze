@@ -16,6 +16,16 @@ implement Person {
   }
 }
 
+fn get_person() :: Person {
+  ret make Person("Mark");
+}
+
 fn main() :: Int {
-  make Person("Mark") |> .get_name |> greet |> say;
+  someone :: String := "Someone";
+  someone |> greet |> say;
+
+  someone2 := make Person("Mark");
+  someone2 |> .get_name |> greet |> say;
+
+  get_person |> .get_name |> greet |> say;
 }

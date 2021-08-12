@@ -701,7 +701,6 @@ fn (mut parser Parser) pipe(prev ast.Expr) ast.PipeExpr {
     body << prev
 
     for parser.lookahead().kind != .semicolon {
-        println(parser.lookahead())
         parser.expect(.pipe)
         next := parser.expr()
         body << next

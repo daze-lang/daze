@@ -8,11 +8,12 @@ pub:
     ast ast.AST
 pub mut:
     vars map[string]string
+    fns map[string]string
     structs []string
 }
 
 pub fn new_cpp(ast ast.AST) CppCodeGenerator {
-    return CppCodeGenerator{ast, map[string]string{}, []string{}}
+    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, []string{}}
 }
 
 pub fn (mut gen CppCodeGenerator) run() string {
@@ -133,6 +134,7 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
     for expr in node.body {
         code += gen.gen(expr)
     }
+    gen.fns[node.name] = gen.typename(node.return_type)
     code += "\n}\n\n"
     return code
 }
@@ -354,7 +356,7 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
     mut paren_count := 0
     mut previous := ast.Expr{}
 
-    for element in node.body {
+    for i, element in node.body {
         if element is ast.VariableExpr {
             if element.value.starts_with(".") {
                 cast := previous
@@ -363,14 +365,29 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
                         parts := cast.name.split("_")
                         code << "${parts[0]}_${parts[1]}_${element.value.replace(".", "")}("
                     }
+                } else if cast is ast.VariableExpr {
+                    mut type_info := gen.vars[cast.value]
+                    if type_info == "" {
+                        type_info = gen.fns[cast.value]
+                    }
+                    code << "struct_${type_info}_${element.value.replace(".", "")}("
                 } else {
                     // TODO proper error message
                     panic("Calling an accessor on anything but a struct / function call is illegal.")
                 }
             } else {
-                code << "${element.value}("
+                if gen.vars.keys().contains(element.value) {
+                    code << "${element.value}"
+                    paren_count--
+                } else {
+                    code << "${element.value}("
+                }
             }
         } else if element is ast.StringLiteralExpr || element is ast.NumberLiteralExpr {
+            if i != 0 {
+                // TODO proper error message
+                panic("Pipelines can't have string / int pipes, only function calls.")
+            }
             code << "[](){ return ${gen.expr(element)}; }()"
             paren_count--
         } else if element is ast.FunctionCallExpr {
