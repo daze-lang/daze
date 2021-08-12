@@ -109,6 +109,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.grouped_expr(node)
     } else if mut node is ast.ArrayInit {
         code = gen.array_init(node)
+    } else if mut node is ast.PipeExpr {
+        code = gen.pipe(node)
     }
 
     return code
@@ -345,4 +347,40 @@ fn (mut gen CppCodeGenerator) implement_block(node ast.ImplementBlockStatement) 
     }
 
     return code
+}
+
+fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
+    mut code := []string{}
+    mut paren_count := 0
+    mut previous := ast.Expr{}
+
+    for element in node.body {
+        if element is ast.VariableExpr {
+            if element.value.starts_with(".") {
+                cast := previous
+                if cast is ast.FunctionCallExpr {
+                    if cast.name.starts_with("struct") {
+                        parts := cast.name.split("_")
+                        code << "${parts[0]}_${parts[1]}_${element.value.replace(".", "")}("
+                    }
+                } else {
+                    // TODO proper error message
+                    panic("Calling an accessor on anything but a struct / function call is illegal.")
+                }
+            } else {
+                code << "${element.value}("
+            }
+        } else if element is ast.StringLiteralExpr || element is ast.NumberLiteralExpr {
+            code << "[](){ return ${gen.expr(element)}; }()"
+            paren_count--
+        } else if element is ast.FunctionCallExpr {
+            code << "${gen.expr(element)}".replace(";", "")
+            paren_count--
+        }
+
+        paren_count++
+        previous = element
+    }
+
+    return code.reverse().join("") + ")".repeat(paren_count) + ";\n"
 }

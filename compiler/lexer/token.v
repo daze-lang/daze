@@ -35,6 +35,7 @@ pub enum TokenType {
     open_square        // [
     close_square       // ]
     arrow_left         // <-
+    pipe               // |>
 
     kw_struct          // `struct`
     kw_fn              // `fn`
@@ -57,36 +58,37 @@ pub enum TokenType {
 }
 
 pub const tokens_map = map{
-  "open_paren"         :" (",
-  "close_paren"        :" )",
-  "open_curly"         :" {",
-  "close_curly"        :" }",
-  "at"                 :" @",
-  "semicolon"          :" ;",
-  "comma"              :" ,",
-  "colon"              :":" ,
+  "open_paren"         :"(",
+  "close_paren"        :")",
+  "open_curly"         :"{",
+  "close_curly"        :"}",
+  "at"                 :"@",
+  "semicolon"          :";",
+  "comma"              :",",
+  "colon"              :":",
   "double_colon"       :"::" ,
-  "colon_equal"        :" =",
-  "equal"              :" =",
-  "double_slash"       :" //",
-  "plus"               :" +",
-  "plus_plus"          :" ++",
-  "minus"              :" -",
-  "minus_minus"        :" --",
-  "div"                :" /",
-  "mod"                :" %",
-  "and_and"            :" &&",
-  "not_equal"          :" !=",
-  "equal_equal"        :" ==",
-  "greater_than"       :" >",
-  "greater_than_equal" :" >=",
-  "less_than_equal"    :" <=",
-  "less_than"          :" <",
-  "not"                :" !",
-  "backtick"           :" `",
-  "open_square"        :" [",
-  "close_square"       :" ]",
-  "arrow_left"         :" <-",
+  "colon_equal"        :":=",
+  "equal"              :"=",
+  "double_slash"       :"//",
+  "plus"               :"+",
+  "plus_plus"          :"++",
+  "minus"              :"-",
+  "minus_minus"        :"--",
+  "div"                :"/",
+  "mod"                :"%",
+  "and_and"            :"&&",
+  "not_equal"          :"!=",
+  "equal_equal"        :"==",
+  "greater_than"       :">",
+  "greater_than_equal" :">=",
+  "less_than_equal"    :"<=",
+  "less_than"          :"<",
+  "not"                :"!",
+  "backtick"           :"`",
+  "open_square"        :"[",
+  "close_square"       :"]",
+  "arrow_left"         :"<-",
+  "pipe"               :"|>",
 }
 
 pub const keywords_map = map{

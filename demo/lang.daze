@@ -1,3 +1,11 @@
+fn greet(name :: String) :: String {
+  ret "Hello, " + name;
+}
+
+fn say(s :: String) :: Void {
+  out(s);
+}
+
 struct Person {
   name :: String
 }
@@ -8,13 +16,6 @@ implement Person {
   }
 }
 
-fn str(s :: String) :: String {
-  ret s + " is nice.";
-}
-
 fn main() :: Int {
-  me := make Person("Mark");
-  s := "s";
-  out(type(me));
-  out(s);
+  make Person("Mark") |> .get_name |> greet |> say;
 }

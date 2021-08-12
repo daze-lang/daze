@@ -15,6 +15,7 @@ pub struct Parser {
         previous Token
         statements []ast.Statement
         struct_defs map[string][]ast.FunctionArgument
+        parsing_pipe bool
 }
 
 pub fn new(tokens []Token) Parser {
@@ -24,7 +25,8 @@ pub fn new(tokens []Token) Parser {
         Token{},
         Token{},
         []ast.Statement{},
-        map[string][]ast.FunctionArgument{}
+        map[string][]ast.FunctionArgument{},
+        false
     }
 }
 
@@ -64,7 +66,6 @@ fn (mut parser Parser) statement() Statement {
         .kw_struct { node = parser.construct() }
         else {}
     }
-
     return node
 }
 
@@ -149,41 +150,12 @@ fn (mut parser Parser) expr() Expr {
         else { node = ast.NoOp{} }
     }
 
+    if parser.lookahead().kind == .pipe && !parser.parsing_pipe {
+        parser.parsing_pipe = true
+        node = parser.pipe(node)
+    }
+
     return node
-}
-
-fn (mut parser Parser) parse_binary_ops() ast.RawBinaryOpExpr {
-    mut raw_op := []string{}
-    raw_op << parser.peek().value
-
-    for parser.lookahead().kind != .semicolon {
-        next := parser.advance()
-        mut val := next.value
-
-        if next.kind == .string {
-            val = "\"$val\""
-        }
-
-        if val == "," || val == "{" {
-            parser.step_back()
-            break
-        }
-
-        if val == ")" {
-            if parser.lookahead_by(-1).value == ")" {
-                parser.step_back()
-                break
-            }
-        }
-
-        raw_op << val
-    }
-
-    if raw_op[0] == "=" || is_keyword(raw_op[0]) {
-        raw_op[0] = ""
-    }
-
-    return ast.RawBinaryOpExpr{raw_op.join("").replace("Self.", "@")}
 }
 
 // Function Declarations
@@ -402,7 +374,7 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr 
     }
 
     parser.expect(.close_paren)
-    if parser.lookahead().kind !in [.close_paren, .open_curly] && !is_binary_op(parser.lookahead()) {
+    if parser.lookahead().kind !in [.close_paren, .open_curly, .pipe] && !is_binary_op(parser.lookahead()) {
         parser.expect(.semicolon)
     }
 
@@ -721,5 +693,23 @@ fn (mut parser Parser) global() ast.GlobalDecl {
     return ast.GlobalDecl{
         name: name,
         value: value
+    }
+}
+
+fn (mut parser Parser) pipe(prev ast.Expr) ast.PipeExpr {
+    mut body := []Expr{}
+    body << prev
+
+    for parser.lookahead().kind != .semicolon {
+        println(parser.lookahead())
+        parser.expect(.pipe)
+        next := parser.expr()
+        body << next
+    }
+
+    parser.expect(.semicolon)
+    parser.parsing_pipe = false
+    return ast.PipeExpr{
+        body: body
     }
 }

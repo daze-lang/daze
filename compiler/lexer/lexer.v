@@ -66,6 +66,9 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 if lexer.lookahead() == "|" {
                     tokens << Token{._or, "||", lexer.line, lexer.column}
                     lexer.advance()
+                } else if lexer.lookahead() == ">" {
+                    tokens << Token{.pipe, "|>", lexer.line, lexer.column}
+                    lexer.advance()
                 }
                 continue
             }
@@ -164,7 +167,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
             else {}
         }
 
-        if !lexer.is_number(current) {
+        if !lexer.is_number(current) || current == "." {
             if current != "\"" {
                 id := lexer.read_identifier(current)
                 // We check if its a valid keyword, if so, we set the token kind
@@ -174,7 +177,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
             }
         }
 
-        if lexer.is_number(current) {
+        if lexer.is_number(current) && current != "." {
             tokens << Token{.number, lexer.read_number(current)?, lexer.line, lexer.column}
             continue
         }

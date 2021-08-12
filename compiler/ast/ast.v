@@ -36,6 +36,7 @@ pub type Expr = FunctionCallExpr
     | ReturnExpr
     | ArrayInit
     | BinaryOp
+    | PipeExpr
     | NoOp
 
 pub type Node = Statement | Expr
@@ -191,6 +192,11 @@ pub struct ForInLoopExpr {
 pub:
     container string
     target Expr
+    body []Expr
+}
+
+pub struct PipeExpr {
+pub:
     body []Expr
 }
 
