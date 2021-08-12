@@ -42,11 +42,6 @@ fn (mut lexer Lexer) read_identifier(c string) string {
         id += lexer.advance()
     }
 
-    // Custom types
-    if id == "Int" {
-        id = "Int64"
-    }
-
     return id
 }
 
@@ -87,7 +82,7 @@ fn (lexer Lexer) is_number(c string) bool {
 }
 
 fn (lexer Lexer) is_letter(c string) bool {
-    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.@".contains(c)
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.@[]".contains(c)
 }
 
 pub fn to_string(kw TokenType) string {

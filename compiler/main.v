@@ -32,18 +32,19 @@ fn load_modules(code string) ?[]string {
     return modules
 }
 
-// compiles down daze source code to crystal
-fn to_crystal(source string) ?string {
+// compiles down daze source code to cpp
+fn to_cpp(source string) ?string {
     mut lexer := lexer.new(source)
     tokens := lexer.lex()?
+    // panic(tokens)
     mut parser := parser.new(tokens)
     ast := parser.parse()
-    // panic(ast)
 
-    mut checker := checker.new(ast)
-    checker.run()
-    mut codegen := codegen.new_crystal(ast)
+    // mut checker := checker.new(ast)
+    // checker.run()
+    mut codegen := codegen.new_cpp(ast)
     mut code := codegen.run()
+    // panic(code)
     return code
 }
 
@@ -53,7 +54,7 @@ fn strip_comments(source string) string {
 
     lines := source.split("\n")
     for line in lines {
-        if !line.starts_with("#") {
+        if !line.trim_space().starts_with("#") {
             stripped_comments += "${line}\n"
         }
     }
@@ -61,9 +62,9 @@ fn strip_comments(source string) string {
     return stripped_comments
 }
 
-fn crystal(file_name string, code string) {
-    os.write_file("/tmp/daze/${file_name}.cr", code) or { panic("Failed writing file") }
-    println(os.execute("crystal build /tmp/daze/${file_name}.cr").output)
+fn cpp(file_name string, code string) {
+    os.write_file("/tmp/daze/${file_name}.cpp", code) or { panic("Failed writing file") }
+    println(os.execute("gcc -x c++ /tmp/daze/${file_name}.cpp -o $file_name -lstdc++").output)
 }
 
 // compiles the main entry point & writes it to file
@@ -77,10 +78,10 @@ fn compile_main(path string) ? {
     }
 
     source += input_file
-    code := to_crystal(strip_comments(source))?
+    code := to_cpp(strip_comments(source))?
     output_file_name := os.file_name(path).replace(".daze", "")
 
-    crystal(output_file_name, code)
+    cpp(output_file_name, code)
 }
 
 fn help() {

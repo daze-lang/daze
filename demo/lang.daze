@@ -1,7 +1,13 @@
-is Main;
+struct Person {
+  name :: String
+}
 
-use "daze::Std";
+implement Person {
+  fn new() :: Void {
+    out("new person");
+  }
+}
 
-fn main() :: Void {
-  out((10 + 5) / 2);
+fn main() :: Int {
+  out("Hello, world.");
 }

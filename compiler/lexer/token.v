@@ -50,8 +50,8 @@ pub enum TokenType {
     kw_break           // `break`
     kw_in              // `in`
     kw_make            // `make`
-
-    raw_crystal_code   // raw crystal code block
+    kw_unsafe          // `unsafe`
+    kw_global          // `global`
 
     eof                // indicating that there are no more tokens left
 }
@@ -104,6 +104,8 @@ pub const keywords_map = map{
     "break": TokenType.kw_break
     "in": TokenType.kw_in
     "make": TokenType.kw_make
+    "unsafe": TokenType.kw_unsafe
+    "global": TokenType.kw_global
 }
 
 pub struct Token {

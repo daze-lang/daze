@@ -95,14 +95,14 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 tokens << Token{.mod, current, lexer.line, lexer.column}
                 continue
             }
-            "[" {
-                tokens << Token{.open_square, current, lexer.line, lexer.column}
-                continue
-            }
-            "]" {
-                tokens << Token{.close_square, current, lexer.line, lexer.column}
-                continue
-            }
+            // "[" {
+            //     tokens << Token{.open_square, current, lexer.line, lexer.column}
+            //     continue
+            // }
+            // "]" {
+            //     tokens << Token{.close_square, current, lexer.line, lexer.column}
+            //     continue
+            // }
             "<" {
                 if lexer.lookahead() == "=" {
                     tokens << Token{.less_than_equal, "<=", lexer.line, lexer.column}
@@ -126,7 +126,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
             }
             "=" {
                 if lexer.lookahead() == "=" {
-                    tokens << Token{.equal_equal, "===", lexer.line, lexer.column}
+                    tokens << Token{.equal_equal, "==", lexer.line, lexer.column}
                     lexer.advance()
                 } else {
                     tokens << Token{.equal, current, lexer.line, lexer.column}
@@ -138,15 +138,6 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                     tokens << Token{.and_and, "&&", lexer.line, lexer.column}
                     lexer.advance()
                 }
-                continue
-            }
-            "`" {
-                mut raw_code := ""
-                for lexer.lookahead() != "`" {
-                    raw_code += lexer.advance()
-                }
-                lexer.advance()
-                tokens << Token{.raw_crystal_code, raw_code.replace("raw\n", ""), lexer.line, lexer.column}
                 continue
             }
             "!" {

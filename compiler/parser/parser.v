@@ -47,11 +47,11 @@ fn (mut parser Parser) statement() Statement {
             // TODO: handle cases like this
             panic("For not allowed at top level")
         }
+        .kw_global { node = parser.global() }
         .kw_implement {
-            // TODO
-            // node = parser.implement_block()
+            node = parser.implement_block()
         }
-        .raw_crystal_code { node = ast.RawCrystalCodeStatement{parser.advance().value} }
+        .kw_unsafe { node = parser.unsafe_() }
         .kw_use { node = parser.use() }
         .kw_fn { node = parser.fn_decl() }
         .kw_is {
@@ -70,6 +70,9 @@ fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr{}
 
     match parser.lookahead().kind {
+        .open_curly {
+            node = parser.array_init()
+        }
         .open_paren { node = parser.grouped_expr() }
         .close_paren { utils.error("Unexpected `)` found.") }
         .plus,
@@ -91,7 +94,6 @@ fn (mut parser Parser) expr() Expr {
             parser.expect(.kw_make)
             node = parser.fn_call(true)
         }
-        .raw_crystal_code { node = ast.RawCrystalCodeExpr{parser.advance().value} }
         .open_square { node = parser.array() }
         .kw_for {
             if parser.lookahead_by(3).kind == .kw_in {
@@ -104,6 +106,7 @@ fn (mut parser Parser) expr() Expr {
             node = ast.VariableExpr{parser.advance().value}
             parser.expect(.semicolon)
         }
+        .kw_unsafe { node = parser.unsafe_() }
         .kw_if { node = parser.if_statement() }
         .string {
             node = ast.StringLiteralExpr{parser.lookahead().value, "String"}
@@ -132,7 +135,7 @@ fn (mut parser Parser) expr() Expr {
                     node = parser.indexing()
                 }
                 else {
-                    if parser.lookahead_by(2).kind == .equal || parser.lookahead_by(2).kind == .double_colon {
+                    if parser.lookahead_by(2).kind in [.equal, .colon_equal, .double_colon] {
                         node = parser.variable_decl()
                     } else {
                         node = ast.VariableExpr{parser.lookahead().value}
@@ -203,7 +206,7 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
 
     mut ret_type := parser.expect(.identifier).value
     if is_arr {
-        ret_type = "Array($ret_type)"
+        ret_type = "[]$ret_type"
     }
 
     parser.expect(.open_curly)
@@ -279,46 +282,27 @@ fn (mut parser Parser) check_for_binary_ops(lookahead_by_amount int) bool {
     return false
 }
 
-fn (mut parser Parser) implement_block() {
-    // parser.expect(.kw_implement)
-    // name := parser.expect(.identifier).value
-    // parser.expect(.open_curly)
+fn (mut parser Parser) implement_block() ast.ImplementBlockStatement {
+    parser.expect(.kw_implement)
+    name := parser.expect(.identifier).value
+    parser.expect(.open_curly)
 
-    // mut fns := []ast.FunctionDeclarationStatement{}
-    // for parser.lookahead().kind != .close_curly {
-    //     fns << parser.fn_decl()
-    // }
+    mut fns := []ast.FunctionDeclarationStatement{}
+    for parser.lookahead().kind != .close_curly {
+        mut decl := parser.fn_decl()
+        decl.name = "struct_${name}_$decl.name"
+        decl.args << ast.FunctionArgument {
+            name: "self",
+            type_name: name
+        }
+        fns << decl
+    }
+    parser.expect(.close_curly)
 
-    // for mut func in fns {
-    //     if func.name == "new" {
-    //         func.name = "initialize"
-    //         mut value := []ast.Expr{}
-    //         value << ast.VariableExpr{"self"}
-    //         func.body << ast.ReturnExpr{
-    //             value: value,
-    //         }
-    //     }
-    //     func.is_struct = true
-    // }
-
-
-    // for field in parser.structs[name].fields {
-    //     mut body := []ast.Expr{}
-    //     mut ret := []ast.Expr{}
-    //     ret << ast.VariableExpr{"@$field.name"}
-    //     body << ast.ReturnExpr{ret}
-    //     func := ast.FunctionDeclarationStatement{
-    //         name: field.name,
-    //         args: []ast.FunctionArgument{},
-    //         body: body,
-    //         return_type: field.type_name,
-    //         is_struct: true
-    //     }
-    //     fns << func
-    // }
-
-    // parser.expect(.close_curly)
-    // parser.structs[name].fns = fns
+    return ast.ImplementBlockStatement{
+        name: name,
+        fns: fns
+    }
 }
 
 fn (mut parser Parser) array_push() Expr {
@@ -529,12 +513,21 @@ fn (mut parser Parser) variable_decl() Expr {
     }
 
     mut type_name := ""
+    mut is_reassignment := false
+    mut is_auto := false
     if parser.lookahead().kind == .double_colon {
+        println("parsing variable decl")
         parser.expect(.double_colon)
         type_name = parser.expect(.identifier).value
         parser.expect(.colon_equal)
     } else {
-        parser.expect(.equal)
+        if parser.lookahead().kind == .colon_equal {
+            is_auto = true
+            parser.expect(.colon_equal)
+        } else {
+            is_reassignment = true
+            parser.expect(.equal)
+        }
     }
 
     mut body := []Expr{}
@@ -543,6 +536,21 @@ fn (mut parser Parser) variable_decl() Expr {
         body << next
         if next is ast.NoOp {
             break
+        }
+    }
+
+    if is_reassignment {
+        return ast.VariableAssignment {
+            name: name,
+            value: body,
+        }
+    }
+
+    if is_auto {
+        return ast.VariableDecl {
+            name: name,
+            value: body,
+            type_name: "Any"
         }
     }
 
@@ -643,4 +651,58 @@ fn (mut parser Parser) grouped_expr() ast.GroupedExpr {
 
     parser.expect(.close_paren)
     return ast.GroupedExpr{body}
+}
+
+fn (mut parser Parser) array_init() ast.ArrayInit {
+    parser.expect(.open_curly)
+    mut body := []ast.Expr{}
+
+    for parser.lookahead().kind != .close_curly {
+        body << parser.expr()
+    }
+
+    parser.expect(.close_curly)
+    return ast.ArrayInit{body}
+}
+
+fn (mut parser Parser) unsafe_() ast.UnsafeBlock {
+    parser.expect(.kw_unsafe)
+    parser.expect(.open_curly)
+
+    mut body := ""
+
+    for parser.lookahead().kind != .close_curly {
+        next := parser.advance()
+        if next.kind == .string {
+            body += "\""
+            body += next.value
+            body += "\""
+            continue
+        }
+        body += next.value
+    }
+
+    parser.expect(.close_curly)
+
+    return ast.UnsafeBlock{
+        body: body
+    }
+}
+
+fn (mut parser Parser) global() ast.GlobalDecl {
+    parser.expect(.kw_global)
+    name := parser.expect(.identifier).value
+    parser.expect(.equal)
+    if parser.lookahead().kind !in [.string, .number] {
+        // TODO proper error message
+        panic("Global constants can only hold strings or integers.")
+    }
+    is_string := parser.lookahead().kind == .string
+    value := if is_string { "\"${parser.advance().value}\"" } else { parser.advance().value }
+    parser.expect(.semicolon)
+
+    return ast.GlobalDecl{
+        name: name,
+        value: value
+    }
 }

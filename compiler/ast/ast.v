@@ -9,14 +9,15 @@ pub mut:
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
-    | RawCrystalCodeStatement
     | ImplementBlockStatement
     | ModuleUseStatement
     | FunctionArgument
+    | UnsafeBlock
+    | GlobalDecl
     | NoOp
 
 pub type Expr = FunctionCallExpr
-    | RawCrystalCodeExpr
+    | VariableAssignment
     | StringLiteralExpr
     | NumberLiteralExpr
     | ArrayDefinition
@@ -31,7 +32,9 @@ pub type Expr = FunctionCallExpr
     | IfExpression
     | ForLoopExpr
     | GroupedExpr
+    | UnsafeBlock
     | ReturnExpr
+    | ArrayInit
     | BinaryOp
     | NoOp
 
@@ -47,15 +50,22 @@ pub mut:
     gen_type string
 }
 
+pub struct UnsafeBlock {
+pub:
+    body string
+}
+
+pub struct GlobalDecl {
+pub:
+    name string
+    value string
+}
+
 pub struct ModuleDeclarationStatement {
 pub:
     name string
 }
 
-pub struct RawCrystalCodeStatement {
-pub:
-    value string
-}
 pub struct RawCrystalCodeExpr {
 pub:
     value string
@@ -103,6 +113,12 @@ pub:
     type_name string
 }
 
+pub struct VariableAssignment {
+pub:
+    name string
+    value []Expr
+}
+
 pub struct FunctionCallExpr {
 pub:
     name string
@@ -117,6 +133,11 @@ pub mut:
 }
 
 pub struct GroupedExpr {
+pub:
+    body []Expr
+}
+
+pub struct ArrayInit {
 pub:
     body []Expr
 }
