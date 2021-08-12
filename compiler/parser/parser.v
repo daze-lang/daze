@@ -14,6 +14,7 @@ pub struct Parser {
         current Token
         previous Token
         statements []ast.Statement
+        struct_defs map[string][]ast.FunctionArgument
 }
 
 pub fn new(tokens []Token) Parser {
@@ -22,7 +23,8 @@ pub fn new(tokens []Token) Parser {
         -1,
         Token{},
         Token{},
-        []ast.Statement{}
+        []ast.Statement{},
+        map[string][]ast.FunctionArgument{}
     }
 }
 
@@ -290,22 +292,25 @@ fn (mut parser Parser) implement_block() ast.ImplementBlockStatement {
     mut fns := []ast.FunctionDeclarationStatement{}
     for parser.lookahead().kind != .close_curly {
         mut decl := parser.fn_decl()
-        decl.name = "struct_${name}_$decl.name"
-        decl.args << ast.FunctionArgument {
-            name: "self",
-            type_name: name
+        if decl.name != "new" {
+            decl.args.prepend(ast.FunctionArgument {
+                name: "self",
+                type_name: name
+            })
         }
+        decl.name = "struct_${name}_$decl.name"
         fns << decl
     }
     parser.expect(.close_curly)
 
     return ast.ImplementBlockStatement{
         name: name,
-        fns: fns
+        fns: fns,
+        struct_args: parser.struct_defs[name]
     }
 }
 
-fn (mut parser Parser) array_push() Expr {
+fn (mut parser Parser) array_push() ast.ArrayPushExpr {
     target_arr := parser.expect(.identifier).value
     parser.expect(.arrow_left)
     value_to_push := parser.expr()
@@ -317,7 +322,7 @@ fn (mut parser Parser) array_push() Expr {
     }
 }
 
-fn (mut parser Parser) for_loop() Expr {
+fn (mut parser Parser) for_loop() ast.ForLoopExpr {
     parser.expect(.kw_for)
     conditional := parser.expr()
     mut body := []Expr{}
@@ -339,7 +344,7 @@ fn (mut parser Parser) for_loop() Expr {
     }
 }
 
-fn (mut parser Parser) for_in_loop() Expr {
+fn (mut parser Parser) for_in_loop() ast.ForInLoopExpr {
     parser.expect(.kw_for)
     container := parser.expect(.identifier).value
     parser.expect(.kw_in)
@@ -364,7 +369,7 @@ fn (mut parser Parser) for_in_loop() Expr {
     }
 }
 
-fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
+fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr {
     mut fn_name := parser.expect(.identifier).value
     mut calling_on := ""
 
@@ -378,8 +383,9 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
     mut args := []Expr{}
 
     if is_struct_initializer {
-        fn_name = "${fn_name}.new"
+        fn_name = "struct_${fn_name}_new"
     }
+
     // no args passed
     if parser.lookahead().kind == .close_paren {
         parser.advance()
@@ -396,8 +402,7 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
     }
 
     parser.expect(.close_paren)
-
-    if parser.lookahead().kind != .close_paren && parser.lookahead().kind != .open_curly && !is_binary_op(parser.lookahead()) {
+    if parser.lookahead().kind !in [.close_paren, .open_curly] && !is_binary_op(parser.lookahead()) {
         parser.expect(.semicolon)
     }
 
@@ -407,7 +412,7 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) Expr {
     }
 }
 
-fn (mut parser Parser) array() Expr {
+fn (mut parser Parser) array() ast.ArrayDefinition {
     mut items := []Expr{}
 
     parser.expect(.open_square)
@@ -430,7 +435,7 @@ fn (mut parser Parser) array() Expr {
     }
 }
 
-fn (mut parser Parser) module_decl() Statement {
+fn (mut parser Parser) module_decl() ast.ModuleDeclarationStatement {
     parser.expect(.kw_is)
     module_name := parser.advance().value
     node := ast.ModuleDeclarationStatement{
@@ -467,6 +472,7 @@ fn (mut parser Parser) construct() ast.StructDeclarationStatement {
 
     parser.expect(.open_curly)
     fields := parser.fn_args(.close_curly)
+    parser.struct_defs[struct_name] = fields
     parser.expect(.close_curly)
 
     return ast.StructDeclarationStatement{
@@ -477,7 +483,7 @@ fn (mut parser Parser) construct() ast.StructDeclarationStatement {
     }
 }
 
-fn (mut parser Parser) use() Statement {
+fn (mut parser Parser) use() ast.ModuleUseStatement {
     parser.expect(.kw_use)
     path := parser.expect(.string).value
     parser.expect(.semicolon)
@@ -487,7 +493,7 @@ fn (mut parser Parser) use() Statement {
     }
 }
 
-fn (mut parser Parser) ret() Expr {
+fn (mut parser Parser) ret() ast.ReturnExpr {
     parser.expect(.kw_return)
     mut value := []Expr{}
 
@@ -516,7 +522,6 @@ fn (mut parser Parser) variable_decl() Expr {
     mut is_reassignment := false
     mut is_auto := false
     if parser.lookahead().kind == .double_colon {
-        println("parsing variable decl")
         parser.expect(.double_colon)
         type_name = parser.expect(.identifier).value
         parser.expect(.colon_equal)
@@ -539,6 +544,16 @@ fn (mut parser Parser) variable_decl() Expr {
         }
     }
 
+    first_expr := body[0]
+    mut inferred_type := ""
+    if mut first_expr is ast.FunctionCallExpr {
+        if first_expr.name.starts_with("struct_") && first_expr.name.ends_with("_new") {
+           // variable is a struct initializer, so now we can infer the type
+           inferred_type = first_expr.name.replace("struct_", "").replace("_new", "")
+        }
+    }
+
+    // var = "some string";
     if is_reassignment {
         return ast.VariableAssignment {
             name: name,
@@ -546,14 +561,16 @@ fn (mut parser Parser) variable_decl() Expr {
         }
     }
 
+    // var := "some string";
     if is_auto {
         return ast.VariableDecl {
             name: name,
             value: body,
-            type_name: "Any"
+            type_name: if inferred_type == "" { "Any" } else { inferred_type }
         }
     }
 
+    // var :: String := "some_string";
     return ast.VariableDecl {
         name: name,
         value: body,
@@ -561,7 +578,7 @@ fn (mut parser Parser) variable_decl() Expr {
     }
 }
 
-fn (mut parser Parser) if_statement() Expr {
+fn (mut parser Parser) if_statement() ast.IfExpression {
     parser.expect(.kw_if)
     conditional := parser.expr()
     parser.expect(.open_curly)

@@ -6,18 +6,25 @@ import parser{is_binary_op}
 pub struct CppCodeGenerator {
 pub:
     ast ast.AST
+pub mut:
+    vars map[string]string
+    structs []string
 }
 
 pub fn new_cpp(ast ast.AST) CppCodeGenerator {
-    return CppCodeGenerator{ast}
+    return CppCodeGenerator{ast, map[string]string{}, []string{}}
 }
 
 pub fn (mut gen CppCodeGenerator) run() string {
-// TODO: out function is temporary here
-    mut code := "#include <iostream>\n#include <vector>\n\n"
+    // TODO: out function is temporary here
+    mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n\n"
     code += "void out(std::string s) { std::cout << s << std::endl; }\n\n"
     code += "std::string tostring(auto s) { return std::to_string(s); }\n\n"
+    code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n\n"
 
+    for type_name in ["int", "std::string"] {
+        code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n\n"
+    }
 
     for node in gen.ast.nodes {
         code += gen.gen(node)
@@ -112,11 +119,19 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
     for arg in node.args {
         args << gen.fn_arg(arg)
     }
-    mut code := "${gen.typename(node.return_type)} ${node.name}(${args.join(", ")}) {\n"
+
+    mut code := ""
+    if node.name == "main" {
+        for struct_type in gen.structs {
+            code += "std::string type($struct_type s) { return \"$struct_type\"; }\n\n"
+        }
+    }
+
+    code += "${gen.typename(node.return_type)} ${node.name}(${args.join(", ")}) {\n"
     for expr in node.body {
         code += gen.gen(expr)
     }
-    code += "\n}\n"
+    code += "\n}\n\n"
     return code
 }
 
@@ -134,7 +149,7 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
                 }
                 "std::vector<${gen.typename(name.split("]")[1])}>"
             } else {
-                println("Unhandled type: $name")
+                // println("Unhandled type: $name")
                 name
             }
         }
@@ -150,13 +165,29 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     for arg in node.args {
         args << gen.expr(arg).replace(";", "")
     }
+
+    mut fn_name := node.name
+    type_of_callee := gen.vars[node.calling_on]
+    if type_of_callee != "" && gen.structs.contains(type_of_callee) {
+        fn_name = "struct_${type_of_callee}_$fn_name"
+    }
+
+    /*
+    TODO This allows calling functions as such
+
+    Do we need this?
+
+    some_variable := "Some name";
+    some_name.str(); => str(some_name);
+    */
+
     if node.calling_on != "" {
         if args.len > 0 {
-            return "${node.name}(${node.calling_on}, ${args.join("")});"
+            return "${fn_name}(${node.calling_on}, ${args.join("")});\n".replace("; ;", "")
         }
-       return "${node.name}(${node.calling_on});"
+       return "${fn_name}(${node.calling_on});\n".replace("; ;", "")
     }
-    return "${node.name}(${args.join("")});"
+    return "${fn_name}(${args.join("")});\n".replace("; ;", "")
 }
 
 fn (mut gen CppCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
@@ -184,6 +215,7 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
     for expr in node.value {
         body += "${gen.gen(expr)} "
     }
+    gen.vars[node.name] = gen.typename(node.type_name)
     return "${gen.typename(node.type_name)} $node.name = $body;\n"
 }
 
@@ -200,6 +232,8 @@ fn (mut gen CppCodeGenerator) struct_decl(node ast.StructDeclarationStatement) s
     for field in node.fields {
         code += gen.fn_arg(field) + ";"
     }
+
+    gen.structs << node.name
 
     code += "\n};\n\n"
     return code
@@ -291,6 +325,20 @@ fn (mut gen CppCodeGenerator) array_init(node ast.ArrayInit) string {
 
 fn (mut gen CppCodeGenerator) implement_block(node ast.ImplementBlockStatement) string {
     mut code := ""
+    mut struct_args := []string{}
+    mut init_args := []string{}
+
+    for arg in node.struct_args {
+        struct_args << gen.fn_arg(arg)
+    }
+
+    for arg in node.struct_args {
+        init_args << ".$arg.name = $arg.name"
+    }
+
+    code += "$node.name struct_${node.name}_new(${struct_args.join(", ")}) {\n"
+    code += "return (${node.name}){${init_args.join(", ")}};\n"
+    code += "}\n\n"
 
     for func in node.fns {
         code += gen.fn_decl(func)

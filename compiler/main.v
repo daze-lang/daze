@@ -36,12 +36,12 @@ fn load_modules(code string) ?[]string {
 fn to_cpp(source string) ?string {
     mut lexer := lexer.new(source)
     tokens := lexer.lex()?
-    // panic(tokens)
     mut parser := parser.new(tokens)
     ast := parser.parse()
+    // panic(ast)
 
-    // mut checker := checker.new(ast)
-    // checker.run()
+    mut checker := checker.new(ast)
+    checker.run()
     mut codegen := codegen.new_cpp(ast)
     mut code := codegen.run()
     // panic(code)

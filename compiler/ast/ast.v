@@ -75,6 +75,7 @@ pub struct ImplementBlockStatement {
 pub:
     name string
     fns []FunctionDeclarationStatement
+    struct_args []FunctionArgument
 }
 
 pub struct ModuleUseStatement {

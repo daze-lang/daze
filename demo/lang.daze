@@ -3,11 +3,18 @@ struct Person {
 }
 
 implement Person {
-  fn new() :: Void {
-    out("new person");
+  fn get_name() :: String {
+    ret self.name;
   }
 }
 
+fn str(s :: String) :: String {
+  ret s + " is nice.";
+}
+
 fn main() :: Int {
-  out("Hello, world.");
+  me := make Person("Mark");
+  s := "s";
+  out(type(me));
+  out(s);
 }
