@@ -1,6 +1,0 @@
-# idea for basic daze assembly syntax
-section main begin;
-%push int64 5;
-%push int64 9;
-%add;
-section main end;
