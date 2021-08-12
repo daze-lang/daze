@@ -2,7 +2,7 @@
 
 ## TODO
 
-- [ ] Start writing a stack based VM in V for Daze
-- [ ] C backend (?)
 - [ ] AST -> JSON
-- [ ] Implement FileBuffer & refactor codegen
+- [ ] Compile-time type checker
+- [ ] Proper error messages for parser errors (marked with TODOs)
+- [ ] Implement `when`
