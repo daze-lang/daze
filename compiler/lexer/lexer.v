@@ -13,7 +13,7 @@ pub fn new(source string) Lexer {
         source.split(""),
         -1,
         1,
-        0
+        0,
     }
 }
 
@@ -41,7 +41,12 @@ pub fn (mut lexer Lexer) lex() []Token {
         }
 
         // Skipping whitespace
-        if lexer.is_whitespace(current) || current == "\n" {
+        if lexer.is_whitespace(current) {
+            lexer.column++
+            continue
+        }
+
+        if current == "\n" {
             continue
         }
 

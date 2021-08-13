@@ -16,9 +16,10 @@ pub struct Parser {
         statements []ast.Statement
         struct_defs map[string][]ast.FunctionArgument
         parsing_pipe bool
+    filepath string
 }
 
-pub fn new(tokens []Token) Parser {
+pub fn new(tokens []Token, filepath string) Parser {
     return Parser{
         tokens,
         -1,
@@ -26,7 +27,8 @@ pub fn new(tokens []Token) Parser {
         Token{},
         []ast.Statement{},
         map[string][]ast.FunctionArgument{},
-        false
+        false,
+        filepath
     }
 }
 
@@ -119,9 +121,10 @@ fn (mut parser Parser) expr() Expr {
         }
         .single_quote {
             parser.advance() // eating single quote
-            character := parser.expect(.identifier).value
+            tok := parser.expect(.identifier)
+            character := tok.value
             if character.len != 1 {
-                utils.parser_error("Characters must be a single character.")
+                utils.parser_error("Characters must be a single character.", parser.filepath, tok.line, tok.column)
             }
             parser.expect(.single_quote)
             node = ast.CharLiteralExpr{character, "Char"}
@@ -317,7 +320,8 @@ fn (mut parser Parser) for_in_loop() ast.ForInLoopExpr {
 }
 
 fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
-    mut fn_name := parser.expect(.identifier).value
+    tok := parser.expect(.identifier)
+    mut fn_name := tok.value
     mut calling_on := ""
 
     parser.expect(.open_paren)
@@ -344,7 +348,7 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
     }
 
     if fn_name.contains(".") {
-        utils.parser_error("Use the pipe operator.")
+        utils.parser_error("Use the pipe operator.", parser.filepath, tok.line, tok.column)
         parts := fn_name.split(".")
     }
 
@@ -457,7 +461,7 @@ fn (mut parser Parser) variable_decl() Expr {
     name := id.value
     // TODO: move this to the type checker
     if name == name.capitalize() {
-        utils.parser_error("Variables are not allowed to start with a capital letter. (line ${id.line}, col ${id.column})")
+        utils.parser_error("Variables are not allowed to start with a capital letter.", parser.filepath, id.line, id.column)
     }
 
     mut type_name := ""

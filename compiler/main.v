@@ -33,11 +33,11 @@ fn load_modules(code string) ?[]string {
 }
 
 // compiles down daze source code to cpp
-fn to_cpp(source string) string {
+fn to_cpp(source string, path string) string {
     mut lexer := lexer.new(source)
     tokens := lexer.lex()
     // panic(tokens)
-    mut parser := parser.new(tokens)
+    mut parser := parser.new(tokens, path)
     ast := parser.parse()
 
     mut checker := checker.new(ast)
@@ -64,7 +64,7 @@ fn compile_main(path string) ? {
     }
 
     source += input_file
-    code := to_cpp(source)
+    code := to_cpp(source, path)
     output_file_name := os.file_name(path).replace(".daze", "")
 
     cpp(output_file_name, code)
@@ -79,6 +79,7 @@ fn help() {
 }
 
 fn main() {
+    // utils.report("p := new_person() .get_name;", "akarmikecskefing.daze", 1, 18, "Pipe operator expected")
     if os.args.len == 1 {
         help()
         return

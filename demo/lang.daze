@@ -12,7 +12,6 @@ fn (Person) get_name() :: String {
 }
 
 fn main() :: Int {
-  p := new_person("Mark") |> .get_name;
-  p |> out;
-  'c' |> tostring |> out;
+  p := new_person("Mark") |> get_name;
+  'c' |> tostring |> out
 }

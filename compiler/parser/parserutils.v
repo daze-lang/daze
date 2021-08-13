@@ -41,7 +41,7 @@ pub fn (mut parser Parser) expect(kind TokenType) Token {
     found := lexer.to_string(next.kind)
     expected := lexer.to_string(kind)
 
-    utils.syntax_error(found, expected, next.line, next.column)
+    utils.syntax_error(found, expected, next.line, next.column, parser.filepath)
     return Token{}
 }
 
