@@ -220,11 +220,19 @@ fn (mut gen CppCodeGenerator) return_expr(node ast.ReturnExpr) string {
 
 fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
     mut body := ""
+    mut type_name := node.type_name
+
     for expr in node.value {
         body += "${gen.gen(expr)} "
     }
-    gen.vars[node.name] = gen.typename(node.type_name)
-    return "${gen.typename(node.type_name)} $node.name = $body;\n"
+
+    cast := node.value[0]
+    if cast is ast.StructInitialization {
+        type_name = cast.name
+    }
+
+    gen.vars[node.name] = gen.typename(type_name)
+    return "${gen.typename(type_name)} $node.name = $body;\n"
 }
 
 fn (mut gen CppCodeGenerator) variable_assignment(node ast.VariableAssignment) string {

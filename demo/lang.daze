@@ -7,6 +7,6 @@ fn (Person) get_name() :: String {
 }
 
 fn main() :: Int {
-  p :: Person := make Person("Mark");
+  p := make Person("Mark");
   p |> .get_name |> out;
 }
