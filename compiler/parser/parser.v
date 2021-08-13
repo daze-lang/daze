@@ -128,7 +128,7 @@ fn (mut parser Parser) expr() Expr {
         .identifier {
             match parser.lookahead_by(2).kind {
                 .open_paren {
-                    node = parser.fn_call(false)
+                    node = parser.fn_call()
                 }
                 .arrow_left {
                     node = parser.array_push()
@@ -254,28 +254,6 @@ fn (mut parser Parser) fn_arg() ast.FunctionArgument {
     }
 }
 
-fn (mut parser Parser) check_for_binary_ops(lookahead_by_amount int) bool {
-    mut raw_op := []string{}
-    raw_op << parser.peek().value
-    if parser.lookahead_by(lookahead_by_amount).kind in [
-        .plus,
-        .minus,
-        .mod,
-        .div,
-        .and_and,
-        .not,
-        .not_equal,
-        .equal_equal,
-        .less_than,
-        .less_than_equal,
-        .greater_than,
-        .greater_than_equal] {
-            return true
-    }
-
-    return false
-}
-
 fn (mut parser Parser) array_push() ast.ArrayPushExpr {
     target_arr := parser.expect(.identifier).value
     parser.expect(.arrow_left)
@@ -323,6 +301,7 @@ fn (mut parser Parser) for_in_loop() ast.ForInLoopExpr {
         if body_expr is ast.NoOp {
             break
         }
+
         body << body_expr
     }
 
@@ -335,7 +314,7 @@ fn (mut parser Parser) for_in_loop() ast.ForInLoopExpr {
     }
 }
 
-fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr {
+fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
     mut fn_name := parser.expect(.identifier).value
     mut calling_on := ""
 
@@ -365,12 +344,6 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr 
     if fn_name.contains(".") {
         utils.parser_error("Use the pipe operator.")
         parts := fn_name.split(".")
-        panic(parts)
-
-        mut fn_calls := []ast.FunctionCallExpr{}
-        for parser.lookahead().kind != .semicolon {
-            fn_calls << parser.fn_call(false)
-        }
     }
 
     return ast.FunctionCallExpr{

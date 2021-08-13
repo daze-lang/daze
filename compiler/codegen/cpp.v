@@ -20,13 +20,13 @@ pub fn new_cpp(ast ast.AST) CppCodeGenerator {
 pub fn (mut gen CppCodeGenerator) run() string {
     // TODO: out function is temporary here
     mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
-    code += "void out(std::string s) { std::cout << s << std::endl; }\n\n"
-    code += "std::string tostring(auto s) { return std::to_string(s); }\n\n"
-    code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n\n"
-    code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n\n"
+    code += "void out(std::string s) { std::cout << s << std::endl; }\n"
+    code += "std::string tostring(auto s) { return std::to_string(s); }\n"
+    code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n"
+    code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n"
 
     for type_name in get_built_in_types() {
-        code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n\n"
+        code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n"
     }
 
     for node in gen.ast.nodes {
@@ -229,6 +229,8 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
     cast := node.value[0]
     if cast is ast.StructInitialization {
         type_name = cast.name
+    } else if cast is ast.FunctionCallExpr {
+        type_name = gen.fns[cast.name]
     }
 
     gen.vars[node.name] = gen.typename(type_name)

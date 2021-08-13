@@ -2,11 +2,15 @@ struct Person {
   name :: String
 }
 
+fn new_person(name :: String) :: Person {
+  ret make Person(name);
+}
+
 fn (Person) get_name() :: String {
   ret self.name;
 }
 
 fn main() :: Int {
-  p := make Person("Mark");
-  p |> .get_name |> out;
+  p := new_person("Mark") |> .get_name;
+  p |> out;
 }
