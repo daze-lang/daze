@@ -9,7 +9,6 @@ pub mut:
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
-    | ImplementBlockStatement
     | ModuleUseStatement
     | FunctionArgument
     | UnsafeBlock
@@ -17,6 +16,7 @@ pub type Statement = FunctionDeclarationStatement
     | NoOp
 
 pub type Expr = FunctionCallExpr
+    | StructInitialization
     | VariableAssignment
     | StringLiteralExpr
     | NumberLiteralExpr
@@ -48,13 +48,19 @@ pub mut:
     args []FunctionArgument
     body []Expr
     return_type string
-    is_struct bool
     gen_type string
+    parent_struct string
 }
 
 pub struct UnsafeBlock {
 pub:
     body string
+}
+
+pub struct StructInitialization {
+pub:
+    name string
+    args []Expr
 }
 
 pub struct GlobalDecl {
@@ -71,13 +77,6 @@ pub:
 pub struct RawCrystalCodeExpr {
 pub:
     value string
-}
-
-pub struct ImplementBlockStatement {
-pub:
-    name string
-    fns []FunctionDeclarationStatement
-    struct_args []FunctionArgument
 }
 
 pub struct ModuleUseStatement {
@@ -127,7 +126,6 @@ pub:
     name string
     calling_on string
     args []Expr
-    gen_type string
 }
 
 pub struct RawBinaryOpExpr {

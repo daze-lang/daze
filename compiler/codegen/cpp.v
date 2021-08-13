@@ -55,8 +55,6 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.FunctionArgument {
         code = gen.fn_arg(node)
     } else if mut node is ast.ModuleDeclarationStatement {
-    } else if mut node is ast.ImplementBlockStatement {
-        code = gen.implement_block(node)
     } else if mut node is ast.UnsafeBlock {
         code = node.body
     } else if mut node is ast.StructDeclarationStatement {
@@ -100,6 +98,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.for_loop(node)
     } else if mut node is ast.ArrayDefinition {
         code = gen.array(node)
+    } else if mut node is ast.StructInitialization {
+        code = gen.struct_init(node)
     } else if mut node is ast.ArrayPushExpr {
         code = "${node.target}.push_back(${gen.gen(node.value)});\n"
     } else if mut node is ast.IncrementExpr {
@@ -331,30 +331,6 @@ fn (mut gen CppCodeGenerator) array_init(node ast.ArrayInit) string {
     return "{${items.join(" ")}}"
 }
 
-fn (mut gen CppCodeGenerator) implement_block(node ast.ImplementBlockStatement) string {
-    mut code := ""
-    mut struct_args := []string{}
-    mut init_args := []string{}
-
-    for arg in node.struct_args {
-        struct_args << gen.fn_arg(arg)
-    }
-
-    for arg in node.struct_args {
-        init_args << ".$arg.name = $arg.name"
-    }
-
-    code += "$node.name struct_${node.name}_new(${struct_args.join(", ")}) {\n"
-    code += "return (${node.name}){${init_args.join(", ")}};\n"
-    code += "}\n\n"
-
-    for func in node.fns {
-        code += gen.fn_decl(func)
-    }
-
-    return code
-}
-
 fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
     mut code := []string{}
     mut paren_count := 0
@@ -413,6 +389,16 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
     }
 
     return code.reverse().join("") + ")".repeat(paren_count) + ";\n"
+}
+
+fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string {
+    mut args := []string{}
+
+    for arg in node.args {
+        args << gen.expr(arg)
+    }
+
+    return "{${args.join(", ")}}"
 }
 
 fn get_built_in_types() []string {

@@ -52,9 +52,6 @@ fn (mut parser Parser) statement() Statement {
             panic("For not allowed at top level")
         }
         .kw_global { node = parser.global() }
-        .kw_implement {
-            node = parser.implement_block()
-        }
         .kw_unsafe { node = parser.unsafe_() }
         .kw_use { node = parser.use() }
         .kw_fn { node = parser.fn_decl() }
@@ -94,8 +91,7 @@ fn (mut parser Parser) expr() Expr {
         .comma { node = ast.VariableExpr{parser.advance().value} }
         .semicolon { parser.advance() }
         .kw_make {
-            parser.expect(.kw_make)
-            node = parser.fn_call(true)
+            node = parser.struct_new()
         }
         .open_square { node = parser.array() }
         .kw_for {
@@ -169,8 +165,15 @@ fn (mut parser Parser) expr() Expr {
 
 // Function Declarations
 fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
+    mut parent_struct := ""
     parser.expect(.kw_fn)
-    fn_name := parser.expect(.identifier).value
+    if parser.lookahead().kind == .open_paren {
+        parser.expect(.open_paren)
+        parent_struct = parser.expect(.identifier).value
+        parser.expect(.close_paren)
+    }
+
+    mut fn_name := parser.expect(.identifier).value
     gen_type := parser.generic()
     parser.expect(.open_paren)
     mut args := []ast.FunctionArgument{}
@@ -200,13 +203,21 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     }
     parser.expect(.close_curly)
 
+    if parent_struct != "" {
+        fn_name = "struct_${parent_struct}_${fn_name}"
+        args.prepend(ast.FunctionArgument{
+            name: "self",
+            type_name: parent_struct
+        })
+    }
+
     return ast.FunctionDeclarationStatement{
         name: fn_name,
         args: args,
         body: body,
         return_type: ret_type,
-        is_struct: false,
-        gen_type: gen_type
+        gen_type: gen_type,
+        parent_struct: parent_struct
     }
 }
 
@@ -263,32 +274,6 @@ fn (mut parser Parser) check_for_binary_ops(lookahead_by_amount int) bool {
     }
 
     return false
-}
-
-fn (mut parser Parser) implement_block() ast.ImplementBlockStatement {
-    parser.expect(.kw_implement)
-    name := parser.expect(.identifier).value
-    parser.expect(.open_curly)
-
-    mut fns := []ast.FunctionDeclarationStatement{}
-    for parser.lookahead().kind != .close_curly {
-        mut decl := parser.fn_decl()
-        if decl.name != "new" {
-            decl.args.prepend(ast.FunctionArgument {
-                name: "self",
-                type_name: name
-            })
-        }
-        decl.name = "struct_${name}_$decl.name"
-        fns << decl
-    }
-    parser.expect(.close_curly)
-
-    return ast.ImplementBlockStatement{
-        name: name,
-        fns: fns,
-        struct_args: parser.struct_defs[name]
-    }
 }
 
 fn (mut parser Parser) array_push() ast.ArrayPushExpr {
@@ -354,20 +339,8 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr 
     mut fn_name := parser.expect(.identifier).value
     mut calling_on := ""
 
-
-    if fn_name.contains(".") {
-        utils.parser_error("Use the pipe operator.")
-        // parts := fn_name.split(".")
-        // fn_name = parts.pop()
-        // calling_on = parts[0]
-    }
-    gen_type := parser.generic()
     parser.expect(.open_paren)
     mut args := []Expr{}
-
-    if is_struct_initializer {
-        fn_name = "struct_${fn_name}_new"
-    }
 
     // no args passed
     if parser.lookahead().kind == .close_paren {
@@ -376,7 +349,6 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr 
             name: fn_name,
             calling_on: calling_on,
             args: []ast.Expr{},
-            gen_type: gen_type
         }
     }
 
@@ -385,8 +357,20 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr 
     }
 
     parser.expect(.close_paren)
+
     if parser.lookahead().kind !in [.close_paren, .open_curly, .pipe] && !is_binary_op(parser.lookahead()) {
         parser.expect(.semicolon)
+    }
+
+    if fn_name.contains(".") {
+        utils.parser_error("Use the pipe operator.")
+        parts := fn_name.split(".")
+        panic(parts)
+
+        mut fn_calls := []ast.FunctionCallExpr{}
+        for parser.lookahead().kind != .semicolon {
+            fn_calls << parser.fn_call(false)
+        }
     }
 
     return ast.FunctionCallExpr{
@@ -724,5 +708,21 @@ fn (mut parser Parser) pipe(prev ast.Expr) ast.PipeExpr {
     parser.parsing_pipe = false
     return ast.PipeExpr{
         body: body
+    }
+}
+
+fn (mut parser Parser) struct_new() ast.StructInitialization {
+    parser.expect(.kw_make)
+    struct_name := parser.expect(.identifier).value
+    parser.expect(.open_paren)
+    mut args := []ast.Expr{}
+    for parser.lookahead().kind != .close_paren {
+        args << parser.expr()
+    }
+    parser.expect(.close_paren)
+
+    return ast.StructInitialization{
+        name: struct_name,
+        args: args
     }
 }

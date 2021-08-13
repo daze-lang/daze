@@ -1,3 +1,12 @@
+struct Person {
+  name :: String
+}
+
+fn (Person) get_name() :: String {
+  ret self.name;
+}
+
 fn main() :: Int {
-  "Hello world." |> out;
+  p :: Person := make Person("Mark");
+  p |> .get_name |> out;
 }
