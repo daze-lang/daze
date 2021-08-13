@@ -63,6 +63,8 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
         code = "#define $node.name $node.value\n"
     } else if mut node is ast.ModuleUseStatement {
         code = "include ${node.path.replace("daze::", "")}\n"
+    } else if mut node is ast.Comment {
+        code = "// $node.value\n"
     }
 
     return code
@@ -116,6 +118,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.array_init(node)
     } else if mut node is ast.PipeExpr {
         code = gen.pipe(node)
+    } else if mut node is ast.Comment {
+        code = "// $node.value\n"
     }
 
     return code

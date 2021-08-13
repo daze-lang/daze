@@ -2,6 +2,7 @@ struct Person {
   name :: String
 }
 
+# This is a function
 fn new_person(name :: String) :: Person {
   ret make Person(name);
 }
@@ -13,4 +14,5 @@ fn (Person) get_name() :: String {
 fn main() :: Int {
   p := new_person("Mark") |> .get_name;
   p |> out;
+  'c' |> tostring |> out;
 }

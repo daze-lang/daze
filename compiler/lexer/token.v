@@ -38,6 +38,7 @@ pub enum TokenType {
     dot                // .
     pipe               // |>
     single_quote       // '
+    comment            // # comment
 
     kw_struct          // `struct`
     kw_fn              // `fn`
@@ -93,6 +94,7 @@ pub const tokens_map = map{
   "pipe"               :"|>",
   "dot"                :".",
   "single_quote"       :"'",
+  // "comment"            :"comment",
 }
 
 pub const keywords_map = map{

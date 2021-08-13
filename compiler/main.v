@@ -33,9 +33,9 @@ fn load_modules(code string) ?[]string {
 }
 
 // compiles down daze source code to cpp
-fn to_cpp(source string) ?string {
+fn to_cpp(source string) string {
     mut lexer := lexer.new(source)
-    tokens := lexer.lex()?
+    tokens := lexer.lex()
     // panic(tokens)
     mut parser := parser.new(tokens)
     ast := parser.parse()
@@ -46,20 +46,6 @@ fn to_cpp(source string) ?string {
     mut code := codegen.run()
     // panic(code)
     return code
-}
-
-// removes comments from daze source code
-fn strip_comments(source string) string {
-    mut stripped_comments := ""
-
-    lines := source.split("\n")
-    for line in lines {
-        if !line.trim_space().starts_with("#") {
-            stripped_comments += "${line}\n"
-        }
-    }
-
-    return stripped_comments
 }
 
 fn cpp(file_name string, code string) {
@@ -78,7 +64,7 @@ fn compile_main(path string) ? {
     }
 
     source += input_file
-    code := to_cpp(strip_comments(source))?
+    code := to_cpp(source)
     output_file_name := os.file_name(path).replace(".daze", "")
 
     cpp(output_file_name, code)

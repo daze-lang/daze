@@ -17,7 +17,7 @@ pub fn new(source string) Lexer {
     }
 }
 
-pub fn (mut lexer Lexer) lex() ?[]Token {
+pub fn (mut lexer Lexer) lex() []Token {
     mut tokens := []Token{}
 
     for {
@@ -26,7 +26,19 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
             break
         }
 
-        current := lexer.advance()
+        mut current := lexer.advance()
+
+        // reading comments
+        if current == "#" {
+            lexer.advance()
+            mut comment := ""
+            for lexer.lookahead() != "\n" {
+                comment += lexer.advance()
+            }
+            current = lexer.advance()
+            tokens << Token{.comment, comment, lexer.line, lexer.column}
+            continue
+        }
 
         // Skipping whitespace
         if lexer.is_whitespace(current) || current == "\n" {
@@ -184,7 +196,7 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
         }
 
         if lexer.is_number(current) && current != "." {
-            tokens << Token{.number, lexer.read_number(current)?, lexer.line, lexer.column}
+            tokens << Token{.number, lexer.read_number(current), lexer.line, lexer.column}
             continue
         }
 

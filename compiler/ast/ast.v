@@ -13,6 +13,7 @@ pub type Statement = FunctionDeclarationStatement
     | FunctionArgument
     | UnsafeBlock
     | GlobalDecl
+    | Comment
     | NoOp
 
 pub type Expr = FunctionCallExpr
@@ -38,6 +39,7 @@ pub type Expr = FunctionCallExpr
     | ArrayInit
     | BinaryOp
     | PipeExpr
+    | Comment
     | NoOp
 
 pub type Node = Statement | Expr
@@ -129,6 +131,11 @@ pub:
 }
 
 pub struct RawBinaryOpExpr {
+pub mut:
+    value string
+}
+
+pub struct Comment {
 pub mut:
     value string
 }

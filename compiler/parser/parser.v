@@ -54,6 +54,7 @@ fn (mut parser Parser) statement() Statement {
         .kw_global { node = parser.global() }
         .kw_unsafe { node = parser.unsafe_() }
         .kw_use { node = parser.use() }
+        .comment { node = ast.Comment{value: parser.advance().value} }
         .kw_fn { node = parser.fn_decl() }
         .kw_is {
             if parser.lookahead_by(2).kind == .identifier {
@@ -73,6 +74,7 @@ fn (mut parser Parser) expr() Expr {
         .open_curly {
             node = parser.array_init()
         }
+        .comment { node = ast.Comment{value: parser.advance().value} }
         .open_paren { node = parser.grouped_expr() }
         .close_paren { utils.error("Unexpected `)` found.") }
         .plus,

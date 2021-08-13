@@ -58,7 +58,7 @@ fn (mut lexer Lexer) read_string() string {
     return string_in
 }
 
-fn (mut lexer Lexer) read_number(c string) ?string {
+fn (mut lexer Lexer) read_number(c string) string {
     mut raw_num := c
     for lexer.is_number(lexer.lookahead()) {
         raw_num += lexer.advance()
