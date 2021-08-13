@@ -37,6 +37,7 @@ pub enum TokenType {
     arrow_left         // <-
     dot                // .
     pipe               // |>
+    single_quote       // '
 
     kw_struct          // `struct`
     kw_fn              // `fn`
@@ -91,6 +92,7 @@ pub const tokens_map = map{
   "arrow_left"         :"<-",
   "pipe"               :"|>",
   "dot"                :".",
+  "single_quote"       :"'",
 }
 
 pub const keywords_map = map{
@@ -109,7 +111,6 @@ pub const keywords_map = map{
     "in": TokenType.kw_in
     "make": TokenType.kw_make
     "unsafe": TokenType.kw_unsafe
-    "global": TokenType.kw_global
 }
 
 pub struct Token {

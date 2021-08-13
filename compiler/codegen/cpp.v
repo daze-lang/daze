@@ -19,12 +19,13 @@ pub fn new_cpp(ast ast.AST) CppCodeGenerator {
 
 pub fn (mut gen CppCodeGenerator) run() string {
     // TODO: out function is temporary here
-    mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n\n"
+    mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
     code += "void out(std::string s) { std::cout << s << std::endl; }\n\n"
     code += "std::string tostring(auto s) { return std::to_string(s); }\n\n"
     code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n\n"
+    code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n\n"
 
-    for type_name in ["int", "std::string"] {
+    for type_name in get_built_in_types() {
         code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n\n"
     }
 
@@ -73,6 +74,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
     mut code := ""
     if mut node is ast.StringLiteralExpr {
         code = gen.string_literal_expr(node)
+    } else if mut node is ast.CharLiteralExpr {
+        code = "'$node.value'"
     } else if mut node is ast.NumberLiteralExpr {
         code = gen.number_literal_expr(node)
     } else if mut node is ast.FunctionCallExpr {
@@ -359,6 +362,10 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
 
     for i, element in node.body {
         if element is ast.VariableExpr {
+            if element.value in ["true", "false"] {
+                utils.codegen_error("Pipes can't start with a boolean.")
+            }
+
             if element.value.starts_with(".") {
                 cast := previous
                 if cast is ast.FunctionCallExpr {
@@ -390,7 +397,7 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
                     code << "${element.value}("
                 }
             }
-        } else if element is ast.StringLiteralExpr || element is ast.NumberLiteralExpr {
+        } else if element is ast.StringLiteralExpr || element is ast.NumberLiteralExpr || element is ast.CharLiteralExpr {
             if i != 0 {
                 utils.codegen_error("Pipelines can't have string / int pipes, only function calls.")
             }
@@ -408,7 +415,11 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
     return code.reverse().join("") + ")".repeat(paren_count) + ";\n"
 }
 
+fn get_built_in_types() []string {
+    return ["std::string", "int", "bool", "float", "char"]
+}
+
 // TODO add more built in types
 fn is_built_in_type(type_name string) bool {
-    return type_name in ["std::string", "int"]
+    return type_name in get_built_in_types()
 }

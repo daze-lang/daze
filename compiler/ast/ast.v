@@ -21,6 +21,7 @@ pub type Expr = FunctionCallExpr
     | StringLiteralExpr
     | NumberLiteralExpr
     | ArrayDefinition
+    | CharLiteralExpr
     | RawBinaryOpExpr
     | ForInLoopExpr
     | ArrayPushExpr
@@ -145,6 +146,12 @@ pub:
 }
 
 pub struct StringLiteralExpr {
+pub:
+    value string
+    value_type string
+}
+
+pub struct CharLiteralExpr {
 pub:
     value string
     value_type string

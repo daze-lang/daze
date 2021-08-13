@@ -119,6 +119,15 @@ fn (mut parser Parser) expr() Expr {
             node = ast.NumberLiteralExpr{strconv.atof64(parser.lookahead().value), "Int"}
             parser.advance()
         }
+        .single_quote {
+            parser.advance() // eating single quote
+            character := parser.expect(.identifier).value
+            if character.len != 1 {
+                utils.parser_error("Characters must be a single character.")
+            }
+            parser.expect(.single_quote)
+            node = ast.CharLiteralExpr{character, "Char"}
+        }
         .kw_return { node = parser.ret() }
         .identifier {
             match parser.lookahead_by(2).kind {
@@ -487,7 +496,7 @@ fn (mut parser Parser) ret() ast.ReturnExpr {
 fn (mut parser Parser) variable_decl() Expr {
     id := parser.expect(.identifier)
     name := id.value
-    // TODO move this to the type checker
+    // TODO: move this to the type checker
     if name == name.capitalize() {
         utils.parser_error("Variables are not allowed to start with a capital letter. (line ${id.line}, col ${id.column})")
     }
@@ -685,7 +694,7 @@ fn (mut parser Parser) global() ast.GlobalDecl {
     name := parser.expect(.identifier).value
     parser.expect(.equal)
     if parser.lookahead().kind !in [.string, .number] {
-        // TODO proper error message
+        // TODO: proper error message
         panic("Global constants can only hold strings or integers.")
     }
     is_string := parser.lookahead().kind == .string

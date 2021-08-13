@@ -98,6 +98,10 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 tokens << Token{.mod, current, lexer.line, lexer.column}
                 continue
             }
+            "'" {
+                tokens << Token{.single_quote, current, lexer.line, lexer.column}
+                continue
+            }
             // "[" {
             //     tokens << Token{.open_square, current, lexer.line, lexer.column}
             //     continue
