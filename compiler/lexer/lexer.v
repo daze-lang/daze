@@ -174,6 +174,8 @@ pub fn (mut lexer Lexer) lex() ?[]Token {
                 kind := to_keyword(id) or { TokenType.identifier }
                 tokens << Token{kind, id, lexer.line, lexer.column}
                 continue
+            } else if current == "." {
+                tokens << Token{.dot, ".", lexer.line, lexer.column}
             }
         }
 

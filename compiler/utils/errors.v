@@ -15,6 +15,12 @@ pub fn parser_error(message string) {
     exit(1)
 }
 
+pub fn codegen_error(message string) {
+    msg := term.bold(term.white(message))
+    println("${term.bold(term.red("CODEGEN ERROR: "))}$msg")
+    exit(1)
+}
+
 pub fn error(message string) {
     msg := term.bold(term.white(message))
     println("${term.bold(term.red("ERROR: "))}$msg")

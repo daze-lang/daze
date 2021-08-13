@@ -16,8 +16,8 @@ implement Person {
   }
 }
 
-fn get_person() :: Person {
-  ret make Person("Mark");
+fn get_person(name :: String) :: Person {
+  ret make Person(name);
 }
 
 fn main() :: Int {
@@ -27,5 +27,7 @@ fn main() :: Int {
   someone2 := make Person("Mark");
   someone2 |> .get_name |> greet |> say;
 
-  out(get_person |> .get_name |> greet);
+  "Hello, world" |> out;
+
+  get_person("Valaki") |> .get_name |> out;
 }

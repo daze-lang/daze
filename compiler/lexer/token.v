@@ -35,6 +35,7 @@ pub enum TokenType {
     open_square        // [
     close_square       // ]
     arrow_left         // <-
+    dot                // .
     pipe               // |>
 
     kw_struct          // `struct`
@@ -89,6 +90,7 @@ pub const tokens_map = map{
   "close_square"       :"]",
   "arrow_left"         :"<-",
   "pipe"               :"|>",
+  "dot"                :".",
 }
 
 pub const keywords_map = map{

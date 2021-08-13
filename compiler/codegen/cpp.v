@@ -2,6 +2,7 @@ module codegen
 
 import ast
 import parser{is_binary_op}
+import utils
 
 pub struct CppCodeGenerator {
 pub:
@@ -149,7 +150,7 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
             if name.contains("[]") {
                 if name.contains("Any") {
                     // TODO proper, colored error message
-                    panic("Arrays cant be of type Any")
+                    utils.codegen_error("Arrays cant be of type Any")
                 }
                 "std::vector<${gen.typename(name.split("]")[1])}>"
             } else {
@@ -364,16 +365,22 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
                     if cast.name.starts_with("struct") {
                         parts := cast.name.split("_")
                         code << "${parts[0]}_${parts[1]}_${element.value.replace(".", "")}("
+                    } else {
+                        code << "struct_${gen.fns[cast.name]}_${element.value.replace(".", "")}("
                     }
                 } else if cast is ast.VariableExpr {
                     mut type_info := gen.vars[cast.value]
                     if type_info == "" {
                         type_info = gen.fns[cast.value]
                     }
+
+                    if is_built_in_type(type_info) {
+                        utils.codegen_error("Calling an accessor on anything but a struct / function call is illegal.")
+                    }
+
                     code << "struct_${type_info}_${element.value.replace(".", "")}("
                 } else {
-                    // TODO proper error message
-                    panic("Calling an accessor on anything but a struct / function call is illegal.")
+                    utils.codegen_error("Calling an accessor on anything but a struct / function call is illegal.")
                 }
             } else {
                 if gen.vars.keys().contains(element.value) {
@@ -385,8 +392,7 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
             }
         } else if element is ast.StringLiteralExpr || element is ast.NumberLiteralExpr {
             if i != 0 {
-                // TODO proper error message
-                panic("Pipelines can't have string / int pipes, only function calls.")
+                utils.codegen_error("Pipelines can't have string / int pipes, only function calls.")
             }
             code << "[](){ return ${gen.expr(element)}; }()"
             paren_count--
@@ -400,4 +406,9 @@ fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
     }
 
     return code.reverse().join("") + ")".repeat(paren_count) + ";\n"
+}
+
+// TODO add more built in types
+fn is_built_in_type(type_name string) bool {
+    return type_name in ["std::string", "int"]
 }

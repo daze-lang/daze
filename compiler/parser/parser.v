@@ -345,10 +345,12 @@ fn (mut parser Parser) fn_call(is_struct_initializer bool) ast.FunctionCallExpr 
     mut fn_name := parser.expect(.identifier).value
     mut calling_on := ""
 
+
     if fn_name.contains(".") {
-        parts := fn_name.split(".")
-        fn_name = parts.pop()
-        calling_on = parts[0]
+        utils.parser_error("Use the pipe operator.")
+        // parts := fn_name.split(".")
+        // fn_name = parts.pop()
+        // calling_on = parts[0]
     }
     gen_type := parser.generic()
     parser.expect(.open_paren)
