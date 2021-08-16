@@ -256,14 +256,24 @@ fn (mut gen CppCodeGenerator) set_module(name string) {
 }
 
 fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
-    mut code := "if (${gen.expr(node.conditional).replace(";", "")}) {\n"
+    mut if_conditional := ""
+
+    for cbody in node.conditional {
+        if_conditional += gen.expr(cbody)
+    }
+
+    mut code := "if ($if_conditional) {\n"
     for func in node.body {
         code += gen.gen(func)
     }
 
     if node.elseifs.len != 0 {
         for elsif in node.elseifs {
-            code += "} else if(${gen.expr(elsif.conditional)}){\n"
+            mut cbody_conditional := ""
+            for cbody in elsif.conditional {
+                cbody_conditional += gen.expr(cbody)
+            }
+            code += "} else if($cbody_conditional){\n"
             for func in elsif.body {
                 code += gen.gen(func)
             }
@@ -282,7 +292,12 @@ fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
 }
 
 fn (mut gen CppCodeGenerator) for_loop(node ast.ForLoopExpr) string {
-    mut code := "\nwhile (${gen.gen(node.conditional)}) {\n"
+    mut conditional := ""
+    for c in node.conditional {
+        conditional += gen.gen(c)
+    }
+
+    mut code := "\nwhile ($conditional) {\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
     }

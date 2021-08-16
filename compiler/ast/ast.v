@@ -107,7 +107,7 @@ pub:
 
 pub struct IfExpression {
 pub:
-    conditional Expr
+    conditional []Expr
     body []Expr
     elseifs []IfExpression
     else_branch []Expr
@@ -201,7 +201,7 @@ pub:
 
 pub struct ForLoopExpr {
 pub:
-    conditional Expr
+    conditional []Expr
     body []Expr
 }
 

@@ -252,9 +252,13 @@ fn (mut parser Parser) array_push() ast.ArrayPushExpr {
 
 fn (mut parser Parser) for_loop() ast.ForLoopExpr {
     parser.expect(.kw_for)
-    conditional := parser.expr()
-    mut body := []Expr{}
+    mut conditional_body := []ast.Expr{}
+    for parser.lookahead().kind != .open_curly {
+        conditional_body << parser.expr()
+    }
     parser.expect(.open_curly)
+
+    mut body := []Expr{}
 
     for parser.lookahead().kind != .close_curly {
         body_expr := parser.expr()
@@ -267,7 +271,7 @@ fn (mut parser Parser) for_loop() ast.ForLoopExpr {
     parser.expect(.close_curly)
 
     return ast.ForLoopExpr{
-        conditional: conditional,
+        conditional: conditional_body,
         body: body
     }
 }
@@ -496,7 +500,10 @@ fn (mut parser Parser) variable_decl() Expr {
 
 fn (mut parser Parser) if_statement() ast.IfExpression {
     parser.expect(.kw_if)
-    conditional := parser.expr()
+    mut conditional_body := []ast.Expr{}
+    for parser.lookahead().kind != .open_curly {
+        conditional_body << parser.expr()
+    }
     parser.expect(.open_curly)
     mut body := []Expr{}
     mut else_body := []Expr{}
@@ -510,7 +517,10 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
     if parser.lookahead().kind == .kw_elif {
         for parser.lookahead().kind == .kw_elif {
             parser.expect(.kw_elif)
-            elseif_conditional := parser.expr()
+            mut elseif_conditional_body := []ast.Expr{}
+            for parser.lookahead().kind != .open_curly {
+                elseif_conditional_body << parser.expr()
+            }
             parser.expect(.open_curly)
             mut elseif_body := []Expr{}
 
@@ -519,7 +529,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
             }
             parser.expect(.close_curly)
             elseif_expr := ast.IfExpression{
-                conditional: elseif_conditional,
+                conditional: elseif_conditional_body,
                 body: elseif_body,
                 else_branch: []Expr{}
             }
@@ -537,7 +547,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
     }
 
     return ast.IfExpression{
-        conditional: conditional,
+        conditional: conditional_body,
         body: body,
         elseifs: elseifs,
         else_branch: else_body

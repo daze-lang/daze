@@ -2,20 +2,11 @@ is main;
 
 use "daze::io";
 
-fn range(from :: Int, to :: Int) :: []Int {
-  arr :: []Int := {};
-  i :: Int := from;
-
-  for (i <= to) {
-    arr <- i;
-    i++;
-  }
-
-  ret arr;
-}
-
 fn main() :: Int {
-  for i in range(10, 15) {
-    io:println(i);
+  i :: Int := 5;
+
+  if i == 5 {
+    io:println("i is 5");
   }
+
 }
