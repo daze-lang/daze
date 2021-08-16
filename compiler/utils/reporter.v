@@ -7,14 +7,10 @@ pub fn report(filename string, line int, column int, errmsg string, error_type s
     file_contents := os.read_file(filename) or { panic("File not found") }
     lines := file_contents.split("\n")
     code := lines[line - 1]
-    width, height := term.get_terminal_size()
-    line_info := term.bold(term.red("L${line}")) + term.bold(term.red(" | "))
-    header := error_type.to_upper()
+    padding := 8
 
-    println("")
-    println("${term.bold(term.red(header))} ${" ".repeat(width - filename.len - header.len - 2)} ${term.bold(filename)}")
-    println("")
-    println(line_info + term.bold(term.red(code)))
-    println("")
-    println(errmsg)
+    print(term.white(term.bold("$filename:$line:$column: ")))
+    println("${term.red(term.bold("error: "))}${term.white(term.bold(errmsg))}")
+    println(" ".repeat(padding) + code)
+    println(" ".repeat(column - 1 + padding) + term.red(term.bold("^")))
 }

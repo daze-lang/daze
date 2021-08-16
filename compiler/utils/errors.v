@@ -3,7 +3,7 @@ module utils
 import term
 
 pub fn syntax_error(found string, expected string, line int, column int, filepath string) {
-    report(filepath, line, column, "Unexpected: found `${found}`, expected `${expected}`.", "syntax error")
+    report(filepath, line, column, "Unexpected: found `${term.underline(found)}`, expected `${term.underline(expected)}`.", "syntax error")
     exit(1)
 }
 

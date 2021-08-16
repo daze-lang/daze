@@ -56,6 +56,7 @@ pub enum TokenType {
     kw_make            // `make`
     kw_unsafe          // `unsafe`
     kw_global          // `global`
+    kw_try             // `try`
 
     eof                // indicating that there are no more tokens left
 }
@@ -113,6 +114,8 @@ pub const keywords_map = map{
     "in": TokenType.kw_in
     "make": TokenType.kw_make
     "unsafe": TokenType.kw_unsafe
+    "global": TokenType.kw_global
+    "try": TokenType.kw_try
 }
 
 pub struct Token {
