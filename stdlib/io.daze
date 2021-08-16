@@ -1,0 +1,12 @@
+is io;
+
+use "daze::something";
+
+struct DefinedInIO {
+  name :: String
+}
+
+fn hello_from_io() :: Void {
+  out("Hello from io module!");
+  something:test_fn();
+}

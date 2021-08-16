@@ -10,33 +10,23 @@ pub:
 pub mut:
     vars map[string]string
     fns map[string]string
-    structs []string
+    mod_name string
 }
 
 pub fn new_cpp(ast ast.AST) CppCodeGenerator {
-    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, []string{}}
+    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, ""}
 }
 
 pub fn (mut gen CppCodeGenerator) run() string {
-    // TODO: out function is temporary here
-    mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
-   code += "std::string __ERROR__;\n"
-   code += "void out(std::string s) { std::cout << s << std::endl; }\n"
-   code += "std::string tostring(auto s) { return std::to_string(s); }\n"
-   code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n"
-   code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n"
-   code += "std::string error(std::string msg) { __ERROR__ = msg; throw(msg); }\n"
-   code += "void fatal(std::string msg) { std::cout << \"FATAL ERROR: \" + msg << std::endl; exit(1); }\n"
+    mut code := ""
 
-    for type_name in get_built_in_types() {
-       code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n"
-    }
+    code += "\n\n//========== DAZE CODE ==========\n\n"
 
     for node in gen.ast.nodes {
        code += gen.gen(node)
     }
 
-    return code
+    return code + if gen.mod_name != "main" { "\n}" } else { "" }
 }
 
 pub fn (mut gen CppCodeGenerator) gen(node ast.Node) string {
@@ -58,6 +48,10 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.FunctionArgument {
         code = gen.fn_arg(node)
     } else if mut node is ast.ModuleDeclarationStatement {
+        gen.mod_name = node.name
+        if node.name != "main" {
+            code = "\nnamespace $node.name {\n"
+        }
     } else if mut node is ast.UnsafeBlock {
         code = node.body
     } else if mut node is ast.StructDeclarationStatement {
@@ -65,7 +59,6 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.GlobalDecl {
         code = "#define $node.name $node.value\n"
     } else if mut node is ast.ModuleUseStatement {
-        code = "include ${node.path.replace("daze::", "")}\n"
     } else if mut node is ast.Comment {
         code = "// $node.value\n"
     }
@@ -134,12 +127,6 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
     }
 
     mut code := ""
-    if node.name == "main" {
-        for struct_type in gen.structs {
-            code += "std::string type($struct_type s) { return \"$struct_type\"; }\n\n"
-        }
-    }
-
     is_optional := node.return_type.ends_with("?")
     mut ret_type := node.return_type.replace("?", "")
 
@@ -183,17 +170,7 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
         args << gen.expr(arg).replace(";", "")
     }
 
-    mut fn_name := node.name
-
-    /*
-    TODO This allows calling functions as such
-
-    Do we need this?
-
-    some_variable := "Some name";
-    some_name.str(); => str(some_name);
-    */
-
+    mut fn_name := node.name.replace(":", "::")
     return "${fn_name}(${args.join("")});\n".replace("; ;", "")
 }
 
@@ -229,7 +206,7 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
     mut optional := ast.OptionalFunctionCall{}
     cast := node.value[0]
     if cast is ast.StructInitialization {
-        type_name = cast.name
+        type_name = cast.name.replace(":", "::")
     } else if cast is ast.FunctionCallExpr {
         type_name = gen.fns[cast.name]
     } else if cast is ast.OptionalFunctionCall {
@@ -264,8 +241,6 @@ fn (mut gen CppCodeGenerator) struct_decl(node ast.StructDeclarationStatement) s
     for field in node.fields {
         code += gen.fn_arg(field) + ";"
     }
-
-    gen.structs << node.name
 
     for member_fn in node.member_fns {
         code += "\n" + gen.statement(member_fn)
@@ -366,7 +341,7 @@ fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string 
         args << gen.expr(arg)
     }
 
-    return "($node.name){${args.join(", ").replace(",,", "")}}"
+    return "($node.name.replace(':', '::')){${args.join(", ").replace(",,", "")}}"
 }
 
 fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCall) string {

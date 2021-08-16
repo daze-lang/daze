@@ -1,3 +1,5 @@
+is main;
+
 fn throw_err() :: String? {
   if (5 != 4) {
     error("5 does not equal 4. Surprised?");

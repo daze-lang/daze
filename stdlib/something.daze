@@ -1,0 +1,5 @@
+is something;
+
+fn test_fn() :: Void {
+  out("Hello!");
+}

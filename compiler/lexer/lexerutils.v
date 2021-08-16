@@ -82,7 +82,7 @@ fn (lexer Lexer) is_number(c string) bool {
 }
 
 fn (lexer Lexer) is_letter(c string) bool {
-    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.@[]?".contains(c)
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.@[]?:".contains(c)
 }
 
 pub fn to_string(kw TokenType) string {
