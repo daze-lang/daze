@@ -11,33 +11,32 @@ pub mut:
     vars map[string]string
     fns map[string]string
     structs []string
-    result_code string
 }
 
 pub fn new_cpp(ast ast.AST) CppCodeGenerator {
-    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, []string{}, ""}
+    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, []string{}}
 }
 
 pub fn (mut gen CppCodeGenerator) run() string {
     // TODO: out function is temporary here
-    gen.result_code = "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
-    gen.result_code += "std::string __ERROR__;\n"
-    gen.result_code += "void out(std::string s) { std::cout << s << std::endl; }\n"
-    gen.result_code += "std::string tostring(auto s) { return std::to_string(s); }\n"
-    gen.result_code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n"
-    gen.result_code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n"
-    gen.result_code += "std::string error(std::string msg) { __ERROR__ = msg; throw(msg); }\n"
-    gen.result_code += "void fatal(std::string msg) { std::cout << \"FATAL ERROR: \" + msg << std::endl; exit(1); }\n"
+    mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
+   code += "std::string __ERROR__;\n"
+   code += "void out(std::string s) { std::cout << s << std::endl; }\n"
+   code += "std::string tostring(auto s) { return std::to_string(s); }\n"
+   code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n"
+   code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n"
+   code += "std::string error(std::string msg) { __ERROR__ = msg; throw(msg); }\n"
+   code += "void fatal(std::string msg) { std::cout << \"FATAL ERROR: \" + msg << std::endl; exit(1); }\n"
 
     for type_name in get_built_in_types() {
-        gen.result_code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n"
+       code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n"
     }
 
     for node in gen.ast.nodes {
-        gen.result_code += gen.gen(node)
+       code += gen.gen(node)
     }
 
-    return gen.result_code
+    return code
 }
 
 pub fn (mut gen CppCodeGenerator) gen(node ast.Node) string {
