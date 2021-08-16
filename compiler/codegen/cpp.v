@@ -291,7 +291,7 @@ fn (mut gen CppCodeGenerator) for_loop(node ast.ForLoopExpr) string {
 }
 
 fn (mut gen CppCodeGenerator) for_in_loop(node ast.ForInLoopExpr) string {
-    mut code := "for (auto $node.container : ${gen.gen(node.target)}) {\n"
+    mut code := "for (auto $node.container : ${gen.gen(node.target).replace(";", "")}) {\n"
     for expr in node.body {
         code += gen.gen(expr)
     }

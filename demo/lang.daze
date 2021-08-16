@@ -1,22 +1,21 @@
 is main;
 
 use "daze::io";
-use "daze::strings";
 
-struct Person {
-  name :: io:IOStruct
-}
+fn range(from :: Int, to :: Int) :: []Int {
+  arr :: []Int := {};
+  i :: Int := from;
 
-fn something() :: String? {
-  ret "hello";
+  for (i <= to) {
+    arr <- i;
+    i++;
+  }
+
+  ret arr;
 }
 
 fn main() :: Int {
-  human := make Person(make io:IOStruct("Mark"));
-  if (strings:contains("hello", "h")) {
-    io:println(len("Contains"));
+  for i in range(10, 15) {
+    io:println(i);
   }
-
-  human.name = make io:IOStruct("Daze");
-  io:println(human.name.name);
 }
