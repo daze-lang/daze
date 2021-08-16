@@ -1,22 +1,16 @@
 is main;
 
-fn throw_err() :: String? {
-  if (5 != 4) {
-    error("5 does not equal 4. Surprised?");
+use "daze::io";
+
+struct Person {
+  name :: String
+
+  fn greet() :: String {
+    ret "Hello, " + name;
   }
-
-  ret "Hello, world.";
-}
-
-fn set_default_based_on_err_msg() :: String {
-  if (__ERROR__ == "5 does not equal 4. Surprised?") {
-    ret "Yes";
-  }
-
-  ret "No";
 }
 
 fn main() :: Int {
-  val :: String := try throw_err() or set_default_based_on_err_msg();
-  out(val);
+  human := make Person("John Doe");
+  io:println(human.greet());
 }

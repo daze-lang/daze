@@ -1,5 +1,7 @@
 is something;
 
+use "daze::io";
+
 fn test_fn() :: Void {
   out("Hello!");
 }

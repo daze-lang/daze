@@ -1,12 +1,19 @@
 is io;
 
-use "daze::something";
-
-struct DefinedInIO {
-  name :: String
+fn out(val :: String) :: Void {
+  unsafe {
+    std::cout << val << std::endl;
+  }
 }
 
-fn hello_from_io() :: Void {
-  out("Hello from io module!");
-  something:test_fn();
+fn println(val :: String) :: Void {
+  unsafe {
+    std::cout << val << std::endl;
+  }
+}
+
+fn writeln(val :: String) :: Void {
+  unsafe {
+    std::cout << val << std::endl;
+  }
 }

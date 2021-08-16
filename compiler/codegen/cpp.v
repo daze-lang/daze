@@ -20,8 +20,6 @@ pub fn new_cpp(ast ast.AST) CppCodeGenerator {
 pub fn (mut gen CppCodeGenerator) run() string {
     mut code := ""
 
-    code += "\n\n//========== DAZE CODE ==========\n\n"
-
     for node in gen.ast.nodes {
        code += gen.gen(node)
     }
@@ -59,6 +57,7 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.GlobalDecl {
         code = "#define $node.name $node.value\n"
     } else if mut node is ast.ModuleUseStatement {
+        code = "// MODULE ${node.path.replace("daze::", "")};\n"
     } else if mut node is ast.Comment {
         code = "// $node.value\n"
     }

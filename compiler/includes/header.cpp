@@ -4,9 +4,7 @@
 #include <algorithm>
 
 std::string __ERROR__;
-void out(std::string s) {
-  std::cout << s << std::endl;
-}
+
 std::string tostring(auto s) {
   return std::to_string(s);
 }
