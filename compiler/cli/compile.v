@@ -58,12 +58,12 @@ pub fn compile(mod Module) CompilationResult {
     tokens := lexer.lex()
     mut parser := parser.new(tokens, mod.path)
     ast := parser.parse()
-    // panic(ast)
 
     mut codegen := codegen.new_cpp(ast)
     mut code := codegen.run()
 
     if mod.name == "main" {
+        // panic(ast)
         module_lookup := compile_modules(load_modules(mod))
         return CompilationResult{
             ast: ast,

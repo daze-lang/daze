@@ -8,6 +8,7 @@ import cli
 
 fn write_generated_output(file_name string, code string) {
     os.write_file("/tmp/daze/${file_name}.cpp", code) or { panic("Failed writing file") }
+    os.execute("astyle /tmp/daze/${file_name}.cpp")
     println(os.execute("gcc -x c++ /tmp/daze/${file_name}.cpp -o $file_name -lstdc++").output)
 }
 

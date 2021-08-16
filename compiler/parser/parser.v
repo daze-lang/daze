@@ -234,7 +234,7 @@ fn (mut parser Parser) fn_arg() ast.FunctionArgument {
 
     return ast.FunctionArgument {
         name: name,
-        type_name: type_name
+        type_name: type_name.replace(":", "::")
     }
 }
 

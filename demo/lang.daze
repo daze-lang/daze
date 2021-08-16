@@ -1,16 +1,22 @@
 is main;
 
 use "daze::io";
+use "daze::strings";
 
 struct Person {
-  name :: String
+  name :: io:IOStruct
+}
 
-  fn greet() :: String {
-    ret "Hello, " + name;
-  }
+fn something() :: String? {
+  ret "hello";
 }
 
 fn main() :: Int {
-  human := make Person("John Doe");
-  io:println(human.greet());
+  human := make Person(make io:IOStruct("Mark"));
+  if (strings:contains("hello", "h")) {
+    io:println(len("Contains"));
+  }
+
+  human.name = make io:IOStruct("Daze");
+  io:println(human.name.name);
 }

@@ -142,6 +142,8 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
     return match name {
         "String" { "std::string" }
         "Int" { "int" }
+        "Bool" { "bool" }
+        "Float" { "float" }
         "Any" { "auto" }
         "Void" { "void" }
         else {
@@ -254,7 +256,7 @@ fn (mut gen CppCodeGenerator) set_module(name string) {
 }
 
 fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
-    mut code := "if (${gen.expr(node.conditional)}) {\n"
+    mut code := "if (${gen.expr(node.conditional).replace(";", "")}) {\n"
     for func in node.body {
         code += gen.gen(func)
     }
@@ -360,7 +362,7 @@ fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCal
 }
 
 fn get_built_in_types() []string {
-    return ["std::string", "int", "bool", "float", "char"]
+    return ["std::string", "int", "bool", "float", "char", "bool"]
 }
 
 // TODO add more built in types

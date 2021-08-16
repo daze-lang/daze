@@ -1,0 +1,5 @@
+is strings;
+
+fn contains(str :: String, substr :: String) :: Bool {
+  ret true;
+}

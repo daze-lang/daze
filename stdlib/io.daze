@@ -1,9 +1,7 @@
 is io;
 
-fn out(val :: String) :: Void {
-  unsafe {
-    std::cout << val << std::endl;
-  }
+struct IOStruct {
+  name :: String
 }
 
 fn println(val :: String) :: Void {
@@ -12,8 +10,8 @@ fn println(val :: String) :: Void {
   }
 }
 
-fn writeln(val :: String) :: Void {
+fn println(val :: int) :: Void {
   unsafe {
-    std::cout << val << std::endl;
+    std::cout << std::to_string(val) << std::endl;
   }
 }

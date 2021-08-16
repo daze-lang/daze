@@ -1,15 +1,18 @@
 ## Known Bugs
 
+- [ ] Circular module import causes crash
+- [ ] floats are not handled properly (they are converted to `floatint`)
+
 ## TODO
 
 - [ ] AST -> JSON
 - [ ] Compile-time type checker
 - [ ] Proper error messages for parser errors (marked with TODOs)
 - [ ] Implement `when`
-- [ ] Implement optional return types
+- [x] Implement optional return types
 - [ ] Implement Sum types
 - [ ] Implement type aliases
-- [ ] Implement module system
+- [x] Implement module system
 
 ## Built in Types
 
