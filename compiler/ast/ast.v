@@ -18,6 +18,7 @@ pub type Statement = FunctionDeclarationStatement
 
 pub type Expr = FunctionCallExpr
     | StructInitialization
+    | OptionalFunctionCall
     | VariableAssignment
     | StringLiteralExpr
     | NumberLiteralExpr
@@ -98,6 +99,12 @@ pub mut:
 pub struct ReturnExpr {
 pub:
     value []Expr
+}
+
+pub struct OptionalFunctionCall {
+pub:
+    fn_call Expr
+    default Expr
 }
 
 pub struct IfExpression {

@@ -57,6 +57,7 @@ pub enum TokenType {
     kw_unsafe          // `unsafe`
     kw_global          // `global`
     kw_try             // `try`
+    kw_or              // `or`
 
     eof                // indicating that there are no more tokens left
 }
@@ -95,7 +96,7 @@ pub const tokens_map = map{
   "pipe"               :"|>",
   "dot"                :".",
   "single_quote"       :"'",
-  // "comment"            :"comment",
+  "comment"            :"comment",
 }
 
 pub const keywords_map = map{
@@ -116,6 +117,7 @@ pub const keywords_map = map{
     "unsafe": TokenType.kw_unsafe
     "global": TokenType.kw_global
     "try": TokenType.kw_try
+    "or": TokenType.kw_or
 }
 
 pub struct Token {

@@ -97,6 +97,9 @@ fn (mut parser Parser) expr() Expr {
         .kw_make {
             node = parser.struct_new()
         }
+        .kw_try {
+            node = parser.try()
+        }
         .open_square { node = parser.array() }
         .kw_for {
             if parser.lookahead_by(3).kind == .kw_in {
@@ -484,10 +487,11 @@ fn (mut parser Parser) variable_decl() Expr {
     mut body := []Expr{}
     for parser.lookahead_by(0).kind != .semicolon {
         next := parser.expr()
-        body << next
         if next is ast.NoOp {
             break
         }
+
+        body << next
     }
 
     first_expr := body[0]
@@ -703,5 +707,23 @@ fn (mut parser Parser) struct_new() ast.StructInitialization {
     return ast.StructInitialization{
         name: struct_name,
         args: args
+    }
+}
+
+fn (mut parser Parser) try() ast.OptionalFunctionCall {
+    parser.expect(.kw_try)
+    fn_call := parser.expr()
+    if fn_call !is ast.FunctionCallExpr {
+        // TODO: move error message to checker
+        panic("Only function calls can be used in try blocks.")
+    }
+
+    parser.expect(.kw_or)
+    default := parser.expr()
+    parser.expect(.semicolon)
+
+    return ast.OptionalFunctionCall{
+        fn_call: fn_call,
+        default: default
     }
 }

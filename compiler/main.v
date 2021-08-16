@@ -36,7 +36,6 @@ fn load_modules(code string) ?[]string {
 fn to_cpp(source string, path string) string {
     mut lexer := lexer.new(source)
     tokens := lexer.lex()
-    // panic(tokens)
     mut parser := parser.new(tokens, path)
     ast := parser.parse()
 
@@ -79,7 +78,6 @@ fn help() {
 }
 
 fn main() {
-    // utils.report("p := new_person() .get_name;", "akarmikecskefing.daze", 1, 18, "Pipe operator expected")
     if os.args.len == 1 {
         help()
         return

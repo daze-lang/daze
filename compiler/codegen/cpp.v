@@ -11,29 +11,33 @@ pub mut:
     vars map[string]string
     fns map[string]string
     structs []string
+    result_code string
 }
 
 pub fn new_cpp(ast ast.AST) CppCodeGenerator {
-    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, []string{}}
+    return CppCodeGenerator{ast, map[string]string{}, map[string]string{}, []string{}, ""}
 }
 
 pub fn (mut gen CppCodeGenerator) run() string {
     // TODO: out function is temporary here
-    mut code := "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
-    code += "void out(std::string s) { std::cout << s << std::endl; }\n"
-    code += "std::string tostring(auto s) { return std::to_string(s); }\n"
-    code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n"
-    code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n"
+    gen.result_code = "#include <iostream>\n#include <vector>\n#include <typeinfo>\n#include <algorithm>\n\n"
+    gen.result_code += "std::string __ERROR__;\n"
+    gen.result_code += "void out(std::string s) { std::cout << s << std::endl; }\n"
+    gen.result_code += "std::string tostring(auto s) { return std::to_string(s); }\n"
+    gen.result_code += "std::string tostring(bool b) { return b ? \"true\" : \"false\"; }\n"
+    gen.result_code += "std::string tostring(char c) { std::string s; s.push_back(c); return s; }\n"
+    gen.result_code += "std::string error(std::string msg) { __ERROR__ = msg; throw(msg); }\n"
+    gen.result_code += "void fatal(std::string msg) { std::cout << \"FATAL ERROR: \" + msg << std::endl; exit(1); }\n"
 
     for type_name in get_built_in_types() {
-        code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n"
+        gen.result_code += "std::string type($type_name s) { return \"${type_name.replace("std::", "")}\"; }\n"
     }
 
     for node in gen.ast.nodes {
-        code += gen.gen(node)
+        gen.result_code += gen.gen(node)
     }
 
-    return code
+    return gen.result_code
 }
 
 pub fn (mut gen CppCodeGenerator) gen(node ast.Node) string {
@@ -72,6 +76,7 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
 
 fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
     mut code := ""
+
     if mut node is ast.StringLiteralExpr {
         code = gen.string_literal_expr(node)
     } else if mut node is ast.CharLiteralExpr {
@@ -138,11 +143,14 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
         }
     }
 
-    code += "${gen.typename(node.return_type)} ${node.name}(${args.join(", ")}) {\n"
+    is_optional := node.return_type.ends_with("?")
+    mut ret_type := node.return_type.replace("?", "")
+
+    code += "${gen.typename(ret_type)} ${node.name}(${args.join(", ")}) {\n"
     for expr in node.body {
         code += gen.gen(expr)
     }
-    gen.fns[node.name] = gen.typename(node.return_type)
+    gen.fns[node.name] = if is_optional { gen.typename(ret_type) + "?" } else { gen.typename(ret_type) }
     code += "\n}\n\n"
     return code
 }
@@ -203,7 +211,7 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
 }
 
 fn (mut gen CppCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
-    return "\"$node.value\""
+    return "std::string(\"$node.value\")"
 }
 
 fn (mut gen CppCodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
@@ -230,14 +238,29 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
         body += "${gen.gen(expr)} "
     }
 
+    mut is_optional := false
+    mut optional := ast.OptionalFunctionCall{}
     cast := node.value[0]
     if cast is ast.StructInitialization {
         type_name = cast.name
     } else if cast is ast.FunctionCallExpr {
         type_name = gen.fns[cast.name]
+    } else if cast is ast.OptionalFunctionCall {
+        is_optional = true
+        optional = cast
+    } else if cast is ast.StringLiteralExpr {
+        type_name = "std::string"
+    } else if cast is ast.NumberLiteralExpr {
+        type_name = "int"
+    } else if cast is ast.CharLiteralExpr {
+        type_name = "char"
     }
 
     gen.vars[node.name] = gen.typename(type_name)
+    if is_optional {
+        return "${gen.typename(type_name)} $node.name;\n${gen.try(node.name, optional)}"
+    }
+
     return "${gen.typename(type_name)} $node.name = $body;\n"
 }
 
@@ -413,6 +436,22 @@ fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string 
     }
 
     return "{${args.join(", ")}}"
+}
+
+fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCall) string {
+    if node.fn_call is ast.FunctionCallExpr {
+        if !gen.fns[node.fn_call.name].ends_with("?") {
+            // TODO: proper error message
+            utils.codegen_error("Trying to wrap non-optional call into a try block.")
+        }
+    }
+    mut code := "try {\n"
+    code += "$assign_to = ${gen.expr(node.fn_call)};"
+    code += "\n} catch (std::string e) {\n"
+    code += "$assign_to = ${gen.expr(node.default)};"
+    code += "\n}\n"
+
+    return code
 }
 
 fn get_built_in_types() []string {

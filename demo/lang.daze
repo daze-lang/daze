@@ -2,6 +2,23 @@ struct Person {
   name :: String
 }
 
-fn main() {
-  out |> out "hi";
+fn throw_err() :: String? {
+  if (5 != 4) {
+    error("5 does not equal 4. Surprised?");
+  }
+
+  ret "Hello, world.";
+}
+
+fn set_default_based_on_err_msg() :: String {
+  if (__ERROR__ == "5 does not equal 4. Surprised?") {
+    ret "Yes";
+  }
+
+  ret "No";
+}
+
+fn main() :: Int {
+  val :: String := try throw_err() or set_default_based_on_err_msg();
+  val |> out;
 }
