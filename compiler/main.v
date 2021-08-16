@@ -38,12 +38,12 @@ fn to_cpp(source string, path string) string {
     tokens := lexer.lex()
     mut parser := parser.new(tokens, path)
     ast := parser.parse()
+    // panic(ast)
 
     mut checker := checker.new(ast)
     checker.run()
     mut codegen := codegen.new_cpp(ast)
     mut code := codegen.run()
-    // panic(code)
     return code
 }
 

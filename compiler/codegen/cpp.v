@@ -120,8 +120,6 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.grouped_expr(node)
     } else if mut node is ast.ArrayInit {
         code = gen.array_init(node)
-    } else if mut node is ast.PipeExpr {
-        code = gen.pipe(node)
     } else if mut node is ast.Comment {
         code = "// $node.value\n"
     }
@@ -186,10 +184,6 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     }
 
     mut fn_name := node.name
-    type_of_callee := gen.vars[node.calling_on]
-    if type_of_callee != "" && gen.structs.contains(type_of_callee) {
-        fn_name = "struct_${type_of_callee}_$fn_name"
-    }
 
     /*
     TODO This allows calling functions as such
@@ -200,12 +194,6 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     some_name.str(); => str(some_name);
     */
 
-    if node.calling_on != "" {
-        if args.len > 0 {
-            return "${fn_name}(${node.calling_on}, ${args.join("")});\n".replace("; ;", "")
-        }
-       return "${fn_name}(${node.calling_on});\n".replace("; ;", "")
-    }
     return "${fn_name}(${args.join("")});\n".replace("; ;", "")
 }
 
@@ -266,7 +254,7 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
 fn (mut gen CppCodeGenerator) variable_assignment(node ast.VariableAssignment) string {
     mut body := ""
     for expr in node.value {
-        body += "${gen.gen(expr)} "
+        body += "${gen.gen(expr)}"
     }
     return "$node.name = $body;\n"
 }
@@ -278,6 +266,10 @@ fn (mut gen CppCodeGenerator) struct_decl(node ast.StructDeclarationStatement) s
     }
 
     gen.structs << node.name
+
+    for member_fn in node.member_fns {
+        code += "\n" + gen.statement(member_fn)
+    }
 
     code += "\n};\n\n"
     return code
@@ -367,66 +359,6 @@ fn (mut gen CppCodeGenerator) array_init(node ast.ArrayInit) string {
     return "{${items.join(" ")}}"
 }
 
-fn (mut gen CppCodeGenerator) pipe(node ast.PipeExpr) string {
-    mut code := []string{}
-    mut paren_count := 0
-    mut previous := ast.Expr{}
-
-    for i, element in node.body {
-        if element is ast.VariableExpr {
-            if element.value in ["true", "false"] {
-                utils.codegen_error("Pipes can't start with a boolean.")
-            }
-
-            if element.value.starts_with(".") {
-                cast := previous
-                if cast is ast.FunctionCallExpr {
-                    if cast.name.starts_with("struct") {
-                        parts := cast.name.split("_")
-                        code << "${parts[0]}_${parts[1]}_${element.value.replace(".", "")}("
-                    } else {
-                        code << "struct_${gen.fns[cast.name]}_${element.value.replace(".", "")}("
-                    }
-                } else if cast is ast.VariableExpr {
-                    mut type_info := gen.vars[cast.value]
-                    if type_info == "" {
-                        type_info = gen.fns[cast.value]
-                    }
-
-                    if is_built_in_type(type_info) {
-                        utils.codegen_error("Calling an accessor on anything but a struct / function call is illegal.")
-                    }
-
-                    code << "struct_${type_info}_${element.value.replace(".", "")}("
-                } else {
-                    utils.codegen_error("Calling an accessor on anything but a struct / function call is illegal.")
-                }
-            } else {
-                if gen.vars.keys().contains(element.value) {
-                    code << "${element.value}"
-                    paren_count--
-                } else {
-                    code << "${element.value}("
-                }
-            }
-        } else if element is ast.StringLiteralExpr || element is ast.NumberLiteralExpr || element is ast.CharLiteralExpr {
-            if i != 0 {
-                utils.codegen_error("Pipelines can't have string / int pipes, only function calls.")
-            }
-            code << "[](){ return ${gen.expr(element)}; }()"
-            paren_count--
-        } else if element is ast.FunctionCallExpr {
-            code << "${gen.expr(element)}".replace(";", "")
-            paren_count--
-        }
-
-        paren_count++
-        previous = element
-    }
-
-    return code.reverse().join("") + ")".repeat(paren_count) + ";\n"
-}
-
 fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string {
     mut args := []string{}
 
@@ -434,7 +366,7 @@ fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string 
         args << gen.expr(arg)
     }
 
-    return "{${args.join(", ")}}"
+    return "($node.name){${args.join(", ").replace(",,", "")}}"
 }
 
 fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCall) string {

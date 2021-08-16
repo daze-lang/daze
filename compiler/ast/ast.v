@@ -39,7 +39,6 @@ pub type Expr = FunctionCallExpr
     | ReturnExpr
     | ArrayInit
     | BinaryOp
-    | PipeExpr
     | Comment
     | NoOp
 
@@ -52,7 +51,6 @@ pub mut:
     body []Expr
     return_type string
     gen_type string
-    parent_struct string
 }
 
 pub struct UnsafeBlock {
@@ -93,7 +91,7 @@ pub:
     fields []FunctionArgument
     gen_type string
 pub mut:
-    fns []FunctionDeclarationStatement
+    member_fns []FunctionDeclarationStatement
 }
 
 pub struct ReturnExpr {
@@ -133,7 +131,7 @@ pub:
 pub struct FunctionCallExpr {
 pub:
     name string
-    calling_on string
+    callchain []string
     args []Expr
 }
 
@@ -211,11 +209,6 @@ pub struct ForInLoopExpr {
 pub:
     container string
     target Expr
-    body []Expr
-}
-
-pub struct PipeExpr {
-pub:
     body []Expr
 }
 

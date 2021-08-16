@@ -1,7 +1,3 @@
-struct Person {
-  name :: String
-}
-
 fn throw_err() :: String? {
   if (5 != 4) {
     error("5 does not equal 4. Surprised?");
@@ -20,5 +16,5 @@ fn set_default_based_on_err_msg() :: String {
 
 fn main() :: Int {
   val :: String := try throw_err() or set_default_based_on_err_msg();
-  val |> out;
+  out(val);
 }

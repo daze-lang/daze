@@ -14,8 +14,6 @@ pub struct Parser {
         current Token
         previous Token
         statements []ast.Statement
-        struct_defs map[string][]ast.FunctionArgument
-        parsing_pipe bool
     filepath string
 }
 
@@ -26,8 +24,6 @@ pub fn new(tokens []Token, filepath string) Parser {
         Token{},
         Token{},
         []ast.Statement{},
-        map[string][]ast.FunctionArgument{},
-        false,
         filepath
     }
 }
@@ -163,24 +159,12 @@ fn (mut parser Parser) expr() Expr {
         else { node = ast.NoOp{} }
     }
 
-    if parser.lookahead().kind == .pipe && !parser.parsing_pipe {
-        parser.parsing_pipe = true
-        node = parser.pipe(node)
-    }
-
     return node
 }
 
 // Function Declarations
 fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
-    mut parent_struct := ""
     parser.expect(.kw_fn)
-    if parser.lookahead().kind == .open_paren {
-        parser.expect(.open_paren)
-        parent_struct = parser.expect(.identifier).value
-        parser.expect(.close_paren)
-    }
-
     mut fn_name := parser.expect(.identifier).value
     gen_type := parser.generic()
     parser.expect(.open_paren)
@@ -188,6 +172,11 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     if parser.lookahead().kind == .identifier {
         args = parser.fn_args(.close_paren)
     }
+
+    if parser.lookahead().kind == .kw_fn {
+        panic("hmm")
+    }
+
     parser.expect(.close_paren)
     parser.expect(.double_colon)
 
@@ -211,21 +200,12 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     }
     parser.expect(.close_curly)
 
-    if parent_struct != "" {
-        fn_name = "struct_${parent_struct}_${fn_name}"
-        args.prepend(ast.FunctionArgument{
-            name: "self",
-            type_name: parent_struct
-        })
-    }
-
     return ast.FunctionDeclarationStatement{
         name: fn_name,
         args: args,
         body: body,
         return_type: ret_type,
         gen_type: gen_type,
-        parent_struct: parent_struct
     }
 }
 
@@ -233,7 +213,11 @@ fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     mut args := []ast.FunctionArgument{}
     for parser.lookahead().kind != delim {
         args << parser.fn_arg()
+
         if parser.lookahead().kind != delim {
+            if parser.lookahead().kind == .kw_fn {
+                return args
+            }
             parser.expect(.comma)
         }
     }
@@ -244,17 +228,9 @@ fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
 fn (mut parser Parser) fn_arg() ast.FunctionArgument {
     name := parser.expect(.identifier).value
     parser.expect(.double_colon)
-    mut is_arr := false
 
-    if parser.lookahead().kind == .open_square {
-        is_arr = true
-        parser.expect(.open_square)
-        parser.expect(.close_square)
-    }
+    // TODO: allow arrays as fn args
     mut type_name := parser.expect(.identifier).value
-    if is_arr {
-        type_name = "Array($type_name)"
-    }
 
     return ast.FunctionArgument {
         name: name,
@@ -325,17 +301,17 @@ fn (mut parser Parser) for_in_loop() ast.ForInLoopExpr {
 fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
     tok := parser.expect(.identifier)
     mut fn_name := tok.value
-    mut calling_on := ""
 
     parser.expect(.open_paren)
     mut args := []Expr{}
+    mut callchain := fn_name.split(".")
 
     // no args passed
     if parser.lookahead().kind == .close_paren {
         parser.advance()
         return ast.FunctionCallExpr{
             name: fn_name,
-            calling_on: calling_on,
+            callchain: callchain,
             args: []ast.Expr{},
         }
     }
@@ -346,14 +322,10 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
 
     parser.expect(.close_paren)
 
-    if parser.lookahead().kind !in [.close_paren, .open_curly, .pipe] && !is_binary_op(parser.lookahead()) {
+    if parser.lookahead().kind !in [.close_paren, .open_curly] && !is_binary_op(parser.lookahead()) {
         parser.expect(.semicolon)
     }
 
-    if fn_name.contains(".") {
-        utils.parser_error("Use the pipe operator.", parser.filepath, tok.line, tok.column)
-        parts := fn_name.split(".")
-    }
 
     return ast.FunctionCallExpr{
         name: fn_name,
@@ -416,19 +388,22 @@ fn (mut parser Parser) generic() string {
 fn (mut parser Parser) construct() ast.StructDeclarationStatement {
     parser.expect(.kw_struct)
     struct_name := parser.expect(.identifier).value
-
-    gen_type := parser.generic()
-
     parser.expect(.open_curly)
-    fields := parser.fn_args(.close_curly)
-    parser.struct_defs[struct_name] = fields
+    mut fields := []ast.FunctionArgument{}
+    if parser.lookahead().kind != .kw_fn {
+        fields = parser.fn_args(.close_curly)
+    }
+
+    mut member_fns := []ast.FunctionDeclarationStatement{}
+    for parser.lookahead().kind != .close_curly {
+        member_fns << parser.fn_decl()
+    }
     parser.expect(.close_curly)
 
     return ast.StructDeclarationStatement{
         name: struct_name,
         fields: fields,
-        fns: []ast.FunctionDeclarationStatement{},
-        gen_type: gen_type
+        member_fns: member_fns
     }
 }
 
@@ -494,15 +469,6 @@ fn (mut parser Parser) variable_decl() Expr {
         body << next
     }
 
-    first_expr := body[0]
-    mut inferred_type := ""
-    if mut first_expr is ast.FunctionCallExpr {
-        if first_expr.name.starts_with("struct_") && first_expr.name.ends_with("_new") {
-           // variable is a struct initializer, so now we can infer the type
-           inferred_type = first_expr.name.replace("struct_", "").replace("_new", "")
-        }
-    }
-
     // var = "some string";
     if is_reassignment {
         return ast.VariableAssignment {
@@ -516,7 +482,7 @@ fn (mut parser Parser) variable_decl() Expr {
         return ast.VariableDecl {
             name: name,
             value: body,
-            type_name: if inferred_type == "" { "Any" } else { inferred_type }
+            type_name: type_name
         }
     }
 
@@ -671,26 +637,6 @@ fn (mut parser Parser) global() ast.GlobalDecl {
     return ast.GlobalDecl{
         name: name,
         value: value
-    }
-}
-
-fn (mut parser Parser) pipe(prev ast.Expr) ast.PipeExpr {
-    mut body := []Expr{}
-    body << prev
-
-    for parser.lookahead().kind !in [.semicolon, .close_paren] {
-        parser.expect(.pipe)
-        next := parser.expr()
-        body << next
-    }
-
-    if parser.lookahead().kind == .semicolon {
-        parser.expect(.semicolon)
-    }
-
-    parser.parsing_pipe = false
-    return ast.PipeExpr{
-        body: body
     }
 }
 
