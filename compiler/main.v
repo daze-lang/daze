@@ -25,7 +25,6 @@ fn compile_main(path string) ? {
     }
 
     result := cli.compile(main_module)
-    // panic(result.ast)
     output_file_name := os.file_name(path).replace(".daze", "")
     write_generated_output(output_file_name, header + result.code)
 }

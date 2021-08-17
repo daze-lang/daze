@@ -115,14 +115,14 @@ pub fn (mut lexer Lexer) lex() []Token {
                 tokens << Token{.single_quote, current, lexer.line, lexer.column - current.len}
                 continue
             }
-            // "[" {
-            //     tokens << Token{.open_square, current, lexer.line, lexer.column - current.len}
-            //     continue
-            // }
-            // "]" {
-            //     tokens << Token{.close_square, current, lexer.line, lexer.column - current.len}
-            //     continue
-            // }
+            "[" {
+                tokens << Token{.open_square, current, lexer.line, lexer.column - current.len}
+                continue
+            }
+            "]" {
+                tokens << Token{.close_square, current, lexer.line, lexer.column - current.len}
+                continue
+            }
             "<" {
                 if lexer.lookahead() == "=" {
                     tokens << Token{.less_than_equal, "<=", lexer.line, lexer.column - current.len - 1}

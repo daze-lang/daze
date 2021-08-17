@@ -1,15 +1,12 @@
 is main;
 
 use "daze::io";
-use "daze::strings";
+
+fn accepts_arr(arr :: [String]) :: [String] {
+  ret arr;
+}
 
 fn main() :: Int {
-  io:println(strings:lower("HELLO"));
-  io:println(strings:upper("hello"));
-  io:println(strings:substring("Hello", 0, 2));
-  io:println(strings:findIndex("Hello", "l"));
-  io:println(strings:findIndex("Hello", "g"));
-  io:println(strings:removeFromIndex("Hello", 0, 3));
-
-  # arr :: [Int] := [1, 2, 3];
+  arr :: [Int] := {1, 2, 3};
+  io:println(tostring(arr[1]));
 }

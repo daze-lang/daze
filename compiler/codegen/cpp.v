@@ -138,6 +138,27 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
     return code
 }
 
+fn (mut gen CppCodeGenerator) generate_array_def(info string) string {
+    mut type_name := ""
+    parts := info.split("|")
+    level := parts[1].int()
+    translated_type_name := gen.typename(parts[0])
+
+    if level == 1 {
+        return "std::vector<${translated_type_name}>"
+    }
+
+    for _ in 0..level - 1 {
+        type_name += "std::vector<"
+    }
+    type_name += "std::vector<${translated_type_name}"
+    for _ in 0..level {
+        type_name += ">"
+    }
+
+    return type_name
+}
+
 fn (mut gen CppCodeGenerator) typename(name string) string {
     return match name {
         "String" { "std::string" }
@@ -148,12 +169,8 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
         "Void" { "void" }
         "Char" { "char" }
         else {
-            if name.contains("[]") {
-                if name.contains("Any") {
-                    // TODO proper, colored error message
-                    utils.codegen_error("Arrays cant be of type Any")
-                }
-                "std::vector<${gen.typename(name.split("]")[1])}>"
+            if name.contains("|") {
+                gen.generate_array_def(name)
             } else {
                 // println("Unhandled type: $name")
                 name

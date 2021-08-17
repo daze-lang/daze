@@ -180,16 +180,11 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     parser.expect(.close_paren)
     parser.expect(.double_colon)
 
-    mut is_arr := false
+    mut ret_type := ""
     if parser.lookahead().kind == .open_square {
-        is_arr = true
-        parser.expect(.open_square)
-        parser.expect(.close_square)
-    }
-
-    mut ret_type := parser.expect(.identifier).value
-    if is_arr {
-        ret_type = "[]$ret_type"
+        ret_type = parser.fn_arg(true).type_name
+    } else {
+        ret_type = parser.expect(.identifier).value
     }
 
     parser.expect(.open_curly)
@@ -212,7 +207,7 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
 fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     mut args := []ast.FunctionArgument{}
     for parser.lookahead().kind != delim {
-        args << parser.fn_arg()
+        args << parser.fn_arg(false)
 
         if parser.lookahead().kind != delim {
             if parser.lookahead().kind == .kw_fn {
@@ -225,12 +220,32 @@ fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     return args
 }
 
-fn (mut parser Parser) fn_arg() ast.FunctionArgument {
-    name := parser.expect(.identifier).value
-    parser.expect(.double_colon)
+fn (mut parser Parser) fn_arg(is_decl bool) ast.FunctionArgument {
+    mut name := ""
+    if !is_decl {
+        name = parser.expect(.identifier).value
+        parser.expect(.double_colon)
+    }
+
+    mut type_name := ""
+    mut level := 1
+    // if we are trying to parse a variable declaration type
+    if parser.lookahead().kind == .open_square {
+        parser.expect(.open_square)
+        for parser.lookahead().kind == .open_square {
+            parser.expect(.open_square)
+            level++
+        }
+        type_name = parser.expect(.identifier).value
+        for _ in 0..level {
+            parser.expect(.close_square)
+        }
+        type_name += "|${level}"
+    } else {
+        type_name = parser.expect(.identifier).value
+    }
 
     // TODO: allow arrays as fn args
-    mut type_name := parser.expect(.identifier).value
 
     return ast.FunctionArgument {
         name: name,
@@ -451,7 +466,7 @@ fn (mut parser Parser) variable_decl() Expr {
     mut is_auto := false
     if parser.lookahead().kind == .double_colon {
         parser.expect(.double_colon)
-        type_name = parser.expect(.identifier).value
+        type_name = parser.fn_arg(true).type_name
         parser.expect(.colon_equal)
     } else {
         if parser.lookahead().kind == .colon_equal {
