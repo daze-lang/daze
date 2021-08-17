@@ -3,6 +3,16 @@
 - [ ] Circular module import causes crash
 - [ ] floats are not handled properly (they are converted to `floatint`)
 
+```nim
+# this one fails
+sum :: []Int := {};
+sum <- hello() + 1;
+
+# this one works as its a grouped expression
+sum :: []Int := {};
+sum <- (hello() + 1);
+```
+
 ## TODO
 
 - [ ] AST -> JSON

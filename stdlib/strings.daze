@@ -35,7 +35,7 @@ fn upper(s :: String) :: String {
   ret uppered_str;
 }
 
-fn sub(str :: String, from :: Int, to :: Int) :: String {
+fn substring(str :: String, from :: Int, to :: Int) :: String {
   substring :: String := "";
 
   for c in range:between(from, to) {
@@ -45,7 +45,7 @@ fn sub(str :: String, from :: Int, to :: Int) :: String {
   ret substring;
 }
 
-fn index(str :: String, chr :: String) :: Int {
+fn findIndex(str :: String, chr :: String) :: Int {
   for i in range:up(len(str)) {
     if tostring(str[i]) == chr {
       ret i;
@@ -87,6 +87,28 @@ fn join(strArr :: []String, delim :: String) :: String {
 
 #   ret substrings;
 # }
+
+fn removeFromIndex(str :: String, from :: Int, length :: Int) :: String {
+  result :: String := "";
+
+  for i in range:up(len(str)) {
+    if i < from || i > length {
+      result = result + tostring(str[i]);
+    }
+  }
+
+  ret result;
+}
+
+fn split(str :: String, delimiter :: String) :: []String {
+  result :: []String := {};
+  str = str + delimiter;
+
+  for i in range:up(len(str)) {
+
+  }
+}
+
 
 # fn replace(str :: String, replace_what :: String, replace_with :: String) :: String {
 #   ret join(split(str, replace_what), replace_with);

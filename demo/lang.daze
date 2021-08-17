@@ -3,18 +3,13 @@ is main;
 use "daze::io";
 use "daze::strings";
 
-fn hello() :: String {
-  ret "hello";
-}
-
 fn main() :: Int {
-  io:println("================");
   io:println(strings:lower("HELLO"));
   io:println(strings:upper("hello"));
-  io:println(strings:sub("Hello", 0, 2));
-  io:println(strings:index("Hello", "l"));
-  io:println(strings:index("Hello", "g"));
+  io:println(strings:substring("Hello", 0, 2));
+  io:println(strings:findIndex("Hello", "l"));
+  io:println(strings:findIndex("Hello", "g"));
+  io:println(strings:removeFromIndex("Hello", 0, 3));
 
-  sum :: []String := {};
-  sum <- hello();
+  # arr :: [Int] := [1, 2, 3];
 }
