@@ -3,10 +3,18 @@ is main;
 use "daze::io";
 use "daze::strings";
 
-fn main() :: Int {
-  result :: []String := strings:split("Split this string by space please", " ");
+fn hello() :: String {
+  ret "hello";
+}
 
-  for res in result {
-    io:println(res);
-  }
+fn main() :: Int {
+  io:println("================");
+  io:println(strings:lower("HELLO"));
+  io:println(strings:upper("hello"));
+  io:println(strings:sub("Hello", 0, 2));
+  io:println(strings:index("Hello", "l"));
+  io:println(strings:index("Hello", "g"));
+
+  sum :: []String := {};
+  sum <- hello();
 }

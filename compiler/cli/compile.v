@@ -20,7 +20,7 @@ fn load_modules(mod Module) []Module {
         mut module_file := os.read_file("${module_path}.daze") or { panic("File not found") }
         new_mod := Module{
             name: module_name
-            path: module_path
+            path: module_path + ".daze"
             code: module_file
         }
         modules << new_mod

@@ -1,35 +1,93 @@
 is strings;
 
 use "daze::io";
+use "daze::range";
 
 fn contains(str :: String, substr :: String) :: Bool {
   ret true;
 }
 
-fn split(str :: String, delimiter :: String) :: []String {
-  word :: String := "";
-  num :: Int := 0;
-  str = str + delimiter;
-  l :: Int := len(str);
+fn lower(c :: Char) :: Char {
+  ret c + 32;
+}
 
-  substrings :: []String := {};
+fn lower(s :: String) :: String {
+  lowered_str :: String := "";
 
-  i :: Int := 0;
-  for i < l {
-
-    # str[i] is of type Char, so we need to convert it to String
-    if tostring(str[i]) != delimiter {
-      word = word + tostring(str[i]);
-    } else {
-      if len(word) != 0 {
-        substrings <- word;
-      }
-
-      word = "";
-    }
-
-    i++;
+  for c in s {
+    lowered_str = lowered_str + lower(c);
   }
 
-  ret substrings;
+  ret lowered_str;
 }
+
+fn upper(c :: Char) :: Char {
+  ret c - 32;
+}
+
+fn upper(s :: String) :: String {
+  uppered_str :: String := "";
+
+  for c in s {
+    uppered_str = uppered_str + upper(c);
+  }
+
+  ret uppered_str;
+}
+
+fn sub(str :: String, from :: Int, to :: Int) :: String {
+  substring :: String := "";
+
+  for c in range:between(from, to) {
+    substring = substring + tostring(str[c]);
+  }
+
+  ret substring;
+}
+
+fn index(str :: String, chr :: String) :: Int {
+  for i in range:up(len(str)) {
+    if tostring(str[i]) == chr {
+      ret i;
+    }
+  }
+
+  ret -1;
+}
+
+fn join(strArr :: []String, delim :: String) :: String {
+  result :: String := "";
+
+  for elem in strArr {
+    result = result + elem + delim;
+  }
+
+  ret result;
+}
+
+# fn split(str :: String, delimiter :: String) :: []String {
+#   word :: String := "";
+#   num :: Int := 0;
+#   str = str + delimiter;
+
+#   substrings :: []String := {};
+
+#   for i in range:up(len(str)) {
+#     # str[i] is of type Char, so we need to convert it to String
+#     if tostring(str[i]) != delimiter {
+#       word = word + tostring(str[i]);
+#     } else {
+#       if len(word) != 0 {
+#         substrings <- word;
+#       }
+
+#       word = "";
+#     }
+#   }
+
+#   ret substrings;
+# }
+
+# fn replace(str :: String, replace_what :: String, replace_with :: String) :: String {
+#   ret join(split(str, replace_what), replace_with);
+# }

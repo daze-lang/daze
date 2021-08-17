@@ -105,7 +105,7 @@ fn (mut parser Parser) expr() Expr {
             }
         }
         .kw_break {
-            node = ast.VariableExpr{parser.advance().value}
+            node = ast.VariableExpr{parser.advance().value + ";"}
             parser.expect(.semicolon)
         }
         .kw_unsafe { node = parser.unsafe_() }

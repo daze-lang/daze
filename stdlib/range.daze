@@ -1,0 +1,25 @@
+is range;
+
+fn between(from :: Int, to :: Int) :: []Int {
+  result :: []Int := {};
+
+  i :: Int := from;
+  for i <= to {
+    result <- i;
+    i++;
+  }
+
+  ret result;
+}
+
+fn up(to :: Int) :: []Int {
+  result :: []Int := {};
+
+  i :: Int := 0;
+  for i <= to {
+    result <- i;
+    i++;
+  }
+
+  ret result;
+}

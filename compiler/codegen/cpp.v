@@ -99,7 +99,7 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
     } else if mut node is ast.StructInitialization {
         code = gen.struct_init(node)
     } else if mut node is ast.ArrayPushExpr {
-        code = "${node.target}.push_back(${gen.gen(node.value)});\n"
+        code = "${node.target}.push_back(${gen.gen(node.value).replace(";", "")});\n"
     } else if mut node is ast.IncrementExpr {
         code = "$node.target++;\n"
     } else if mut node is ast.DecrementExpr {
@@ -296,7 +296,7 @@ fn (mut gen CppCodeGenerator) for_loop(node ast.ForLoopExpr) string {
         conditional += gen.gen(c)
     }
 
-    mut code := "\nwhile ($conditional) {\n"
+    mut code := "\nwhile (${conditional.replace(";", "")}) {\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
     }
