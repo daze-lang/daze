@@ -1,5 +1,35 @@
 is strings;
 
+use "daze::io";
+
 fn contains(str :: String, substr :: String) :: Bool {
   ret true;
+}
+
+fn split(str :: String, delimiter :: String) :: []String {
+  word :: String := "";
+  num :: Int := 0;
+  str = str + delimiter;
+  l :: Int := len(str);
+
+  substrings :: []String := {};
+
+  i :: Int := 0;
+  for i < l {
+
+    # str[i] is of type Char, so we need to convert it to String
+    if tostring(str[i]) != delimiter {
+      word = word + tostring(str[i]);
+    } else {
+      if len(word) != 0 {
+        substrings <- word;
+      }
+
+      word = "";
+    }
+
+    i++;
+  }
+
+  ret substrings;
 }

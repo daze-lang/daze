@@ -1,12 +1,12 @@
 is main;
 
 use "daze::io";
+use "daze::strings";
 
 fn main() :: Int {
-  i :: Int := 5;
+  result :: []String := strings:split("Split this string by space please", " ");
 
-  if i == 5 {
-    io:println("i is 5");
+  for res in result {
+    io:println(res);
   }
-
 }

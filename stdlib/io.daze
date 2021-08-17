@@ -10,7 +10,13 @@ fn println(val :: String) :: Void {
   }
 }
 
-fn println(val :: int) :: Void {
+fn println(val :: Char) :: Void {
+  unsafe {
+    std::cout << std::string(1, val) << std::endl;
+  }
+}
+
+fn println(val :: Int) :: Void {
   unsafe {
     std::cout << std::to_string(val) << std::endl;
   }

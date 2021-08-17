@@ -11,7 +11,9 @@
 - [ ] Implement `when`
 - [x] Implement optional return types
 - [ ] Implement Sum types
-- [ ] Implement type aliases
+- [ ] Implement Enums
+- [ ] Implement maps
+- [ ] range (0..9, 0..500)
 - [x] Implement module system
 
 ## Built in Types

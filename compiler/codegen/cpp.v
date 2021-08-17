@@ -146,6 +146,7 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
         "Float" { "float" }
         "Any" { "auto" }
         "Void" { "void" }
+        "Char" { "char" }
         else {
             if name.contains("[]") {
                 if name.contains("Any") {
@@ -192,7 +193,7 @@ fn (mut gen CppCodeGenerator) return_expr(node ast.ReturnExpr) string {
     for expr in node.value {
         body += gen.gen(expr)
     }
-    return "\nreturn ${body.replace("\n", " ")};\n"
+    return "\nreturn ${body.replace("\n", " ").replace(";", "")};\n"
 }
 
 fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
@@ -208,8 +209,6 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
     cast := node.value[0]
     if cast is ast.StructInitialization {
         type_name = cast.name.replace(":", "::")
-    } else if cast is ast.FunctionCallExpr {
-        type_name = gen.fns[cast.name]
     } else if cast is ast.OptionalFunctionCall {
         is_optional = true
         optional = cast
@@ -262,7 +261,7 @@ fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
         if_conditional += gen.expr(cbody)
     }
 
-    mut code := "if ($if_conditional) {\n"
+    mut code := "if ($if_conditional.replace(";", "")) {\n"
     for func in node.body {
         code += gen.gen(func)
     }
@@ -273,7 +272,7 @@ fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
             for cbody in elsif.conditional {
                 cbody_conditional += gen.expr(cbody)
             }
-            code += "} else if($cbody_conditional){\n"
+            code += "} else if($cbody_conditional.replace(";", "")){\n"
             for func in elsif.body {
                 code += gen.gen(func)
             }

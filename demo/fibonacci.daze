@@ -1,9 +1,9 @@
 is Main;
 
-use "daze::Std";
+use "daze::io";
 
 fn fibonacci(num :: Int) :: Int {
-  if (num <= 1) {
+  if num <= 1 {
     ret 1;
   }
 
@@ -11,5 +11,5 @@ fn fibonacci(num :: Int) :: Int {
 }
 
 fn main() :: Void {
-  out(fibonacci(20));
+  io:println(fibonacci(20));
 }
