@@ -17,7 +17,6 @@
 - [ ] Implement maps
 - [x] Implement module system
 - [ ] Better string interpolation
-- [ ] Module import aliasing (use "daze::term" as t)
 
 ## Built in Types
 
