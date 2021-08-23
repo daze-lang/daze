@@ -51,6 +51,7 @@ pub fn is_binary_op(op Token) bool {
         .minus,
         .mod,
         .div,
+        .mul,
         .and_and,
         .not,
         .not_equal,

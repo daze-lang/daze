@@ -17,6 +17,7 @@ pub enum TokenType {
     identifier         // identifiers
     number             // any number
     plus               // +
+    mul                // *
     plus_plus          // ++
     minus              // -
     minus_minus        // --
@@ -35,6 +36,7 @@ pub enum TokenType {
     open_square        // [
     close_square       // ]
     arrow_left         // <-
+    arrow_right        // ->
     dot                // .
     pipe               // |>
     single_quote       // '
@@ -93,6 +95,7 @@ pub const tokens_map = map{
   "open_square"        :"[",
   "close_square"       :"]",
   "arrow_left"         :"<-",
+  "arrow_right"        :"->",
   "pipe"               :"|>",
   "dot"                :".",
   "single_quote"       :"'",

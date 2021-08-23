@@ -3,16 +3,6 @@
 - [ ] Circular module import causes crash
 - [ ] floats are not handled properly (they are converted to `floatint`)
 
-```nim
-# this one fails
-sum :: []Int := {};
-sum <- hello() + 1;
-
-# this one works as its a grouped expression
-sum :: []Int := {};
-sum <- (hello() + 1);
-```
-
 ## TODO
 
 - [ ] AST -> JSON
@@ -23,7 +13,6 @@ sum <- (hello() + 1);
 - [ ] Implement Sum types
 - [ ] Implement Enums
 - [ ] Implement maps
-- [ ] range (0..9, 0..500)
 - [x] Implement module system
 
 ## Built in Types

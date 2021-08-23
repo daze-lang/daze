@@ -2,11 +2,13 @@ is main;
 
 use "daze::io";
 
-fn accepts_arr(arr :: [String]) :: [String] {
-  ret arr;
+fn call() :: Int {
+  ret 4;
 }
 
 fn main() :: Int {
-  arr :: [Int] := {1, 2, 3};
-  io:println(tostring(arr[1]));
+  sum :: [Int] := {};
+  sum <- call() + 1;
+  io:println(sum[0]); # 5
+  io:println("Hello world.");
 }

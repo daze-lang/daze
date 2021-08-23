@@ -98,6 +98,9 @@ pub fn (mut lexer Lexer) lex() []Token {
                 if lexer.lookahead() == "-" {
                     tokens << Token{.minus_minus, "--", lexer.line, lexer.column - current.len - 1}
                     lexer.advance()
+                } else if lexer.lookahead() == ">" {
+                    tokens << Token{.arrow_right, "->", lexer.line, lexer.column - current.len - 1}
+                    lexer.advance()
                 } else {
                     tokens << Token{.minus, current, lexer.line, lexer.column - current.len}
                 }
@@ -158,6 +161,10 @@ pub fn (mut lexer Lexer) lex() []Token {
                     tokens << Token{.and_and, "&&", lexer.line, lexer.column - current.len - 1}
                     lexer.advance()
                 }
+                continue
+            }
+            "*" {
+                tokens << Token{.mul, "*", lexer.line, lexer.column - current.len - 1}
                 continue
             }
             "!" {

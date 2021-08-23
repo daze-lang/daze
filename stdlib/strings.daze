@@ -55,7 +55,7 @@ fn findIndex(str :: String, chr :: String) :: Int {
   ret -1;
 }
 
-fn join(strArr :: []String, delim :: String) :: String {
+fn join(strArr :: [String], delim :: String) :: String {
   result :: String := "";
 
   for elem in strArr {
@@ -100,8 +100,8 @@ fn removeFromIndex(str :: String, from :: Int, length :: Int) :: String {
   ret result;
 }
 
-fn split(str :: String, delimiter :: String) :: []String {
-  result :: []String := {};
+fn split(str :: String, delimiter :: String) :: [String] {
+  result :: [String] := {};
   str = str + delimiter;
 
   for i in range:up(len(str)) {

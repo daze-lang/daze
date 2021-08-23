@@ -75,19 +75,19 @@ fn (mut parser Parser) expr() Expr {
         .comment { node = ast.Comment{value: parser.advance().value} }
         .open_paren { node = parser.grouped_expr() }
         .close_paren { utils.error("Unexpected `)` found.") }
-        .plus,
-        .minus,
-        .mod,
-        .div,
-        .and_and,
-        .not,
-        .not_equal,
-        .equal_equal,
-        .less_than,
-        .less_than_equal,
-        .greater_than,
-        .greater_than_equal,
-        ._or {  node = ast.BinaryOp{parser.advance().value} }
+        // .plus,
+        // .minus,
+        // .mod,
+        // .div,
+        // .and_and,
+        // .not,
+        // .not_equal,
+        // .equal_equal,
+        // .less_than,
+        // .less_than_equal,
+        // .greater_than,
+        // .greater_than_equal,
+        // ._or {  node = ast.BinaryOp{parser.advance().value} }
         .comma { node = ast.VariableExpr{parser.advance().value} }
         .semicolon { parser.advance() }
         .kw_make {
@@ -157,6 +157,10 @@ fn (mut parser Parser) expr() Expr {
             }
         }
         else { node = ast.NoOp{} }
+    }
+
+    if is_binary_op(parser.lookahead()) {
+        node = parser.binary(node)
     }
 
     return node
@@ -697,4 +701,27 @@ fn (mut parser Parser) try() ast.OptionalFunctionCall {
         fn_call: fn_call,
         default: default
     }
+}
+
+fn (mut parser Parser) binary(node ast.Expr) ast.BinaryOperation {
+    lhs := node
+    mut op := ""
+    mut rhs := ast.Expr{}
+
+    if is_binary_op(parser.lookahead()) {
+        op = parser.advance().value
+        rhs = parser.expr()
+        if is_binary_op(parser.lookahead()) {
+            rhs = parser.binary(rhs)
+        }
+
+        return ast.BinaryOperation{
+            lhs: lhs,
+            op: op,
+            rhs: rhs
+        }
+    }
+
+    // Unreachable
+    return ast.BinaryOperation{}
 }

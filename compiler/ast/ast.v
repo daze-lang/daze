@@ -25,6 +25,7 @@ pub type Expr = FunctionCallExpr
     | ArrayDefinition
     | CharLiteralExpr
     | RawBinaryOpExpr
+    | BinaryOperation
     | ForInLoopExpr
     | ArrayPushExpr
     | IncrementExpr
@@ -228,6 +229,13 @@ pub struct FunctionArgument {
 pub:
     name string
     type_name string
+}
+
+pub struct BinaryOperation {
+pub:
+    lhs Expr
+    op string
+    rhs Expr
 }
 
 pub struct NoOp {}

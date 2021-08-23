@@ -84,6 +84,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.variable_assignment(node)
     } else if mut node is ast.BinaryOp {
         code = "$node.value"
+    } else if mut node is ast.BinaryOperation {
+        code = gen.binary(node)
     } else if mut node is ast.ReturnExpr {
         code = gen.return_expr(node)
     } else if mut node is ast.VariableDecl {
@@ -390,6 +392,14 @@ fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCal
     code += "\n}\n"
 
     return code
+}
+
+fn (mut gen CppCodeGenerator) binary(node ast.BinaryOperation) string {
+    if gen.expr(node.rhs) == "" {
+        // TODO: proper error message
+        panic("Couldn't parse binary op. Missing right hand side?")
+    }
+    return "${gen.expr(node.lhs)} ${node.op} ${gen.expr(node.rhs)}"
 }
 
 fn get_built_in_types() []string {

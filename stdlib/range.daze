@@ -1,7 +1,7 @@
 is range;
 
-fn between(from :: Int, to :: Int) :: []Int {
-  result :: []Int := {};
+fn between(from :: Int, to :: Int) :: [Int] {
+  result :: [Int] := {};
 
   i :: Int := from;
   for i <= to {
@@ -12,8 +12,8 @@ fn between(from :: Int, to :: Int) :: []Int {
   ret result;
 }
 
-fn up(to :: Int) :: []Int {
-  result :: []Int := {};
+fn up(to :: Int) :: [Int] {
+  result :: [Int] := {};
 
   i :: Int := 0;
   for i <= to {
