@@ -66,7 +66,6 @@ pub fn compile(mod Module) CompilationResult {
     mut code := codegen.run()
 
     if mod.name == "main" {
-        // panic(ast)
         module_lookup := compile_modules(load_modules(mod))
         mut checker := checker.new(ast, module_lookup)
         checker.run()

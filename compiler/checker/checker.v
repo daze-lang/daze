@@ -64,6 +64,8 @@ fn (mut checker Checker) expr(node ast.Expr) {
         checker.fn_call(node)
     } else if node is ast.VariableDecl {
         checker.var_decl(node)
+    } else if node is ast.StructInitialization {
+        checker.struct_decl(node)
     }
 }
 
@@ -78,8 +80,18 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
     mut my_type := ""
     if cast is ast.StringLiteralExpr {
         my_type = "String"
+    } else if cast is ast.VariableExpr {
+        // accessing struct field
+        if cast.value.contains(".") {
+            calling_on := cast.value.split(".")[0]
+            field := cast.value.split(".")[1]
+            struct_name := checker.variables[calling_on].type_name
+            my_type = checker.get_struct_field_by_name(struct_name, field).type_name
+        }
     } else if cast is ast.NumberLiteralExpr {
         my_type = "Int"
+    } else if cast is ast.StructInitialization {
+        my_type = cast.name
     } else if cast is ast.FunctionCallExpr {
         my_type = checker.functions[resolve_function_name(cast.name)].return_type
     }
@@ -98,6 +110,12 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     mut function_name := resolve_function_name(node.name)
+
+    // Allowing println for now
+    if function_name == "println" {
+        return
+    }
+
     if node.name.contains(":") {
         mut module_name := node.name.split(":")[0]
         function_name = node.name.split(":")[1]
@@ -123,11 +141,22 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
 
     // Checking argument types
     for i in 0..args_len {
+        checker.check(node.args[i])
         expected := ast_node.args[i].type_name
         mut my_type := ""
         cast := node.args[i]
         if cast is ast.StringLiteralExpr {
             my_type = "String"
+        } else if cast is ast.StructInitialization {
+            my_type = cast.name
+        } else if cast is ast.VariableExpr {
+            // accessing struct field
+            if cast.value.contains(".") {
+                calling_on := cast.value.split(".")[0]
+                field := cast.value.split(".")[1]
+                struct_name := checker.variables[calling_on].type_name
+                my_type = checker.get_struct_field_by_name(struct_name, field).type_name
+            }
         } else if cast is ast.NumberLiteralExpr {
             my_type = "Int"
         } else if cast is ast.FunctionCallExpr {
@@ -137,6 +166,52 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
             panic("Type mismatch. Trying to call function `$function_name` with argument `${ast_node.args[i].name}` as ${my_type}, but it expects ${expected}")
         }
     }
+}
+
+fn (mut checker Checker) struct_decl(node ast.StructInitialization) {
+    args_len := node.args.len
+    ast_node := checker.structs[node.name]
+    // Checking argument types
+    for i in 0..args_len {
+        checker.check(node.args[i])
+        expected := ast_node.fields[i].type_name
+        mut my_type := ""
+        cast := node.args[i]
+        if cast is ast.StringLiteralExpr {
+            my_type = "String"
+        } else if cast is ast.StructInitialization {
+            my_type = cast.name
+        } else if cast is ast.VariableExpr {
+            // accessing struct field
+            if cast.value.contains(".") {
+                calling_on := cast.value.split(".")[0]
+                field := cast.value.split(".")[1]
+                struct_name := checker.variables[calling_on].type_name
+                my_type = checker.get_struct_field_by_name(struct_name, field).type_name
+            }
+        } else if cast is ast.NumberLiteralExpr {
+            my_type = "Int"
+        } else if cast is ast.FunctionCallExpr {
+            my_type = checker.functions[resolve_function_name(cast.name)].return_type
+        }
+
+        if expected != my_type {
+            panic("Type mismatch: Trying to assign ${my_type} to ${node.name}.${ast_node.fields[i].name}, but it expects $expected")
+        }
+    }
+}
+
+// Utilities
+
+fn (mut checker Checker) get_struct_field_by_name(struct_name string, field_name string) ast.FunctionArgument {
+    for field in checker.structs[struct_name].fields {
+        if field.name == field_name {
+            return field
+        }
+    }
+
+    // Should be unreachable
+    return ast.FunctionArgument{}
 }
 
 fn resolve_function_name(name string) string {

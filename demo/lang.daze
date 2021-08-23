@@ -2,10 +2,17 @@ is main;
 
 use "daze::io";
 
-fn hello() :: Int {
-  ret 5;
+struct Person {
+  name :: Int
 }
 
 fn main() :: Int {
-  something :: String := hello();
+  # something :: Person := make Person("5");
+  io:println("Hello, world.");
+
+  if 5 == 5 {
+    io:println("5 is 5");
+  } else {
+    io:println("5 isnt 5");
+  }
 }

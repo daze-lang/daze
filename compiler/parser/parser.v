@@ -150,8 +150,14 @@ fn (mut parser Parser) expr() Expr {
                     if parser.lookahead_by(2).kind in [.equal, .colon_equal, .double_colon] {
                         node = parser.variable_decl()
                     } else {
-                        node = ast.VariableExpr{parser.lookahead().value}
-                        parser.advance()
+                        val := parser.lookahead().value
+                        if val.starts_with(".") {
+                            // TODO: better error message
+                            panic("Directly trying to access struct field. Store it in a variable instead")
+                        } else {
+                            node = ast.VariableExpr{val}
+                            parser.advance()
+                        }
                     }
                 }
             }
@@ -161,6 +167,10 @@ fn (mut parser Parser) expr() Expr {
 
     if is_binary_op(parser.lookahead()) {
         node = parser.binary(node)
+    }
+
+    if node is ast.StructInitialization {
+        // panic(node)
     }
 
     return node

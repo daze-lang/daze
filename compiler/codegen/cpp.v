@@ -375,7 +375,7 @@ fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string 
         args << gen.expr(arg)
     }
 
-    return "($node.name.replace(':', '::')){${args.join(", ").replace(",,", "")}}"
+    return "($node.name.replace(':', '::')){${args.join(", ").replace(",,", "").replace(";", "")}}"
 }
 
 fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCall) string {
