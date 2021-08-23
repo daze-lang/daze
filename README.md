@@ -8,6 +8,7 @@
 
 - [ ] AST -> JSON
 - [ ] Compile-time type checker
+  - [ ] Check return types, function argument types, return exprs
 - [ ] Proper error messages for parser errors (marked with TODOs)
 - [ ] Implement `when`
 - [x] Implement optional return types

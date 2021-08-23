@@ -1,9 +1,5 @@
 is io;
 
-struct IOStruct {
-  name :: String
-}
-
 fn println(val :: String) :: Void {
   unsafe {
     std::cout << val << std::endl;

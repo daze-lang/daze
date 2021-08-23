@@ -68,7 +68,7 @@ pub:
 pub struct GlobalDecl {
 pub:
     name string
-    value string
+    value Expr
 }
 
 pub struct ModuleDeclarationStatement {
@@ -97,7 +97,7 @@ pub mut:
 
 pub struct ReturnExpr {
 pub:
-    value []Expr
+    value Expr
 }
 
 pub struct OptionalFunctionCall {
@@ -108,7 +108,7 @@ pub:
 
 pub struct IfExpression {
 pub:
-    conditional []Expr
+    conditional Expr
     body []Expr
     elseifs []IfExpression
     else_branch []Expr
@@ -119,14 +119,14 @@ mut:
 pub struct VariableDecl {
 pub:
     name string
-    value []Expr
+    value Expr
     type_name string
 }
 
 pub struct VariableAssignment {
 pub:
     name string
-    value []Expr
+    value Expr
 }
 
 pub struct FunctionCallExpr {
@@ -148,7 +148,7 @@ pub mut:
 
 pub struct GroupedExpr {
 pub:
-    body []Expr
+    body Expr
 }
 
 pub struct ArrayInit {
@@ -202,7 +202,7 @@ pub:
 
 pub struct ForLoopExpr {
 pub:
-    conditional []Expr
+    conditional Expr
     body []Expr
 }
 

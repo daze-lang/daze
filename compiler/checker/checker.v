@@ -10,6 +10,7 @@ mut:
     structs map[string]ast.StructDeclarationStatement
     variables map[string]ast.VariableDecl
     modules map[string]CompilationResult
+    current_mod string
 }
 
 pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
@@ -18,17 +19,20 @@ pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
         map[string]ast.FunctionDeclarationStatement,
         map[string]ast.StructDeclarationStatement{},
         map[string]ast.VariableDecl{},
-        modules
+        modules,
+        ""
     }
 }
 
 pub fn (mut checker Checker) run() {
-    for _, mod in checker.modules {
+    for modname, mod in checker.modules {
+        checker.current_mod = modname
         for node in mod.ast.nodes {
             checker.check(node)
         }
     }
 
+    checker.current_mod = "main"
     for node in checker.ast.nodes {
         checker.check(node)
     }
@@ -50,7 +54,15 @@ fn (mut checker Checker) statement(node ast.Statement) {
             checker.check(body)
         }
     } else if node is ast.StructDeclarationStatement {
-        checker.structs[node.name] = node
+        if checker.current_mod != "main" {
+            checker.structs[checker.current_mod + ":" + node.name] = node
+        } else {
+            checker.structs[node.name] = node
+        }
+    } else if node is ast.GlobalDecl {
+        if node.name != node.name.capitalize() {
+            utils.error("Global variable names must be uppercase, found: `$node.name`")
+        }
     } else if node is ast.ModuleDeclarationStatement {
         if node.name == node.name.capitalize() {
             utils.error("Module names must be lowercase, found: `$node.name`")
@@ -66,35 +78,20 @@ fn (mut checker Checker) expr(node ast.Expr) {
         checker.var_decl(node)
     } else if node is ast.StructInitialization {
         checker.struct_decl(node)
+    } else if node is ast.BinaryOperation {
+        checker.binary(node)
+    } else if node is ast.VariableExpr {
+        if !checker.variables.keys().contains(node.value) {
+            // TODO: proper error message
+            panic("Accessing unknown variable")
+        }
     }
 }
 
 fn (mut checker Checker) var_decl(node ast.VariableDecl) {
-    if checker.variables.keys().contains(node.name) {
-        var_type := checker.variables[node.name]
-    }
-
-    cast := node.value[0]
-    expected := node.type_name
-
-    mut my_type := ""
-    if cast is ast.StringLiteralExpr {
-        my_type = "String"
-    } else if cast is ast.VariableExpr {
-        // accessing struct field
-        if cast.value.contains(".") {
-            calling_on := cast.value.split(".")[0]
-            field := cast.value.split(".")[1]
-            struct_name := checker.variables[calling_on].type_name
-            my_type = checker.get_struct_field_by_name(struct_name, field).type_name
-        }
-    } else if cast is ast.NumberLiteralExpr {
-        my_type = "Int"
-    } else if cast is ast.StructInitialization {
-        my_type = cast.name
-    } else if cast is ast.FunctionCallExpr {
-        my_type = checker.functions[resolve_function_name(cast.name)].return_type
-    }
+    checker.check(node.value)
+    expected := node.type_name.replace("::", ":")
+    my_type := checker.infer(node.value)
 
     if expected != my_type {
         panic("Type mismatch. Trying to assign ${my_type} to variable `${node.name}`, but it expects ${expected}")
@@ -103,13 +100,15 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
     checker.variables[node.name] = node
 
     // checking the variable body
-    for body in node.value {
-        checker.check(body)
-    }
+    checker.check(node.value)
 }
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     mut function_name := resolve_function_name(node.name)
+
+    if function_name == "main" {
+        panic("Calling `main` is not allowed.")
+    }
 
     // Allowing println for now
     if function_name == "println" {
@@ -143,25 +142,8 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     for i in 0..args_len {
         checker.check(node.args[i])
         expected := ast_node.args[i].type_name
-        mut my_type := ""
-        cast := node.args[i]
-        if cast is ast.StringLiteralExpr {
-            my_type = "String"
-        } else if cast is ast.StructInitialization {
-            my_type = cast.name
-        } else if cast is ast.VariableExpr {
-            // accessing struct field
-            if cast.value.contains(".") {
-                calling_on := cast.value.split(".")[0]
-                field := cast.value.split(".")[1]
-                struct_name := checker.variables[calling_on].type_name
-                my_type = checker.get_struct_field_by_name(struct_name, field).type_name
-            }
-        } else if cast is ast.NumberLiteralExpr {
-            my_type = "Int"
-        } else if cast is ast.FunctionCallExpr {
-            my_type = checker.functions[resolve_function_name(cast.name)].return_type
-        }
+        my_type := checker.infer(node.args[i])
+
         if expected != my_type {
             panic("Type mismatch. Trying to call function `$function_name` with argument `${ast_node.args[i].name}` as ${my_type}, but it expects ${expected}")
         }
@@ -175,30 +157,71 @@ fn (mut checker Checker) struct_decl(node ast.StructInitialization) {
     for i in 0..args_len {
         checker.check(node.args[i])
         expected := ast_node.fields[i].type_name
-        mut my_type := ""
-        cast := node.args[i]
-        if cast is ast.StringLiteralExpr {
-            my_type = "String"
-        } else if cast is ast.StructInitialization {
-            my_type = cast.name
-        } else if cast is ast.VariableExpr {
-            // accessing struct field
-            if cast.value.contains(".") {
-                calling_on := cast.value.split(".")[0]
-                field := cast.value.split(".")[1]
-                struct_name := checker.variables[calling_on].type_name
-                my_type = checker.get_struct_field_by_name(struct_name, field).type_name
-            }
-        } else if cast is ast.NumberLiteralExpr {
-            my_type = "Int"
-        } else if cast is ast.FunctionCallExpr {
-            my_type = checker.functions[resolve_function_name(cast.name)].return_type
-        }
+        my_type := checker.infer(node.args[i])
 
         if expected != my_type {
             panic("Type mismatch: Trying to assign ${my_type} to ${node.name}.${ast_node.fields[i].name}, but it expects $expected")
         }
     }
+}
+
+fn (mut checker Checker) array_init(expected_type string, node ast.ArrayInit) {
+    expected := expected_type.split("|")[0]
+    // // Checking argument types
+    for i in 0..node.body.len {
+        my_type := checker.infer(node.body[i])
+        checker.check(node.body[i])
+
+        if expected != my_type {
+            // TODO: proper error message
+            panic("Type mismatch")
+        }
+    }
+}
+
+fn (mut checker Checker) binary(node ast.BinaryOperation) {
+    checker.check(node.lhs)
+    checker.check(node.rhs)
+
+    if checker.infer(node.lhs) != checker.infer(node.rhs) {
+        panic("Type mismatch in binary. Got: ${checker.infer(node.rhs)}, expected: ${checker.infer(node.lhs)}")
+    }
+
+    if node.lhs is ast.BinaryOperation {
+        checker.binary(node.lhs)
+    }
+
+    if node.rhs is ast.BinaryOperation {
+        checker.binary(node.rhs)
+    }
+}
+
+// Type Inference
+
+fn (mut checker Checker) infer(node ast.Expr) string {
+    if node is ast.BinaryOperation {
+        return checker.infer(node.lhs)
+    } else if node is ast.FunctionCallExpr {
+        return checker.functions[resolve_function_name(node.name)].return_type
+    } else if node is ast.StringLiteralExpr {
+        return "String"
+    } else if node is ast.NumberLiteralExpr {
+        return "Int"
+    } else if node is ast.StructInitialization {
+        return node.name
+    } else if node is ast.VariableExpr {
+        // accessing struct field
+        if node.value.contains(".") {
+            calling_on := node.value.split(".")[0]
+            field := node.value.split(".")[1]
+            struct_name := checker.variables[calling_on].type_name
+            return checker.get_struct_field_by_name(struct_name, field).type_name
+        } else {
+            return checker.variables[node.value].type_name
+        }
+    }
+
+    panic("Unable to infer type: $node")
 }
 
 // Utilities

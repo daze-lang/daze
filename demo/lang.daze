@@ -2,17 +2,20 @@ is main;
 
 use "daze::io";
 
+global NAME = "Mark";
+global MILLISECOND = 1;
+global SECOND = MILLISECOND * 60;
+
 struct Person {
   name :: Int
+
+  fn get_name() :: Int {
+    ret name;
+  }
 }
 
 fn main() :: Int {
-  # something :: Person := make Person("5");
-  io:println("Hello, world.");
-
-  if 5 == 5 {
-    io:println("5 is 5");
-  } else {
-    io:println("5 isnt 5");
-  }
+  h :: Int := 5;
+  b :: Person := make Person(h);
+  io:println(SECOND);
 }

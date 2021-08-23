@@ -281,10 +281,7 @@ fn (mut parser Parser) array_push() ast.ArrayPushExpr {
 
 fn (mut parser Parser) for_loop() ast.ForLoopExpr {
     parser.expect(.kw_for)
-    mut conditional_body := []ast.Expr{}
-    for parser.lookahead().kind != .open_curly {
-        conditional_body << parser.expr()
-    }
+    mut conditional := parser.expr()
     parser.expect(.open_curly)
 
     mut body := []Expr{}
@@ -300,7 +297,7 @@ fn (mut parser Parser) for_loop() ast.ForLoopExpr {
     parser.expect(.close_curly)
 
     return ast.ForLoopExpr{
-        conditional: conditional_body,
+        conditional: conditional,
         body: body
     }
 }
@@ -456,18 +453,9 @@ fn (mut parser Parser) use() ast.ModuleUseStatement {
 
 fn (mut parser Parser) ret() ast.ReturnExpr {
     parser.expect(.kw_return)
-    mut value := []Expr{}
-
-    for parser.lookahead().kind != .semicolon {
-        next := parser.expr()
-        value << next
-        if next is ast.NoOp {
-            break
-        }
-    }
 
     return ast.ReturnExpr{
-        value: value,
+        value: parser.expr(),
     }
 }
 
@@ -496,15 +484,7 @@ fn (mut parser Parser) variable_decl() Expr {
         }
     }
 
-    mut body := []Expr{}
-    for parser.lookahead_by(0).kind != .semicolon {
-        next := parser.expr()
-        if next is ast.NoOp {
-            break
-        }
-
-        body << next
-    }
+    mut body := parser.expr()
 
     // var = "some string";
     if is_reassignment {
@@ -533,10 +513,7 @@ fn (mut parser Parser) variable_decl() Expr {
 
 fn (mut parser Parser) if_statement() ast.IfExpression {
     parser.expect(.kw_if)
-    mut conditional_body := []ast.Expr{}
-    for parser.lookahead().kind != .open_curly {
-        conditional_body << parser.expr()
-    }
+    mut conditional := parser.expr()
     parser.expect(.open_curly)
     mut body := []Expr{}
     mut else_body := []Expr{}
@@ -550,10 +527,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
     if parser.lookahead().kind == .kw_elif {
         for parser.lookahead().kind == .kw_elif {
             parser.expect(.kw_elif)
-            mut elseif_conditional_body := []ast.Expr{}
-            for parser.lookahead().kind != .open_curly {
-                elseif_conditional_body << parser.expr()
-            }
+            mut elseif_conditional := parser.expr()
             parser.expect(.open_curly)
             mut elseif_body := []Expr{}
 
@@ -562,7 +536,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
             }
             parser.expect(.close_curly)
             elseif_expr := ast.IfExpression{
-                conditional: elseif_conditional_body,
+                conditional: elseif_conditional,
                 body: elseif_body,
                 else_branch: []Expr{}
             }
@@ -580,7 +554,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
     }
 
     return ast.IfExpression{
-        conditional: conditional_body,
+        conditional: conditional,
         body: body,
         elseifs: elseifs,
         else_branch: else_body
@@ -619,12 +593,7 @@ fn (mut parser Parser) indexing() ast.IndexingExpr {
 
 fn (mut parser Parser) grouped_expr() ast.GroupedExpr {
     parser.expect(.open_paren)
-    mut body := []ast.Expr{}
-
-    for parser.lookahead().kind != .close_paren {
-        body << parser.expr()
-    }
-
+    mut body := parser.expr()
     parser.expect(.close_paren)
     return ast.GroupedExpr{body}
 }
@@ -669,12 +638,7 @@ fn (mut parser Parser) global() ast.GlobalDecl {
     parser.expect(.kw_global)
     name := parser.expect(.identifier).value
     parser.expect(.equal)
-    if parser.lookahead().kind !in [.string, .number] {
-        // TODO: proper error message
-        panic("Global constants can only hold strings or integers.")
-    }
-    is_string := parser.lookahead().kind == .string
-    value := if is_string { "\"${parser.advance().value}\"" } else { parser.advance().value }
+    value := parser.expr()
     parser.expect(.semicolon)
 
     return ast.GlobalDecl{

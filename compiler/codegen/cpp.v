@@ -55,7 +55,7 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.StructDeclarationStatement {
         code = gen.struct_decl(node)
     } else if mut node is ast.GlobalDecl {
-        code = "#define $node.name $node.value\n"
+        code = "const auto ${node.name} = ${gen.expr(node.value)};\n"
     } else if mut node is ast.ModuleUseStatement {
         code = "// MODULE ${node.path.replace("daze::", "")};\n"
     } else if mut node is ast.Comment {
@@ -204,28 +204,23 @@ fn (mut gen CppCodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) st
 }
 
 fn (mut gen CppCodeGenerator) variable_expr(node ast.VariableExpr) string {
+    if node.value.contains(":") {
+        return node.value.replace(":", "::")
+    }
     return node.value
 }
 
 fn (mut gen CppCodeGenerator) return_expr(node ast.ReturnExpr) string {
-    mut body := ""
-    for expr in node.value {
-        body += gen.gen(expr)
-    }
-    return "\nreturn ${body.replace("\n", " ").replace(";", "")};\n"
+    return "\nreturn ${gen.gen(node.value).replace("\n", " ").replace(";", "")};\n"
 }
 
 fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
-    mut body := ""
+    mut body := gen.gen(node.value)
     mut type_name := node.type_name
-
-    for expr in node.value {
-        body += "${gen.gen(expr)} "
-    }
 
     mut is_optional := false
     mut optional := ast.OptionalFunctionCall{}
-    cast := node.value[0]
+    cast := node.value
     if cast is ast.StructInitialization {
         type_name = cast.name.replace(":", "::")
     } else if cast is ast.OptionalFunctionCall {
@@ -248,11 +243,7 @@ fn (mut gen CppCodeGenerator) variable_decl(node ast.VariableDecl) string {
 }
 
 fn (mut gen CppCodeGenerator) variable_assignment(node ast.VariableAssignment) string {
-    mut body := ""
-    for expr in node.value {
-        body += "${gen.gen(expr)}"
-    }
-    return "$node.name = $body;\n"
+    return "$node.name = ${gen.gen(node.value)};\n"
 }
 
 fn (mut gen CppCodeGenerator) struct_decl(node ast.StructDeclarationStatement) string {
@@ -274,24 +265,15 @@ fn (mut gen CppCodeGenerator) set_module(name string) {
 }
 
 fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
-    mut if_conditional := ""
 
-    for cbody in node.conditional {
-        if_conditional += gen.expr(cbody)
-    }
-
-    mut code := "if ($if_conditional.replace(";", "")) {\n"
+    mut code := "if (${gen.expr(node.conditional).replace(";", "")}) {\n"
     for func in node.body {
         code += gen.gen(func)
     }
 
     if node.elseifs.len != 0 {
         for elsif in node.elseifs {
-            mut cbody_conditional := ""
-            for cbody in elsif.conditional {
-                cbody_conditional += gen.expr(cbody)
-            }
-            code += "} else if($cbody_conditional.replace(";", "")){\n"
+            code += "} else if(${gen.expr(elsif.conditional).replace(";", "")}){\n"
             for func in elsif.body {
                 code += gen.gen(func)
             }
@@ -310,11 +292,7 @@ fn (mut gen CppCodeGenerator) if_statement(node ast.IfExpression) string {
 }
 
 fn (mut gen CppCodeGenerator) for_loop(node ast.ForLoopExpr) string {
-    mut conditional := ""
-    for c in node.conditional {
-        conditional += gen.gen(c)
-    }
-
+    mut conditional := "${gen.gen(node.conditional)}"
     mut code := "\nwhile (${conditional.replace(";", "")}) {\n"
     for func in node.body {
         code += gen.gen(func) + "\n"
@@ -349,13 +327,7 @@ fn (mut gen CppCodeGenerator) indexing(node ast.IndexingExpr) string {
 }
 
 fn (mut gen CppCodeGenerator) grouped_expr(node ast.GroupedExpr) string {
-    mut items := []string{}
-
-    for item in node.body {
-        items << gen.gen(item)
-    }
-
-    return "(${items.join(" ")})"
+    return "(${gen.gen(node.body)})"
 }
 
 fn (mut gen CppCodeGenerator) array_init(node ast.ArrayInit) string {
@@ -364,8 +336,7 @@ fn (mut gen CppCodeGenerator) array_init(node ast.ArrayInit) string {
     for item in node.body {
         items << gen.gen(item)
     }
-
-    return "{${items.join(" ")}}"
+    return "{${items.join(", ").replace(", ,", ",").replace(";", "")}}"
 }
 
 fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string {
