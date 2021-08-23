@@ -9,6 +9,7 @@ mut:
     functions map[string]ast.FunctionDeclarationStatement
     structs map[string]ast.StructDeclarationStatement
     variables map[string]ast.VariableDecl
+    enums map[string]ast.EnumDeclarationStatement
     modules map[string]CompilationResult
     current_mod string
 }
@@ -19,6 +20,7 @@ pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
         map[string]ast.FunctionDeclarationStatement,
         map[string]ast.StructDeclarationStatement{},
         map[string]ast.VariableDecl{},
+        map[string]ast.EnumDeclarationStatement,
         modules,
         ""
     }
@@ -59,6 +61,8 @@ fn (mut checker Checker) statement(node ast.Statement) {
         } else {
             checker.structs[node.name] = node
         }
+    } else if node is ast.EnumDeclarationStatement {
+        checker.enums[node.name] = node
     } else if node is ast.GlobalDecl {
         if node.name != node.name.capitalize() {
             utils.error("Global variable names must be uppercase, found: `$node.name`")
@@ -82,16 +86,39 @@ fn (mut checker Checker) expr(node ast.Expr) {
         checker.binary(node)
     } else if node is ast.OptionalFunctionCall {
         checker.optional(node)
+    } else if node is ast.VariableAssignment {
+        checker.var_assignment(node)
     } else if node is ast.VariableExpr {
-        if !checker.variables.keys().contains(node.value) {
+        if !checker.variables.keys().contains(node.value) && !checker.enums.keys().contains(node.value.split(":")[0])  {
             // TODO: proper error message
-            panic("Accessing unknown variable")
+            panic("Accessing unknown variable: ${node.value}")
+        }
+
+        if node.value.contains(":") {
+            // module or enum
+            mod_or_enum_name := node.value.split(":")[0]
+            field := node.value.split(":")[1]
+            is_mod := checker.modules.keys().contains(mod_or_enum_name)
+            is_enum := checker.enums.keys().contains(mod_or_enum_name)
+
+            if is_enum {
+                if !checker.enums[mod_or_enum_name].values.contains(field) {
+                    panic("Trying to access unkown field ${field} of enum `${mod_or_enum_name}`")
+                }
+            }
+
+            if is_mod {
+                panic("Unhandled: checker.v:109")
+            }
         }
     }
 }
 
 fn (mut checker Checker) var_decl(node ast.VariableDecl) {
     checker.check(node.value)
+    if node.value is ast.NoOp {
+        return
+    }
     expected := node.type_name.replace("::", ":")
     my_type := checker.infer(node.value)
 
@@ -107,6 +134,9 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     mut function_name := resolve_function_name(node.name)
+    for arg in node.args {
+        checker.check(arg)
+    }
 
     if function_name == "main" {
         panic("Calling `main` is not allowed.")
@@ -207,6 +237,19 @@ fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
     }
 }
 
+fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
+    checker.check(node.value)
+    mut expected := checker.infer(checker.variables[node.name].value)
+    my_type := checker.infer(node.value)
+
+    if expected != my_type {
+        panic("Type mismatch. Trying to assign ${my_type} to variable `${node.name}`, but it expects ${expected}")
+    }
+
+    // checking the variable body
+    checker.check(node.value)
+}
+
 // Type Inference
 
 fn (mut checker Checker) infer(node ast.Expr) string {
@@ -232,6 +275,12 @@ fn (mut checker Checker) infer(node ast.Expr) string {
             struct_name := checker.variables[calling_on].type_name
             return checker.get_struct_field_by_name(struct_name, field).type_name
         } else {
+            if checker.variables[node.value].type_name == "" {
+                enum_name := node.value.split(":")[0]
+                if checker.enums.keys().contains(enum_name) {
+                    return enum_name
+                }
+            }
             return checker.variables[node.value].type_name
         }
     }

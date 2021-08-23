@@ -54,6 +54,8 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
         code = node.body
     } else if mut node is ast.StructDeclarationStatement {
         code = gen.struct_decl(node)
+    } else if mut node is ast.EnumDeclarationStatement {
+        code = gen.enum_(node)
     } else if mut node is ast.GlobalDecl {
         code = "const auto ${node.name} = ${gen.expr(node.value)};\n"
     } else if mut node is ast.ModuleUseStatement {
@@ -402,6 +404,10 @@ fn (mut gen CppCodeGenerator) binary(node ast.BinaryOperation) string {
         panic("Couldn't parse binary op. Missing right hand side?")
     }
     return "${gen.expr(node.lhs)} ${node.op} ${gen.expr(node.rhs)}"
+}
+
+fn (mut gen CppCodeGenerator) enum_(node ast.EnumDeclarationStatement) string {
+    return "enum $node.name {${node.values.join(", ")}};"
 }
 
 fn get_built_in_types() []string {

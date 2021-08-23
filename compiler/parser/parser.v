@@ -50,6 +50,7 @@ fn (mut parser Parser) statement() Statement {
             panic("For not allowed at top level")
         }
         .kw_global { node = parser.global() }
+        .kw_enum { node = parser.enum_() }
         .kw_unsafe { node = parser.unsafe_() }
         .kw_use { node = parser.use() }
         .comment { node = ast.Comment{value: parser.advance().value} }
@@ -66,7 +67,7 @@ fn (mut parser Parser) statement() Statement {
 }
 
 fn (mut parser Parser) expr() Expr {
-    mut node := ast.Expr{}
+    mut node := ast.Expr(ast.NoOp{})
 
     match parser.lookahead().kind {
         .open_curly {
@@ -79,19 +80,6 @@ fn (mut parser Parser) expr() Expr {
         .comment { node = ast.Comment{value: parser.advance().value} }
         .open_paren { node = parser.grouped_expr() }
         .close_paren { utils.error("Unexpected `)` found.") }
-        // .plus,
-        // .minus,
-        // .mod,
-        // .div,
-        // .and_and,
-        // .not,
-        // .not_equal,
-        // .equal_equal,
-        // .less_than,
-        // .less_than_equal,
-        // .greater_than,
-        // .greater_than_equal,
-        // ._or {  node = ast.BinaryOp{parser.advance().value} }
         .comma { node = ast.NoOp{} parser.advance() }
         .semicolon { parser.advance() }
         .kw_make {
@@ -173,10 +161,6 @@ fn (mut parser Parser) expr() Expr {
         node = parser.binary(node)
     }
 
-    if node is ast.StructInitialization {
-        // panic(node)
-    }
-
     return node
 }
 
@@ -189,10 +173,6 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
     mut args := []ast.FunctionArgument{}
     if parser.lookahead().kind == .identifier {
         args = parser.fn_args(.close_paren)
-    }
-
-    if parser.lookahead().kind == .kw_fn {
-        panic("hmm")
     }
 
     parser.expect(.close_paren)
@@ -740,4 +720,26 @@ fn (mut parser Parser) binary(node ast.Expr) ast.BinaryOperation {
 
     // Unreachable
     return ast.BinaryOperation{}
+}
+
+fn (mut parser Parser) enum_() ast.EnumDeclarationStatement {
+    parser.expect(.kw_enum)
+    name := parser.expect(.identifier).value
+    parser.expect(.open_curly)
+    mut values := []string{}
+    for parser.lookahead().kind != .close_curly {
+        values << parser.expect(.identifier).value
+
+        if parser.lookahead().kind != .close_curly {
+            parser.expect(.comma)
+        }
+    }
+
+    parser.expect(.close_curly)
+    parser.expect(.semicolon)
+
+    return ast.EnumDeclarationStatement{
+        name: name,
+        values: values
+    }
 }

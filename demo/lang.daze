@@ -2,16 +2,7 @@ is main;
 
 use "daze::io";
 
-fn fails() :: String {
-  ret error("Nope.");
-}
-
 fn main() :: Int {
-  val :: String := try fails() or "5";
-  data :: map[String -> String] := {
-    "name" -> "Mark",
-    "age" -> "24",
-  };
-
-  io:println(data["name"]);
+  num :: Int := 5;
+  io:println(num > 1);
 }

@@ -17,3 +17,10 @@ fn println(val :: Int) :: Void {
     std::cout << std::to_string(val) << std::endl;
   }
 }
+
+
+fn println(val :: Bool) :: Void {
+  unsafe {
+    std::cout << std::boolalpha << val << std::endl;
+  }
+}

@@ -9,6 +9,7 @@ pub mut:
 pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
+    | EnumDeclarationStatement
     | ModuleUseStatement
     | FunctionArgument
     | UnsafeBlock
@@ -248,6 +249,12 @@ pub:
     lhs Expr
     op string
     rhs Expr
+}
+
+pub struct EnumDeclarationStatement {
+pub:
+    name string
+    values []string
 }
 
 pub struct NoOp {}
