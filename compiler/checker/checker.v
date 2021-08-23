@@ -151,6 +151,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         mut module_name := node.name.split(":")[0]
         function_name = node.name.split(":")[1]
         if !checker.modules.keys().contains(module_name) {
+            println(checker.modules)
             panic("Referencing unknown module: ${module_name}")
         }
     }

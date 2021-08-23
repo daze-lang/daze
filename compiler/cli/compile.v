@@ -8,7 +8,7 @@ import utils
 import ast{CompilationResult, Module}
 import os
 
-fn load_modules(mod Module) []Module {
+fn load_modules(mod Module, base string) []Module {
     matches := utils.match_all(mod.code, "use (.*?);")
     mut modules := []Module{}
 
@@ -17,26 +17,29 @@ fn load_modules(mod Module) []Module {
         module_name := module_path.replace("daze::", "")
         if module_path.starts_with("daze::") {
             module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
+        } else {
+            module_path = os.join_path(base, module_path)
         }
 
-        mut module_file := os.read_file("${module_path}.daze") or { panic("File not found") }
+        mut module_file := os.read_file("${module_path}.daze") or { panic("File not found ($module_path") }
+        mod_name := module_name.replace("./", "").split("/")
         new_mod := Module{
-            name: module_name
+            name: mod_name.pop(),
             path: module_path + ".daze"
             code: module_file
         }
         modules << new_mod
-        modules << load_modules(new_mod)
+        modules << load_modules(new_mod, base)
     }
 
     return modules
 }
 
-fn compile_modules(mods []Module) map[string]CompilationResult {
+fn compile_modules(mods []Module, base string) map[string]CompilationResult {
     mut compiled_modules_map := map[string]CompilationResult{}
 
     for rawmod in mods {
-        compiled_modules_map[rawmod.name] = compile(rawmod)
+        compiled_modules_map[rawmod.name] = compile(rawmod, base)
     }
 
     return compiled_modules_map
@@ -55,7 +58,7 @@ fn replace_imports(code string, lookup map[string]CompilationResult) string {
     return ret_code
 }
 
-pub fn compile(mod Module) CompilationResult {
+pub fn compile(mod Module, base string) CompilationResult {
     mut lexer := lexer.new(mod.code)
     tokens := lexer.lex()
     // panic(tokens)
@@ -67,7 +70,7 @@ pub fn compile(mod Module) CompilationResult {
 
     if mod.name == "main" {
         // panic(ast)
-        module_lookup := compile_modules(load_modules(mod))
+        module_lookup := compile_modules(load_modules(mod, base), base)
         mut checker := checker.new(ast, module_lookup)
         checker.run()
 

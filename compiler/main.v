@@ -13,7 +13,7 @@ fn write_generated_output(file_name string, code string) {
 }
 
 // compiles the main entry point & writes it to file
-fn compile_main(path string) ? {
+fn compile_main(path string, base string) ? {
     mut main_module_contents := os.read_file(path) or { panic("File not found") }
     // TODO: not a good way to do things
     mut header := os.read_file("./compiler/includes/header.cpp") or { panic("File not found") }
@@ -24,7 +24,7 @@ fn compile_main(path string) ? {
         code: main_module_contents
     }
 
-    result := cli.compile(main_module)
+    result := cli.compile(main_module, base)
     output_file_name := os.file_name(path).replace(".daze", "")
     write_generated_output(output_file_name, header + result.code)
 }
@@ -47,16 +47,14 @@ fn main() {
             if os.args.len != 3 {
                 utils.error("Too few arguments for command `build`.")
             }
-
-            compile_main(os.args[2])?
+            compile_main(os.args[2], get_base_dir(os.args[2]))?
         }
 
         "run" {
             if os.args.len != 3 {
                 utils.error("Too few arguments for command `run`.")
             }
-
-            compile_main(os.args[2])?
+            compile_main(os.args[2], get_base_dir(os.args[2]))?
             executable := os.file_name(os.args[2]).replace(".daze", "")
             println(os.execute("./${executable}").output)
         }
@@ -65,4 +63,11 @@ fn main() {
             help()
         }
     }
+}
+
+fn get_base_dir(path string) string {
+    parts := path.split("/")
+    parts.pop()
+    base := os.join_path(os.getwd(), parts.join("/")) + "/"
+    return base
 }

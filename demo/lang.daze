@@ -2,8 +2,10 @@ is main;
 
 use "daze::io";
 use "daze::term";
+use "./fibonacci";
 
 fn main() :: Int {
   name :: String := "Mark";
-  io:println(term:bold(term:fg_red("Hello, I'm {name}")));
+  fib_of_30 :: Int := fibonacci:fibonacci(30);
+  io:println(term:bold(term:fg_red("Fibonacci of 30 is: {fib_of_30}")));
 }

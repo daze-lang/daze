@@ -1,6 +1,4 @@
-is Main;
-
-use "daze::io";
+is fibonacci;
 
 fn fibonacci(num :: Int) :: Int {
   if num <= 1 {
@@ -8,8 +6,4 @@ fn fibonacci(num :: Int) :: Int {
   }
 
   ret fibonacci(num - 1) + fibonacci(num - 2);
-}
-
-fn main() :: Void {
-  io:println(fibonacci(20));
 }
