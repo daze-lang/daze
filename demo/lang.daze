@@ -2,20 +2,12 @@ is main;
 
 use "daze::io";
 
-global NAME = "Mark";
-global MILLISECOND = 1;
-global SECOND = MILLISECOND * 60;
-
-struct Person {
-  name :: Int
-
-  fn get_name() :: Int {
-    ret name;
-  }
-}
-
 fn main() :: Int {
-  h :: Int := 5;
-  b :: Person := make Person(h);
-  io:println(SECOND);
+  data :: map[String -> String] := {
+    "name" -> "Mark",
+    "age" -> "24",
+  };
+
+  io:println(data["name"]);
+  io:println(data["age"]);
 }

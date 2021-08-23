@@ -70,7 +70,11 @@ fn (mut parser Parser) expr() Expr {
 
     match parser.lookahead().kind {
         .open_curly {
-            node = parser.array_init()
+            if parser.lookahead_by(3).kind == .arrow_right {
+                node = parser.map_init()
+            } else {
+                node = parser.array_init()
+            }
         }
         .comment { node = ast.Comment{value: parser.advance().value} }
         .open_paren { node = parser.grouped_expr() }
@@ -196,7 +200,7 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
 
     mut ret_type := ""
     if parser.lookahead().kind == .open_square {
-        ret_type = parser.fn_arg(true).type_name
+        ret_type = parser.fn_arg(true, .double_colon).type_name
     } else {
         ret_type = parser.expect(.identifier).value
     }
@@ -221,7 +225,7 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
 fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     mut args := []ast.FunctionArgument{}
     for parser.lookahead().kind != delim {
-        args << parser.fn_arg(false)
+        args << parser.fn_arg(false, .double_colon)
 
         if parser.lookahead().kind != delim {
             if parser.lookahead().kind == .kw_fn {
@@ -234,16 +238,31 @@ fn (mut parser Parser) fn_args(delim lexer.TokenType) []ast.FunctionArgument {
     return args
 }
 
-fn (mut parser Parser) fn_arg(is_decl bool) ast.FunctionArgument {
+fn (mut parser Parser) fn_arg(is_decl bool, delim lexer.TokenType) ast.FunctionArgument {
     mut name := ""
     if !is_decl {
         name = parser.expect(.identifier).value
-        parser.expect(.double_colon)
+        parser.expect(delim)
     }
 
     mut type_name := ""
     mut level := 1
-    // if we are trying to parse a variable declaration type
+    if parser.lookahead().kind == .kw_map {
+        parser.expect(.kw_map)
+        parser.expect(.open_square)
+        key_type := parser.fn_arg(true, .arrow_right).type_name
+        parser.expect(.arrow_right)
+        value_type := parser.fn_arg(true, .arrow_right).type_name
+        parser.expect(.close_square)
+        type_name = "$key_type->$value_type"
+
+        return ast.FunctionArgument {
+            name: name,
+            type_name: type_name.replace(":", "::")
+        }
+    }
+
+    // if we are trying to parse an array type
     if parser.lookahead().kind == .open_square {
         parser.expect(.open_square)
         for parser.lookahead().kind == .open_square {
@@ -258,8 +277,6 @@ fn (mut parser Parser) fn_arg(is_decl bool) ast.FunctionArgument {
     } else {
         type_name = parser.expect(.identifier).value
     }
-
-    // TODO: allow arrays as fn args
 
     return ast.FunctionArgument {
         name: name,
@@ -472,7 +489,7 @@ fn (mut parser Parser) variable_decl() Expr {
     mut is_auto := false
     if parser.lookahead().kind == .double_colon {
         parser.expect(.double_colon)
-        type_name = parser.fn_arg(true).type_name
+        type_name = parser.fn_arg(true, .double_colon).type_name
         parser.expect(.colon_equal)
     } else {
         if parser.lookahead().kind == .colon_equal {
@@ -608,6 +625,27 @@ fn (mut parser Parser) array_init() ast.ArrayInit {
 
     parser.expect(.close_curly)
     return ast.ArrayInit{body}
+}
+
+fn (mut parser Parser) map_init() ast.MapInit {
+    parser.expect(.open_curly)
+    mut body := []ast.MapKeyValuePair{}
+
+    for parser.lookahead().kind != .close_curly {
+        key := parser.expr()
+        if key is ast.NoOp {
+            continue
+        }
+        parser.expect(.arrow_right)
+        value := parser.expr()
+        if value is ast.NoOp {
+            continue
+        }
+        body << ast.MapKeyValuePair{key: key, value: value}
+    }
+
+    parser.expect(.close_curly)
+    return ast.MapInit{body}
 }
 
 fn (mut parser Parser) unsafe_() ast.UnsafeBlock {

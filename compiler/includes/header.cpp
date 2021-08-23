@@ -2,6 +2,7 @@
 #include <vector>
 #include <typeinfo>
 #include <algorithm>
+#include <map>
 
 std::string __ERROR__;
 

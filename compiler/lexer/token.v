@@ -60,6 +60,7 @@ pub enum TokenType {
     kw_global          // `global`
     kw_try             // `try`
     kw_or              // `or`
+    kw_map             // `map`
 
     eof                // indicating that there are no more tokens left
 }
@@ -121,6 +122,7 @@ pub const keywords_map = map{
     "global": TokenType.kw_global
     "try": TokenType.kw_try
     "or": TokenType.kw_or
+    "map": TokenType.kw_map
 }
 
 pub struct Token {

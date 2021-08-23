@@ -40,6 +40,7 @@ pub type Expr = FunctionCallExpr
     | ReturnExpr
     | ArrayInit
     | BinaryOp
+    | MapInit
     | Comment
     | NoOp
 
@@ -154,6 +155,17 @@ pub:
 pub struct ArrayInit {
 pub:
     body []Expr
+}
+
+pub struct MapInit {
+pub:
+    body []MapKeyValuePair
+}
+
+pub struct MapKeyValuePair {
+pub:
+    key Expr
+    value Expr
 }
 
 pub struct StringLiteralExpr {

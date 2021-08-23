@@ -114,6 +114,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.grouped_expr(node)
     } else if mut node is ast.ArrayInit {
         code = gen.array_init(node)
+    } else if mut node is ast.MapInit {
+        code = gen.map_init(node)
     } else if mut node is ast.Comment {
         code = "// $node.value\n"
     }
@@ -161,6 +163,23 @@ fn (mut gen CppCodeGenerator) generate_array_def(info string) string {
     return type_name
 }
 
+fn (mut gen CppCodeGenerator) generate_map_def(info string) string {
+    mut type_name := ""
+    parts := info.split("->")
+    if parts[0].contains("|") {
+        // TODO
+        panic("Keys cant be arrays")
+    }
+    mut key_type := gen.typename(parts[0])
+    mut value_type := gen.typename(parts[1])
+
+    if parts[1].contains("|") {
+        value_type = gen.generate_array_def(parts[1])
+    }
+
+    return "std::map<${key_type}, ${value_type}>"
+}
+
 fn (mut gen CppCodeGenerator) typename(name string) string {
     return match name {
         "String" { "std::string" }
@@ -171,8 +190,10 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
         "Void" { "void" }
         "Char" { "char" }
         else {
-            if name.contains("|") {
+            if name.contains("|") && !name.contains("->") {
                 gen.generate_array_def(name)
+            } else if name.contains("->") {
+                gen.generate_map_def(name)
             } else {
                 // println("Unhandled type: $name")
                 name
@@ -337,6 +358,16 @@ fn (mut gen CppCodeGenerator) array_init(node ast.ArrayInit) string {
         items << gen.gen(item)
     }
     return "{${items.join(", ").replace(", ,", ",").replace(";", "")}}"
+}
+
+fn (mut gen CppCodeGenerator) map_init(node ast.MapInit) string {
+    mut items := []string{}
+
+    for item in node.body {
+        items << "{${gen.gen(item.key)}, ${gen.gen(item.value)}},"
+    }
+
+    return "{${items.join("\n")}}"
 }
 
 fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string {
