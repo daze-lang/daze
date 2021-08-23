@@ -80,6 +80,8 @@ fn (mut checker Checker) expr(node ast.Expr) {
         checker.struct_decl(node)
     } else if node is ast.BinaryOperation {
         checker.binary(node)
+    } else if node is ast.OptionalFunctionCall {
+        checker.optional(node)
     } else if node is ast.VariableExpr {
         if !checker.variables.keys().contains(node.value) {
             // TODO: proper error message
@@ -196,13 +198,26 @@ fn (mut checker Checker) binary(node ast.BinaryOperation) {
     }
 }
 
+fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
+    checker.check(node.fn_call)
+    type_name := checker.infer(node.fn_call).replace("?", "")
+    if type_name != checker.infer(node.default) {
+        // TODO
+        panic("Optional function call & default value types don't match.")
+    }
+}
+
 // Type Inference
 
 fn (mut checker Checker) infer(node ast.Expr) string {
     if node is ast.BinaryOperation {
         return checker.infer(node.lhs)
+    } else if node is ast.OptionalFunctionCall {
+        return checker.infer(node.fn_call)
+    } else if node is ast.MapInit {
+        return "${checker.infer(node.body[0].key)}->${checker.infer(node.body[0].value)}"
     } else if node is ast.FunctionCallExpr {
-        return checker.functions[resolve_function_name(node.name)].return_type
+        return checker.functions[resolve_function_name(node.name)].return_type.replace("?", "")
     } else if node is ast.StringLiteralExpr {
         return "String"
     } else if node is ast.NumberLiteralExpr {
