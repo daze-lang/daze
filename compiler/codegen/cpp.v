@@ -219,6 +219,9 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
 }
 
 fn (mut gen CppCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
+    if node.value.contains("{") && node.value.contains("}") {
+        return "std::string(\"$node.value\")".replace("{", "\"+").replace("}", "+\"")
+    }
     return "std::string(\"$node.value\")"
 }
 

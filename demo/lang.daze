@@ -1,8 +1,9 @@
 is main;
 
 use "daze::io";
+use "daze::term";
 
 fn main() :: Int {
-  num :: Int := 5;
-  io:println(num > 1);
+  name :: String := "Mark";
+  io:println(term:bold(term:fg_red("Hello, I'm {name}")));
 }
