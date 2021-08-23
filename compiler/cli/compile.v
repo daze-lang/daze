@@ -3,7 +3,9 @@ module cli
 import lexer
 import parser
 import codegen
+import checker
 import utils
+import ast{CompilationResult, Module}
 import os
 
 fn load_modules(mod Module) []Module {
@@ -66,6 +68,9 @@ pub fn compile(mod Module) CompilationResult {
     if mod.name == "main" {
         // panic(ast)
         module_lookup := compile_modules(load_modules(mod))
+        mut checker := checker.new(ast, module_lookup)
+        checker.run()
+
         return CompilationResult{
             ast: ast,
             mod: mod,

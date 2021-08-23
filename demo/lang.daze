@@ -2,13 +2,10 @@ is main;
 
 use "daze::io";
 
-fn call() :: Int {
-  ret 4;
+fn hello() :: Int {
+  ret 5;
 }
 
 fn main() :: Int {
-  sum :: [Int] := {};
-  sum <- call() + 1;
-  io:println(sum[0]); # 5
-  io:println("Hello world.");
+  something :: String := hello();
 }

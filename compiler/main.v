@@ -3,7 +3,7 @@ module main
 import os
 import term
 import utils
-
+import ast
 import cli
 
 fn write_generated_output(file_name string, code string) {
@@ -18,7 +18,7 @@ fn compile_main(path string) ? {
     // TODO: not a good way to do things
     mut header := os.read_file("./compiler/includes/header.cpp") or { panic("File not found") }
 
-    main_module := cli.Module{
+    main_module := ast.Module{
         name: "main",
         path: path,
         code: main_module_contents

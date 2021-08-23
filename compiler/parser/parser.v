@@ -88,7 +88,7 @@ fn (mut parser Parser) expr() Expr {
         // .greater_than,
         // .greater_than_equal,
         // ._or {  node = ast.BinaryOp{parser.advance().value} }
-        .comma { node = ast.VariableExpr{parser.advance().value} }
+        .comma { node = ast.NoOp{} parser.advance() }
         .semicolon { parser.advance() }
         .kw_make {
             node = parser.struct_new()
@@ -341,6 +341,10 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
 
     for parser.lookahead().kind != .close_paren {
         args << parser.expr()
+
+        if parser.lookahead().kind == .comma {
+            parser.advance()
+        }
     }
 
     parser.expect(.close_paren)

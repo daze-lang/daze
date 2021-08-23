@@ -60,8 +60,7 @@ pub fn is_binary_op(op Token) bool {
         .less_than_equal,
         .greater_than,
         .greater_than_equal,
-        ._or,
-        .comma] {
+        ._or] {
             return true
     }
 

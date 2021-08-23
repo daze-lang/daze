@@ -1,6 +1,4 @@
-module cli
-
-import ast
+module ast
 
 pub struct Module {
 pub mut:
@@ -11,7 +9,7 @@ pub mut:
 
 pub struct CompilationResult {
 pub mut:
-    ast ast.AST
+    ast AST
     mod Module
     code string
 }
