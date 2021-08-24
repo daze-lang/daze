@@ -16,7 +16,8 @@ fn write_generated_output(file_name string, code string) {
 fn compile_main(path string, base string) ? {
     mut main_module_contents := os.read_file(path) or { panic("File not found") }
     // TODO: not a good way to do things
-    mut header := os.read_file("./compiler/includes/header.cpp") or { panic("File not found") }
+    mut header := os.read_file("./compiler/includes/header.h") or { panic("File not found") }
+    mut httplib := os.read_file("./compiler/includes/httplib.h") or { panic("File not found") }
 
     main_module := ast.Module{
         name: "main",
@@ -26,7 +27,7 @@ fn compile_main(path string, base string) ? {
 
     result := cli.compile(main_module, base)
     output_file_name := os.file_name(path).replace(".daze", "")
-    write_generated_output(output_file_name, header + result.code)
+    write_generated_output(output_file_name, header + httplib + result.code)
 }
 
 fn help() {

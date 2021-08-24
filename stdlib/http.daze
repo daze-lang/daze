@@ -1,0 +1,9 @@
+is http;
+
+fn get(url :: String) :: String {
+  ret unsafe {
+    http::Request request{url};
+    const auto response = request.send("GET");
+    return std::string{response.body.begin(), response.body.end()};
+  };
+}
