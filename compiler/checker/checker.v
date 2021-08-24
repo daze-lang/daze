@@ -157,7 +157,17 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     }
 
     if !checker.functions.keys().contains(function_name) {
-        panic("Trying to call unknown function: ${node.name}")
+        // calling on a variable
+        if node.name.contains(".") {
+            variable := node.name.split(".")[0]
+            fn_name := node.name.split(".")[1]
+            var_type := checker.variables[variable].type_name
+            if !checker.struct_has_function_by_name(var_type.replace("::", ":"), fn_name) {
+                panic("Trying to call unknown function: ${node.name}")
+            }
+        } else {
+            panic("Trying to call unknown function: ${node.name}")
+        }
     }
 
     // Checking argument count
@@ -301,6 +311,29 @@ fn (mut checker Checker) get_struct_field_by_name(struct_name string, field_name
     // Should be unreachable
     return ast.FunctionArgument{}
 }
+
+fn (mut checker Checker) get_struct_function_by_name(struct_name string, fn_name string) ast.FunctionDeclarationStatement {
+    for memberfn in checker.structs[struct_name].member_fns {
+        if memberfn.name == fn_name {
+            return memberfn
+        }
+    }
+
+    // Should be unreachable
+    return ast.FunctionDeclarationStatement{}
+}
+
+fn (mut checker Checker) struct_has_function_by_name(struct_name string, fn_name string) bool {
+    for memberfn in checker.structs[struct_name].member_fns {
+        if memberfn.name == fn_name {
+            return true
+        }
+    }
+
+    // Should be unreachable
+    return false
+}
+
 
 fn resolve_function_name(name string) string {
     mut function_name := name

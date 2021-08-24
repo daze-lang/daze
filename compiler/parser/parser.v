@@ -50,8 +50,8 @@ fn (mut parser Parser) statement() Statement {
             panic("For not allowed at top level")
         }
         .kw_global { node = parser.global() }
+        .raw_cpp_code { node = ast.RawCppCode{body: parser.advance().value} }
         .kw_enum { node = parser.enum_() }
-        .kw_unsafe { node = parser.unsafe_() }
         .kw_use { node = parser.use() }
         .comment { node = ast.Comment{value: parser.advance().value} }
         .kw_fn { node = parser.fn_decl() }
@@ -79,6 +79,7 @@ fn (mut parser Parser) expr() Expr {
         }
         .comment { node = ast.Comment{value: parser.advance().value} }
         .open_paren { node = parser.grouped_expr() }
+        .raw_cpp_code { node = ast.RawCppCode{body: parser.advance().value} }
         .close_paren { utils.error("Unexpected `)` found.") }
         .comma { node = ast.NoOp{} parser.advance() }
         .semicolon { parser.advance() }
@@ -100,7 +101,6 @@ fn (mut parser Parser) expr() Expr {
             node = ast.VariableExpr{parser.advance().value + ";"}
             parser.expect(.semicolon)
         }
-        .kw_unsafe { node = parser.unsafe_() }
         .kw_if { node = parser.if_statement() }
         .string {
             node = ast.StringLiteralExpr{parser.lookahead().value, "String"}
@@ -626,30 +626,6 @@ fn (mut parser Parser) map_init() ast.MapInit {
 
     parser.expect(.close_curly)
     return ast.MapInit{body}
-}
-
-fn (mut parser Parser) unsafe_() ast.UnsafeBlock {
-    parser.expect(.kw_unsafe)
-    parser.expect(.open_curly)
-
-    mut body := ""
-
-    for parser.lookahead().kind != .close_curly {
-        next := parser.advance()
-        if next.kind == .string {
-            body += "\""
-            body += next.value
-            body += "\""
-            continue
-        }
-        body += next.value
-    }
-
-    parser.expect(.close_curly)
-
-    return ast.UnsafeBlock{
-        body: body
-    }
 }
 
 fn (mut parser Parser) global() ast.GlobalDecl {

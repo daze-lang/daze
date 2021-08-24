@@ -1,26 +1,26 @@
 is io;
 
 fn println(val :: String) :: Void {
-  unsafe {
+  `
     std::cout << val << std::endl;
-  }
+  `
 }
 
 fn println(val :: Char) :: Void {
-  unsafe {
+  `
     std::cout << std::string(1, val) << std::endl;
-  }
+  `
 }
 
 fn println(val :: Int) :: Void {
-  unsafe {
+  `
     std::cout << std::to_string(val) << std::endl;
-  }
+  `
 }
 
 
 fn println(val :: Bool) :: Void {
-  unsafe {
+  `
     std::cout << std::boolalpha << val << std::endl;
-  }
+  `
 }

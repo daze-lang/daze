@@ -50,7 +50,7 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
         if node.name != "main" {
             code = "\nnamespace $node.name {\n"
         }
-    } else if mut node is ast.UnsafeBlock {
+    } else if mut node is ast.RawCppCode {
         code = node.body
     } else if mut node is ast.StructDeclarationStatement {
         code = gen.struct_decl(node)
@@ -81,7 +81,7 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.fn_call(node)
     } else if mut node is ast.VariableExpr {
         code = gen.variable_expr(node)
-    } else if mut node is ast.UnsafeBlock {
+    } else if mut node is ast.RawCppCode {
         code = node.body
     } else if mut node is ast.VariableAssignment {
         code = gen.variable_assignment(node)
@@ -140,6 +140,7 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
     for expr in node.body {
         code += gen.gen(expr)
     }
+    println(gen.typename(ret_type))
     gen.fns[node.name] = if is_optional { gen.typename(ret_type) + "?" } else { gen.typename(ret_type) }
     code += "\n}\n\n"
     return code
@@ -197,6 +198,8 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
                 gen.generate_array_def(name)
             } else if name.contains("->") {
                 gen.generate_map_def(name)
+            } else if name.count(":") == 1 {
+                name.replace(":", "::")
             } else {
                 // println("Unhandled type: $name")
                 name

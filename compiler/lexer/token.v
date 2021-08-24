@@ -41,6 +41,7 @@ pub enum TokenType {
     pipe               // |>
     single_quote       // '
     comment            // # comment
+    raw_cpp_code       // raw c++ code between `
 
     kw_struct          // `struct`
     kw_fn              // `fn`
@@ -56,7 +57,6 @@ pub enum TokenType {
     kw_break           // `break`
     kw_in              // `in`
     kw_make            // `make`
-    kw_unsafe          // `unsafe`
     kw_global          // `global`
     kw_try             // `try`
     kw_or              // `or`
@@ -119,7 +119,6 @@ pub const keywords_map = map{
     "break": TokenType.kw_break
     "in": TokenType.kw_in
     "make": TokenType.kw_make
-    "unsafe": TokenType.kw_unsafe
     "global": TokenType.kw_global
     "try": TokenType.kw_try
     "or": TokenType.kw_or

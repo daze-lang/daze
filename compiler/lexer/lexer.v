@@ -54,6 +54,16 @@ pub fn (mut lexer Lexer) lex() []Token {
                 tokens << Token{.open_paren, current, lexer.line, lexer.column - current.len}
                 continue
             }
+            "`" {
+                lexer.advance()
+                mut body := ""
+                for lexer.lookahead() != "`" {
+                    body = body + lexer.advance()
+                }
+                lexer.advance()
+                tokens << Token{.raw_cpp_code, body.trim_space(), lexer.line, lexer.column - current.len}
+                continue
+            }
             ")" {
                 tokens << Token{.close_paren, current, lexer.line, lexer.column - current.len}
                 continue
@@ -194,6 +204,9 @@ pub fn (mut lexer Lexer) lex() []Token {
         if !lexer.is_number(current) || current == "." {
             if current != "\"" {
                 id := lexer.read_identifier(current)
+                // if id == "unsafe" {
+                    // panic("unsafe")
+                // }
                 // We check if its a valid keyword, if so, we set the token kind
                 kind := to_keyword(id) or { TokenType.identifier }
                 tokens << Token{kind, id, lexer.line, lexer.column - id.len}

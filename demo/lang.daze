@@ -1,12 +1,11 @@
 is main;
 
-use "daze::io";
-use "daze::term";
 use "daze::http";
-use "./fibonacci";
+use "daze::io";
 
 fn main() :: Int {
-  name :: String := "Mark";
-  # fib_of_30 :: Int := fibonacci:fibonacci(1);
-  io:println(http:get("http://daze.one"));
+  response :: http:HttpResponse := http:get(
+    "http://jsonplaceholder.typicode.com/posts/1"
+  );
+  io:println(response.get_text());
 }

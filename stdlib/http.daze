@@ -1,9 +1,18 @@
 is http;
 
-fn get(url :: String) :: String {
-  ret unsafe {
+struct HttpResponse {
+  text :: String
+
+  fn get_text() :: String {
+    ret text;
+  }
+}
+
+fn get(url :: String) :: http:HttpResponse {
+  `
     http::Request request{url};
     const auto response = request.send("GET");
-    return std::string{response.body.begin(), response.body.end()};
-  };
+    const auto text = std::string{response.body.begin(), response.body.end()};
+  `;
+  ret make HttpResponse(text);
 }

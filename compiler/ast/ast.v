@@ -12,7 +12,7 @@ pub type Statement = FunctionDeclarationStatement
     | EnumDeclarationStatement
     | ModuleUseStatement
     | FunctionArgument
-    | UnsafeBlock
+    | RawCppCode
     | GlobalDecl
     | Comment
     | NoOp
@@ -37,7 +37,7 @@ pub type Expr = FunctionCallExpr
     | IfExpression
     | ForLoopExpr
     | GroupedExpr
-    | UnsafeBlock
+    | RawCppCode
     | ReturnExpr
     | ArrayInit
     | BinaryOp
@@ -56,7 +56,7 @@ pub mut:
     gen_type string
 }
 
-pub struct UnsafeBlock {
+pub struct RawCppCode {
 pub:
     body string
 }
@@ -76,11 +76,6 @@ pub:
 pub struct ModuleDeclarationStatement {
 pub:
     name string
-}
-
-pub struct RawCrystalCodeExpr {
-pub:
-    value string
 }
 
 pub struct ModuleUseStatement {

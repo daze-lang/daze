@@ -61,7 +61,6 @@ fn replace_imports(code string, lookup map[string]CompilationResult) string {
 pub fn compile(mod Module, base string) CompilationResult {
     mut lexer := lexer.new(mod.code)
     tokens := lexer.lex()
-    // panic(tokens)
     mut parser := parser.new(tokens, mod.path)
     ast := parser.parse()
 
