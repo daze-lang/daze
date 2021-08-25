@@ -12,6 +12,7 @@ mut:
     enums map[string]ast.EnumDeclarationStatement
     modules map[string]CompilationResult
     current_mod string
+    current_fn string
 }
 
 pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
@@ -22,6 +23,7 @@ pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
         map[string]ast.VariableDecl{},
         map[string]ast.EnumDeclarationStatement,
         modules,
+        "",
         ""
     }
 }
@@ -51,6 +53,7 @@ pub fn (mut checker Checker) check(node ast.Node) {
 
 fn (mut checker Checker) statement(node ast.Statement) {
     if node is ast.FunctionDeclarationStatement {
+        checker.current_fn = node.name
         checker.functions[node.name] = node
         for body in node.body {
             checker.check(body)
@@ -91,6 +94,7 @@ fn (mut checker Checker) expr(node ast.Expr) {
     } else if node is ast.VariableExpr {
         if !checker.variables.keys().contains(node.value) && !checker.enums.keys().contains(node.value.split(":")[0])  {
             // TODO: proper error message
+            // TODO: check dot operator accessing here
             panic("Accessing unknown variable: ${node.value}")
         }
 
@@ -184,7 +188,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     // Checking argument types
     for i in 0..args_len {
         checker.check(node.args[i])
-        expected := ast_node.args[i].type_name
+        expected := ast_node.args[i].type_name.replace("ref ", "")
         my_type := checker.infer(node.args[i])
 
         if expected != my_type {
@@ -249,8 +253,19 @@ fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
 }
 
 fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
+    mut expected := "UNKNOWN"
+    if !checker.variables.keys().contains(node.name) {
+        if checker.fn_has_arg_with_name(checker.current_fn, node.name) {
+            expected = checker.fn_get_arg_with_name(checker.current_fn, node.name).type_name.replace("ref ", "")
+        } else {
+            panic("Trying to assign to unknown variable `$node.name` in function `$checker.current_fn`")
+        }
+
+    } else {
+        expected = checker.infer(checker.variables[node.name].value)
+    }
+
     checker.check(node.value)
-    mut expected := checker.infer(checker.variables[node.name].value)
     my_type := checker.infer(node.value)
 
     if expected != my_type {
@@ -334,6 +349,27 @@ fn (mut checker Checker) struct_has_function_by_name(struct_name string, fn_name
     return false
 }
 
+fn (mut checker Checker) fn_has_arg_with_name(fn_name string, arg_name string) bool {
+    for arg in checker.functions[fn_name].args {
+        if arg.name == arg_name {
+            return true
+        }
+    }
+
+    // should be unreachable
+    return false
+}
+
+fn (mut checker Checker) fn_get_arg_with_name(fn_name string, arg_name string) ast.FunctionArgument {
+    for arg in checker.functions[fn_name].args {
+        if arg.name == arg_name {
+            return arg
+        }
+    }
+
+    // should be unreachable
+    return ast.FunctionArgument{}
+}
 
 fn resolve_function_name(name string) string {
     mut function_name := name

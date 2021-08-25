@@ -255,7 +255,15 @@ fn (mut parser Parser) fn_arg(is_decl bool, delim lexer.TokenType) ast.FunctionA
         }
         type_name += "|${level}"
     } else {
+        mut is_ref := false
+        if parser.lookahead().value == "ref" {
+            parser.advance()
+            is_ref = true
+        }
         type_name = parser.expect(.identifier).value
+        if is_ref {
+            type_name = "ref $type_name"
+        }
     }
 
     return ast.FunctionArgument {

@@ -1,6 +1,6 @@
 is fibonacci;
 
-fn fibonacci(num :: Int) :: Int {
+fn fibonacci(num :: BigInt) :: BigInt {
   if num <= 1 {
     ret 1;
   }

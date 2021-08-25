@@ -1,11 +1,17 @@
 is main;
 
-use "daze::http";
 use "daze::io";
+use "./fibonacci";
+
+struct Person {
+  name :: String
+}
+
+struct Container {
+  p :: Person
+}
 
 fn main() :: Int {
-  response :: http:HttpResponse := http:get(
-    "http://jsonplaceholder.typicode.com/posts/1"
-  );
-  io:println(response.get_text());
+  # cont :: Container := make Container(make Person("Mark"));
+  io:println(fibonacci:fibonacci(46));
 }

@@ -140,7 +140,7 @@ fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) str
     for expr in node.body {
         code += gen.gen(expr)
     }
-    println(gen.typename(ret_type))
+
     gen.fns[node.name] = if is_optional { gen.typename(ret_type) + "?" } else { gen.typename(ret_type) }
     code += "\n}\n\n"
     return code
@@ -185,9 +185,14 @@ fn (mut gen CppCodeGenerator) generate_map_def(info string) string {
 }
 
 fn (mut gen CppCodeGenerator) typename(name string) string {
+    if name.starts_with("ref ") {
+        return gen.typename(name.replace("ref ", "")) + "&"
+    }
+
     return match name {
         "String" { "std::string" }
         "Int" { "int" }
+        "BigInt" { "uint64_t" }
         "Bool" { "bool" }
         "Float" { "float" }
         "Any" { "auto" }
@@ -415,13 +420,4 @@ fn (mut gen CppCodeGenerator) binary(node ast.BinaryOperation) string {
 
 fn (mut gen CppCodeGenerator) enum_(node ast.EnumDeclarationStatement) string {
     return "enum $node.name {${node.values.join(", ")}};"
-}
-
-fn get_built_in_types() []string {
-    return ["std::string", "int", "bool", "float", "char", "bool"]
-}
-
-// TODO add more built in types
-fn is_built_in_type(type_name string) bool {
-    return type_name in get_built_in_types()
 }
