@@ -161,6 +161,15 @@ fn (mut parser Parser) expr() Expr {
         node = parser.binary(node)
     }
 
+    if parser.lookahead().kind == .kw_as {
+        parser.expect(.kw_as)
+        type_name := parser.expect(.identifier).value
+        return ast.TypeCast {
+            value: node,
+            type_name: type_name
+        }
+    }
+
     return node
 }
 

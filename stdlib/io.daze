@@ -12,12 +12,17 @@ fn println(val :: Char) :: Void {
   `
 }
 
-fn println(val :: Int) :: Void {
+fn println(val :: BigInt) :: Void {
   `
     std::cout << std::to_string(val) << std::endl;
   `
 }
 
+fn println(val :: Int) :: Void {
+  `
+    std::cout << std::to_string(val) << std::endl;
+  `
+}
 
 fn println(val :: Bool) :: Void {
   `

@@ -293,6 +293,8 @@ fn (mut checker Checker) infer(node ast.Expr) string {
         return "Int"
     } else if node is ast.StructInitialization {
         return node.name
+    } else if node is ast.TypeCast {
+        return node.type_name
     } else if node is ast.VariableExpr {
         // accessing struct field
         if node.value.contains(".") {

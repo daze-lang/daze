@@ -1,17 +1,18 @@
 is main;
 
 use "daze::io";
-use "./fibonacci";
 
 struct Person {
   name :: String
 }
 
-struct Container {
-  p :: Person
+fn changeName(p :: ref Person) :: Void {
+  p.name = "Carl";
 }
 
 fn main() :: Int {
-  # cont :: Container := make Container(make Person("Mark"));
-  io:println(fibonacci:fibonacci(46));
+  p :: ref Person := &make Person("Mark");
+  io:println(p.name); # Mark
+  changeName(p);
+  io:println(p.name); # Carl
 }

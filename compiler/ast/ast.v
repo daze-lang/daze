@@ -41,6 +41,7 @@ pub type Expr = FunctionCallExpr
     | ReturnExpr
     | ArrayInit
     | BinaryOp
+    | TypeCast
     | MapInit
     | Comment
     | NoOp
@@ -250,6 +251,12 @@ pub struct EnumDeclarationStatement {
 pub:
     name string
     values []string
+}
+
+pub struct TypeCast {
+pub:
+    value Expr
+    type_name string
 }
 
 pub struct NoOp {}

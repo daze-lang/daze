@@ -62,6 +62,7 @@ pub enum TokenType {
     kw_or              // `or`
     kw_map             // `map`
     kw_enum            // `enum`
+    kw_as              // `as`
 
     eof                // indicating that there are no more tokens left
 }
@@ -124,6 +125,7 @@ pub const keywords_map = map{
     "or": TokenType.kw_or
     "map": TokenType.kw_map
     "enum": TokenType.kw_enum
+    "as": TokenType.kw_as
 }
 
 pub struct Token {

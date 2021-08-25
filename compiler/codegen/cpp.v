@@ -121,6 +121,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.map_init(node)
     } else if mut node is ast.Comment {
         code = "// $node.value\n"
+    } else if mut node is ast.TypeCast {
+        code = gen.typecast(node)
     }
 
     return code
@@ -420,4 +422,8 @@ fn (mut gen CppCodeGenerator) binary(node ast.BinaryOperation) string {
 
 fn (mut gen CppCodeGenerator) enum_(node ast.EnumDeclarationStatement) string {
     return "enum $node.name {${node.values.join(", ")}};"
+}
+
+fn (mut gen CppCodeGenerator) typecast(node ast.TypeCast) string {
+    return "(${gen.typename(node.type_name)}) ${gen.expr(node.value)}"
 }
