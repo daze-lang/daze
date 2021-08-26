@@ -55,6 +55,7 @@ pub mut:
     body []Expr
     return_type string
     gen_type string
+    external bool
 }
 
 pub struct RawCppCode {
@@ -89,6 +90,7 @@ pub:
     name string
     fields []FunctionArgument
     gen_type string
+    external bool
 pub mut:
     member_fns []FunctionDeclarationStatement
 }

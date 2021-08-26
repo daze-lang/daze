@@ -208,6 +208,7 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
         body: body,
         return_type: ret_type,
         gen_type: gen_type,
+        external: false
     }
 }
 
@@ -451,7 +452,8 @@ fn (mut parser Parser) construct() ast.StructDeclarationStatement {
     return ast.StructDeclarationStatement{
         name: struct_name,
         fields: fields,
-        member_fns: member_fns
+        member_fns: member_fns,
+        external: false
     }
 }
 

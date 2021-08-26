@@ -71,7 +71,7 @@ pub fn compile(mod Module, base string) CompilationResult {
         // panic(ast)
         module_lookup := compile_modules(load_modules(mod, base), base)
         mut checker := checker.new(ast, module_lookup)
-        checker.run()
+        // checker.run()
 
         return CompilationResult{
             ast: ast,

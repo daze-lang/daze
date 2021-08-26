@@ -6,13 +6,13 @@ struct Person {
   name :: String
 }
 
-fn changeName(p :: ref Person) :: Void {
-  p.name = "Carl";
-}
+# fn changeName(p :: ref Person) :: Void {
+#   p.name = "Carl";
+# }
 
 fn main() :: Int {
   p :: ref Person := &make Person("Mark");
   io:println(p.name); # Mark
-  changeName(p);
-  io:println(p.name); # Carl
+  # changeName(p);
+  # io:println(p.name); # Carl
 }

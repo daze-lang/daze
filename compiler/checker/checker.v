@@ -95,6 +95,9 @@ fn (mut checker Checker) expr(node ast.Expr) {
         if !checker.variables.keys().contains(node.value) && !checker.enums.keys().contains(node.value.split(":")[0])  {
             // TODO: proper error message
             // TODO: check dot operator accessing here
+            if node.value.contains(".") {
+                checker.dotchain(node.value.split("."))
+            }
             panic("Accessing unknown variable: ${node.value}")
         }
 
@@ -123,7 +126,7 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
     if node.value is ast.NoOp {
         return
     }
-    expected := node.type_name.replace("::", ":")
+    expected := node.type_name.replace("::", ":").replace("ref ", "")
     my_type := checker.infer(node.value)
 
     if expected != my_type {
@@ -257,6 +260,15 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
     if !checker.variables.keys().contains(node.name) {
         if checker.fn_has_arg_with_name(checker.current_fn, node.name) {
             expected = checker.fn_get_arg_with_name(checker.current_fn, node.name).type_name.replace("ref ", "")
+        } else if node.name.contains(".") {
+            // assigning to struct field
+            var_name := node.name.split(".")[0]
+            struct_field := node.name.split(".")[1]
+            if !checker.fn_has_arg_with_name(checker.current_fn, var_name) {
+                panic("Trying to assign to unknown struct variable `$var_name` in function `$checker.current_fn`")
+            }
+            arg_type := checker.fn_get_arg_with_name(checker.current_fn, var_name).type_name.replace("ref ", "")
+            expected = checker.get_struct_field_by_name(arg_type, struct_field).type_name
         } else {
             panic("Trying to assign to unknown variable `$node.name` in function `$checker.current_fn`")
         }
@@ -276,44 +288,52 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
     checker.check(node.value)
 }
 
+fn (mut checker Checker) dotchain(chain []string) {
+    // mut checked := []string{}
+    // for var in chain {
+    //     // is_variable := checker.vars
+    // }
+}
+
 // Type Inference
 
 fn (mut checker Checker) infer(node ast.Expr) string {
+    mut type_name := ""
     if node is ast.BinaryOperation {
-        return checker.infer(node.lhs)
+        type_name = checker.infer(node.lhs)
     } else if node is ast.OptionalFunctionCall {
-        return checker.infer(node.fn_call)
+        type_name = checker.infer(node.fn_call)
     } else if node is ast.MapInit {
-        return "${checker.infer(node.body[0].key)}->${checker.infer(node.body[0].value)}"
+        type_name = "${checker.infer(node.body[0].key)}->${checker.infer(node.body[0].value)}"
     } else if node is ast.FunctionCallExpr {
-        return checker.functions[resolve_function_name(node.name)].return_type.replace("?", "")
+        type_name = checker.functions[resolve_function_name(node.name)].return_type.replace("?", "")
     } else if node is ast.StringLiteralExpr {
-        return "String"
+        type_name = "String"
     } else if node is ast.NumberLiteralExpr {
-        return "Int"
+        type_name = "Int"
     } else if node is ast.StructInitialization {
-        return node.name
+        type_name = node.name
     } else if node is ast.TypeCast {
-        return node.type_name
+        type_name = node.type_name
     } else if node is ast.VariableExpr {
         // accessing struct field
         if node.value.contains(".") {
-            calling_on := node.value.split(".")[0]
-            field := node.value.split(".")[1]
-            struct_name := checker.variables[calling_on].type_name
-            return checker.get_struct_field_by_name(struct_name, field).type_name
+            checker.dotchain(node.value.split("."))
         } else {
             if checker.variables[node.value].type_name == "" {
                 enum_name := node.value.split(":")[0]
                 if checker.enums.keys().contains(enum_name) {
-                    return enum_name
+                    type_name = enum_name
                 }
             }
-            return checker.variables[node.value].type_name
+            type_name = checker.variables[node.value].type_name
         }
     }
+    if type_name == "" {
+        panic("Unable to infer type: $node")
+    }
 
-    panic("Unable to infer type: $node")
+    return type_name.replace("ref ", "")
 }
 
 // Utilities
