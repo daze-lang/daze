@@ -13,5 +13,6 @@ struct Person {
 
 fn main() :: Int {
   response :: http:HttpResponse := http:get("http://google.com")
-  io:println(response.get_text())
+  # response = "Hello"
+  io:println("Hello")
 }

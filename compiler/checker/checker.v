@@ -8,7 +8,7 @@ pub struct Checker {
 mut:
     functions map[string]ast.FunctionDeclarationStatement
     structs map[string]ast.StructDeclarationStatement
-    variables map[string]ast.VariableDecl
+    variables map[string]map[string]ast.VariableDecl
     enums map[string]ast.EnumDeclarationStatement
     modules map[string]CompilationResult
     current_mod string
@@ -20,7 +20,7 @@ pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
         ast,
         map[string]ast.FunctionDeclarationStatement,
         map[string]ast.StructDeclarationStatement{},
-        map[string]ast.VariableDecl{},
+        map[string]map[string]ast.VariableDecl{},
         map[string]ast.EnumDeclarationStatement,
         modules,
         "",
@@ -40,6 +40,7 @@ pub fn (mut checker Checker) run() {
     for node in checker.ast.nodes {
         checker.check(node)
     }
+
 }
 
 
@@ -133,7 +134,7 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
         panic("Type mismatch. Trying to assign ${my_type} to variable `${node.name}`, but it expects ${expected}")
     }
 
-    checker.variables[node.name] = node
+    checker.variables[checker.current_fn][node.name] = node
 
     // checking the variable body
     checker.check(node.value)
@@ -151,6 +152,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
 
     // Allowing println for now
     if function_name == "println" {
+        // panic(checker.variables)
         return
     }
 
@@ -158,8 +160,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         mut module_name := node.name.split(":")[0]
         function_name = node.name.split(":")[1]
         if !checker.modules.keys().contains(module_name) {
-            println(checker.modules)
-            panic("Referencing unknown module: ${module_name}")
+            // panic("Referencing unknown module: ${module_name}")
         }
     }
 
@@ -168,7 +169,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         if node.name.contains(".") {
             variable := node.name.split(".")[0]
             fn_name := node.name.split(".")[1]
-            var_type := checker.variables[variable].type_name
+            var_type := checker.variables[checker.current_fn][variable].type_name
             if !checker.struct_has_function_by_name(var_type.replace("::", ":"), fn_name) {
                 panic("Trying to call unknown function: ${node.name}")
             }
@@ -257,7 +258,7 @@ fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
 
 fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
     mut expected := "UNKNOWN"
-    if !checker.variables.keys().contains(node.name) {
+    if !checker.variables[checker.current_fn].keys().contains(node.name) {
         if checker.fn_has_arg_with_name(checker.current_fn, node.name) {
             expected = checker.fn_get_arg_with_name(checker.current_fn, node.name).type_name.replace("ref ", "")
         } else if node.name.contains(".") {
@@ -274,7 +275,7 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
         }
 
     } else {
-        expected = checker.infer(checker.variables[node.name].value)
+        expected = checker.infer(checker.variables[checker.current_fn][node.name].value)
     }
 
     checker.check(node.value)
@@ -291,7 +292,7 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
 fn (mut checker Checker) dotchain(chain []string) {
     mut checked := []string{}
     for var in chain {
-        is_variable := checker.variables.keys().contains(var)
+        is_variable := checker.variables[checker.current_fn].keys().contains(var)
         panic(is_variable)
     }
 }
@@ -321,13 +322,13 @@ fn (mut checker Checker) infer(node ast.Expr) string {
         if node.value.contains(".") {
             checker.dotchain(node.value.split("."))
         } else {
-            if checker.variables[node.value].type_name == "" {
+            if checker.variables[checker.current_fn][node.value].type_name == "" {
                 enum_name := node.value.split(":")[0]
                 if checker.enums.keys().contains(enum_name) {
                     type_name = enum_name
                 }
             }
-            type_name = checker.variables[node.value].type_name
+            type_name = checker.variables[checker.current_fn][node.value].type_name
         }
     }
     if type_name == "" {
