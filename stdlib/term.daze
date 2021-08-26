@@ -1,147 +1,147 @@
-is term;
+is term
 
-global RESET = "\e[0m";
+global RESET = "\e[0m"
 
 fn fg_red(text :: String) :: String {
-  ret "\e[31m{text}{RESET}";
+  ret "\e[31m{text}{RESET}"
 }
 
 fn fg_black(text :: String) :: String {
-  ret "\e[30m{text}{RESET}";
+  ret "\e[30m{text}{RESET}"
 }
 
 fn fg_green(text :: String) :: String {
-  ret "\e[32m{text}{RESET}";
+  ret "\e[32m{text}{RESET}"
 }
 
 fn fg_yellow(text :: String) :: String {
-  ret "\e[33m{text}{RESET}";
+  ret "\e[33m{text}{RESET}"
 }
 
 fn fg_blue(text :: String) :: String {
-  ret "\e[34m{text}{RESET}";
+  ret "\e[34m{text}{RESET}"
 }
 
 fn fg_magenta(text :: String) :: String {
-  ret "\e[35m{text}{RESET}";
+  ret "\e[35m{text}{RESET}"
 }
 
 fn fg_cyan(text :: String) :: String {
-  ret "\e[36m{text}{RESET}";
+  ret "\e[36m{text}{RESET}"
 }
 
 fn fg_light_gray(text :: String) :: String {
-  ret "\e[37m{text}{RESET}";
+  ret "\e[37m{text}{RESET}"
 }
 
 fn fg_dark_gray(text :: String) :: String {
-  ret "\e[90m{text}{RESET}";
+  ret "\e[90m{text}{RESET}"
 }
 
 fn fg_light_red(text :: String) :: String {
-  ret "\e[91m{text}{RESET}";
+  ret "\e[91m{text}{RESET}"
 }
 
 fn fg_light_green(text :: String) :: String {
-  ret "\e[92m{text}{RESET}";
+  ret "\e[92m{text}{RESET}"
 }
 
 fn fg_light_yellow(text :: String) :: String {
-  ret "\e[93m{text}{RESET}";
+  ret "\e[93m{text}{RESET}"
 }
 
 fn fg_light_blue(text :: String) :: String {
-  ret "\e[94m{text}{RESET}";
+  ret "\e[94m{text}{RESET}"
 }
 
 fn fg_light_magenta(text :: String) :: String {
-  ret "\e[95m{text}{RESET}";
+  ret "\e[95m{text}{RESET}"
 }
 
 fn fg_light_cyan(text :: String) :: String {
-  ret "\e[96m{text}{RESET}";
+  ret "\e[96m{text}{RESET}"
 }
 
 fn fg_white(text :: String) :: String {
-  ret "\e[97m{text}{RESET}";
+  ret "\e[97m{text}{RESET}"
 }
 
 fn bg_black(text :: String) :: String {
-  ret "\e[40m{text}{RESET}";
+  ret "\e[40m{text}{RESET}"
 }
 
 fn bg_red(text :: String) :: String {
-  ret "\e[41m{text}{RESET}";
+  ret "\e[41m{text}{RESET}"
 }
 
 fn bg_green(text :: String) :: String {
-  ret "\e[42m{text}{RESET}";
+  ret "\e[42m{text}{RESET}"
 }
 
 fn bg_yellow(text :: String) :: String {
-  ret "\e[43m{text}{RESET}";
+  ret "\e[43m{text}{RESET}"
 }
 
 fn bg_blue(text :: String) :: String {
-  ret "\e[44m{text}{RESET}";
+  ret "\e[44m{text}{RESET}"
 }
 
 fn bg_magenta(text :: String) :: String {
-  ret "\e[45m{text}{RESET}";
+  ret "\e[45m{text}{RESET}"
 }
 
 fn bg_cyan(text :: String) :: String {
-  ret "\e[46m{text}{RESET}";
+  ret "\e[46m{text}{RESET}"
 }
 
 fn bg_light_gray(text :: String) :: String {
-  ret "\e[47m{text}{RESET}";
+  ret "\e[47m{text}{RESET}"
 }
 
 fn bg_dark_gray(text :: String) :: String {
-  ret "\e[100m{text}{RESET}";
+  ret "\e[100m{text}{RESET}"
 }
 
 fn bg_light_red(text :: String) :: String {
-  ret "\e[101m{text}{RESET}";
+  ret "\e[101m{text}{RESET}"
 }
 
 fn bg_light_green(text :: String) :: String {
-  ret "\e[102m{text}{RESET}";
+  ret "\e[102m{text}{RESET}"
 }
 
 fn bg_light_yellow(text :: String) :: String {
-  ret "\e[103m{text}{RESET}";
+  ret "\e[103m{text}{RESET}"
 }
 
 fn bg_light_blue(text :: String) :: String {
-  ret "\e[104m{text}{RESET}";
+  ret "\e[104m{text}{RESET}"
 }
 
 fn bg_light_magenta(text :: String) :: String {
-  ret "\e[105m{text}{RESET}";
+  ret "\e[105m{text}{RESET}"
 }
 
 fn bg_light_cyan(text :: String) :: String {
-  ret "\e[106m{text}{RESET}";
+  ret "\e[106m{text}{RESET}"
 }
 
 fn bg_white(text :: String) :: String {
-  ret "\e[107m{text}{RESET}";
+  ret "\e[107m{text}{RESET}"
 }
 
 fn bold(text :: String) :: String {
-  ret "\e[1m{text}{RESET}";
+  ret "\e[1m{text}{RESET}"
 }
 
 fn underline(text :: String) :: String {
-  ret "\e[4m{text}{RESET}";
+  ret "\e[4m{text}{RESET}"
 }
 
 fn hidden(text :: String) :: String {
-  ret "\e[8m{text}{RESET}";
+  ret "\e[8m{text}{RESET}"
 }
 
 fn invert(text :: String) :: String {
-  ret "\e[7m{text}{RESET}";
+  ret "\e[7m{text}{RESET}"
 }

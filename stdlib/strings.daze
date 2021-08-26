@@ -1,68 +1,68 @@
-is strings;
+is strings
 
-use "daze::io";
-use "daze::range";
+use "daze::io"
+use "daze::range"
 
 fn contains(str :: String, substr :: String) :: Bool {
-  ret true;
+  ret true
 }
 
 fn lower(c :: Char) :: Char {
-  ret c + 32;
+  ret c + 32
 }
 
 fn lower(s :: String) :: String {
-  lowered_str :: String := "";
+  lowered_str :: String := ""
 
   for c in s {
-    lowered_str = lowered_str + lower(c);
+    lowered_str = lowered_str + lower(c)
   }
 
-  ret lowered_str;
+  ret lowered_str
 }
 
 fn upper(c :: Char) :: Char {
-  ret c - 32;
+  ret c - 32
 }
 
 fn upper(s :: String) :: String {
-  uppered_str :: String := "";
+  uppered_str :: String := ""
 
   for c in s {
-    uppered_str = uppered_str + upper(c);
+    uppered_str = uppered_str + upper(c)
   }
 
-  ret uppered_str;
+  ret uppered_str
 }
 
 fn substring(str :: String, from :: Int, to :: Int) :: String {
-  substring :: String := "";
+  substring :: String := ""
 
   for c in range:between(from, to) {
-    substring = substring + tostring(str[c]);
+    substring = substring + tostring(str[c])
   }
 
-  ret substring;
+  ret substring
 }
 
 fn findIndex(str :: String, chr :: String) :: Int {
   for i in range:up(len(str)) {
     if tostring(str[i]) == chr {
-      ret i;
+      ret i
     }
   }
 
-  ret -1;
+  ret -1
 }
 
 fn join(strArr :: [String], delim :: String) :: String {
-  result :: String := "";
+  result :: String := ""
 
   for elem in strArr {
-    result = result + elem + delim;
+    result = result + elem + delim
   }
 
-  ret result;
+  ret result
 }
 
 # fn split(str :: String, delimiter :: String) :: []String {
@@ -89,20 +89,20 @@ fn join(strArr :: [String], delim :: String) :: String {
 # }
 
 fn removeFromIndex(str :: String, from :: Int, length :: Int) :: String {
-  result :: String := "";
+  result :: String := ""
 
   for i in range:up(len(str)) {
     if i < from || i > length {
-      result = result + tostring(str[i]);
+      result = result + tostring(str[i])
     }
   }
 
-  ret result;
+  ret result
 }
 
 fn split(str :: String, delimiter :: String) :: [String] {
-  result :: [String] := {};
-  str = str + delimiter;
+  result :: [String] := {}
+  str = str + delimiter
 
   for i in range:up(len(str)) {
 

@@ -1,18 +1,17 @@
-is main;
+is main
 
-use "daze::io";
+use "daze::io"
+use "daze::net::http"
 
 struct Person {
   name :: String
+
+  fn greet() :: String {
+    ret "Hello, {name}"
+  }
 }
 
-# fn changeName(p :: ref Person) :: Void {
-#   p.name = "Carl";
-# }
-
 fn main() :: Int {
-  p :: ref Person := &make Person("Mark");
-  io:println(p.name); # Mark
-  # changeName(p);
-  # io:println(p.name); # Carl
+  response :: http:HttpResponse := http:get("http://google.com")
+  io:println(response.get_text())
 }

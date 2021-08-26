@@ -8,23 +8,26 @@ import utils
 import ast{CompilationResult, Module}
 import os
 
-fn load_modules(mod Module, base string) []Module {
-    matches := utils.match_all(mod.code, "use (.*?);")
-    mut modules := []Module{}
+fn module_not_found(name string, path string) {
+    println("Module `$name` not found. Aborting.")
+}
 
+fn load_modules(mod Module, base string) []Module {
+    matches := utils.match_all(mod.code, "use (.*?\n)")
+    mut modules := []Module{}
     for m in matches {
-        mut module_path := m.replace("\"", "").replace("use ", "").replace(";", "")
-        module_name := module_path.replace("daze::", "")
+        mut module_path := m.trim_space().replace("\"", "").replace("use ", "").replace(";", "")
+        module_name := module_path.replace("daze::", "").replace("::", "/")
         if module_path.starts_with("daze::") {
             module_path = "${os.getenv("DAZE_PATH")}/stdlib/$module_name"
         } else {
             module_path = os.join_path(base, module_path)
         }
 
-        mut module_file := os.read_file("${module_path}.daze") or { panic("File not found ($module_path") }
+        mut module_file := os.read_file("${module_path}.daze") or { module_not_found(module_name, module_path) exit(1) }
         mod_name := module_name.replace("./", "").split("/")
         new_mod := Module{
-            name: mod_name.pop(),
+            name: mod_name.join("::"),
             path: module_path + ".daze"
             code: module_file
         }
@@ -51,6 +54,7 @@ fn replace_imports(code string, lookup map[string]CompilationResult) string {
 
     for m in matches {
         mod_name := m.replace("// MODULE ", "").replace(";", "")
+        println(m)
         ret_code = ret_code.replace(m, lookup[mod_name].code)
         return replace_imports(ret_code, lookup)
     }

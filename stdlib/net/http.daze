@@ -1,10 +1,10 @@
-is http;
+is http
 
 struct HttpResponse {
   text :: String
 
   fn get_text() :: String {
-    ret text;
+    ret text
   }
 }
 
@@ -14,5 +14,5 @@ fn get(url :: String) :: http:HttpResponse {
     const auto response = request.send("GET");
     const auto text = std::string{response.body.begin(), response.body.end()};
   `;
-  ret make HttpResponse(text);
+  ret make HttpResponse(text)
 }

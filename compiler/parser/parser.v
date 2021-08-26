@@ -43,7 +43,7 @@ fn (mut parser Parser) statements() []Statement {
 }
 
 fn (mut parser Parser) statement() Statement {
-    mut node := ast.Statement{}
+    mut node := ast.Statement(ast.NoOp{})
     match parser.lookahead().kind {
         .kw_for {
             // TODO: handle cases like this
@@ -99,7 +99,7 @@ fn (mut parser Parser) expr() Expr {
         }
         .kw_break {
             node = ast.VariableExpr{parser.advance().value + ";"}
-            parser.expect(.semicolon)
+            // parser.expect(.semicolon)
         }
         .kw_if { node = parser.if_statement() }
         .string {
@@ -286,7 +286,7 @@ fn (mut parser Parser) array_push() ast.ArrayPushExpr {
     target_arr := parser.expect(.identifier).value
     parser.expect(.arrow_left)
     value_to_push := parser.expr()
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
 
     return ast.ArrayPushExpr {
         target: target_arr,
@@ -372,7 +372,7 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
     parser.expect(.close_paren)
 
     if parser.lookahead().kind !in [.close_paren, .open_curly] && !is_binary_op(parser.lookahead()) {
-        parser.expect(.semicolon)
+        // parser.expect(.semicolon)
     }
 
 
@@ -411,7 +411,7 @@ fn (mut parser Parser) module_decl() ast.ModuleDeclarationStatement {
     node := ast.ModuleDeclarationStatement{
         name: module_name
     }
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
     return node
 }
 
@@ -460,10 +460,9 @@ fn (mut parser Parser) construct() ast.StructDeclarationStatement {
 fn (mut parser Parser) use() ast.ModuleUseStatement {
     parser.expect(.kw_use)
     path := parser.expect(.string).value
-    parser.expect(.semicolon)
-
+    // parser.expect(.semicolon)
     return ast.ModuleUseStatement{
-        path: path
+        path: path.replace("daze::", "")
     }
 }
 
@@ -580,7 +579,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
 fn (mut parser Parser) increment() ast.IncrementExpr {
     target := parser.expect(.identifier).value
     parser.expect(.plus_plus)
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
     return ast.IncrementExpr {
         target: target
     }
@@ -589,7 +588,7 @@ fn (mut parser Parser) increment() ast.IncrementExpr {
 fn (mut parser Parser) decrement() ast.DecrementExpr {
     target := parser.expect(.identifier).value
     parser.expect(.minus_minus)
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
     return ast.DecrementExpr {
         target: target
     }
@@ -652,7 +651,7 @@ fn (mut parser Parser) global() ast.GlobalDecl {
     name := parser.expect(.identifier).value
     parser.expect(.equal)
     value := parser.expr()
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
 
     return ast.GlobalDecl{
         name: name,
@@ -686,7 +685,7 @@ fn (mut parser Parser) try() ast.OptionalFunctionCall {
 
     parser.expect(.kw_or)
     default := parser.expr()
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
 
     return ast.OptionalFunctionCall{
         fn_call: fn_call,
@@ -731,7 +730,7 @@ fn (mut parser Parser) enum_() ast.EnumDeclarationStatement {
     }
 
     parser.expect(.close_curly)
-    parser.expect(.semicolon)
+    // parser.expect(.semicolon)
 
     return ast.EnumDeclarationStatement{
         name: name,

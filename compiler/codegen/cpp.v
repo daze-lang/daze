@@ -226,7 +226,7 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     }
 
     mut fn_name := node.name.replace(":", "::")
-    return "${fn_name}(${args.join("")});\n".replace("; ;", "")
+    return "${fn_name}(${args.join(", ")});\n".replace("; ;", "")
 }
 
 fn (mut gen CppCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {

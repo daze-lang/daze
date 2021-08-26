@@ -1,4 +1,4 @@
-is io;
+is io
 
 fn println(val :: String) :: Void {
   `

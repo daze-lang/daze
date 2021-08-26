@@ -289,10 +289,11 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
 }
 
 fn (mut checker Checker) dotchain(chain []string) {
-    // mut checked := []string{}
-    // for var in chain {
-    //     // is_variable := checker.vars
-    // }
+    mut checked := []string{}
+    for var in chain {
+        is_variable := checker.variables.keys().contains(var)
+        panic(is_variable)
+    }
 }
 
 // Type Inference
