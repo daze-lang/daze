@@ -6,29 +6,55 @@ import utils
 pub struct Checker {
     ast ast.AST
 mut:
-    functions map[string]ast.FunctionDeclarationStatement
-    structs map[string]ast.StructDeclarationStatement
-    variables map[string]map[string]ast.VariableDecl
-    enums map[string]ast.EnumDeclarationStatement
+    // list of modules, key: module name
     modules map[string]CompilationResult
+    // the current module we are inside (can be deprecated in favor of checker.context.mod_name)
     current_mod string
+    // the current function name we inside
     current_fn string
+    // Points to the current context, every file that is imported is a unique context
+    context Context
+    // map of contexts; key: module name
+    contexts map[string]Context
+}
+
+struct Context {
+mut:
+    mod_name string
+    // map of function declarations inside the current module; key: function name
+    functions map[string]ast.FunctionDeclarationStatement
+    // map of struct declarations inside the current module; key: struct name
+    structs map[string]ast.StructDeclarationStatement
+    // map of function name -> variable name -> variable declaration ast node
+    variables map[string]map[string]ast.VariableDecl
+    // map of enum declarations inside the current module; key: enum name
+    enums map[string]ast.EnumDeclarationStatement
+}
+
+fn new_context(modname string) Context {
+    return Context{
+        mod_name: modname,
+        functions: map[string]ast.FunctionDeclarationStatement,
+        structs: map[string]ast.StructDeclarationStatement{},
+        variables: map[string]map[string]ast.VariableDecl{},
+        enums: map[string]ast.EnumDeclarationStatement,
+    }
 }
 
 pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
     return Checker{
-        ast,
-        map[string]ast.FunctionDeclarationStatement,
-        map[string]ast.StructDeclarationStatement{},
-        map[string]map[string]ast.VariableDecl{},
-        map[string]ast.EnumDeclarationStatement,
-        modules,
-        "",
-        ""
+        ast: ast,
+        modules: modules,
+        current_mod: "",
+        current_fn: "",
+        context: Context{},
+        contexts: map[string]Context{},
     }
 }
 
 pub fn (mut checker Checker) run() {
+    // when we initialize the type checker, it first goes through every imported module
+    // and typechecks them in an isolated space
     for modname, mod in checker.modules {
         checker.current_mod = modname
         for node in mod.ast.nodes {
@@ -36,11 +62,11 @@ pub fn (mut checker Checker) run() {
         }
     }
 
+    // when we get to the main module, we set it as the current module and start the type checker
     checker.current_mod = "main"
     for node in checker.ast.nodes {
         checker.check(node)
     }
-
 }
 
 
@@ -55,10 +81,10 @@ pub fn (mut checker Checker) check(node ast.Node) {
 fn (mut checker Checker) statement(node ast.Statement) {
     if node is ast.FunctionDeclarationStatement {
         checker.current_fn = node.name
-        if checker.functions.keys().contains(node.name) {
+        if checker.context.functions.keys().contains(node.name) {
             panic("Fn already defined.")
         }
-        checker.functions[node.name] = node
+        checker.context.functions[node.name] = node
 
         // pushing arguments as variables for a function declaration
         for arg in node.args {
@@ -67,7 +93,7 @@ fn (mut checker Checker) statement(node ast.Statement) {
                 value: ast.Expr{}
                 type_name: arg.type_name
             }
-            checker.variables[checker.current_fn][arg.name] = arg_as_var
+            checker.context.variables[checker.current_fn][arg.name] = arg_as_var
         }
 
         for body in node.body {
@@ -75,12 +101,12 @@ fn (mut checker Checker) statement(node ast.Statement) {
         }
     } else if node is ast.StructDeclarationStatement {
         if checker.current_mod != "main" {
-            checker.structs[checker.current_mod + ":" + node.name] = node
+            checker.context.structs[checker.current_mod + ":" + node.name] = node
         } else {
-            checker.structs[node.name] = node
+            checker.context.structs[node.name] = node
         }
     } else if node is ast.EnumDeclarationStatement {
-        checker.enums[node.name] = node
+        checker.context.enums[node.name] = node
     } else if node is ast.GlobalDecl {
         if node.name != node.name.capitalize() {
             utils.error("Global variable names must be uppercase, found: `$node.name`")
@@ -89,6 +115,10 @@ fn (mut checker Checker) statement(node ast.Statement) {
         if node.name == node.name.capitalize() {
             utils.error("Module names must be lowercase, found: `$node.name`")
         }
+        // creating new context when a new module use statement is found
+        context := new_context(node.name)
+        checker.contexts[node.name] = context
+        checker.context = context
     }
 }
 
@@ -107,14 +137,16 @@ fn (mut checker Checker) expr(node ast.Expr) {
     } else if node is ast.VariableAssignment {
         checker.var_assignment(node)
     } else if node is ast.VariableExpr {
-        if !checker.variables[checker.current_fn].keys().contains(node.value) && !checker.enums.keys().contains(node.value.split(":")[0])  {
+        if !checker.context.variables[checker.current_fn].keys().contains(node.value) && !checker.context.enums.keys().contains(node.value.split(":")[0])  {
             // TODO: proper error message
             // TODO: check dot operator accessing here
             if node.value.contains(".") {
                 checker.dotchain(node.value.split("."))
             }
-            println(checker.current_fn)
-            panic("Accessing unknown variable: ${node.value}")
+
+            if node.value !in ["true", "false"] {
+                panic("Accessing unknown variable: ${node.value}")
+            }
         }
 
         if node.value.contains(":") {
@@ -122,10 +154,10 @@ fn (mut checker Checker) expr(node ast.Expr) {
             mod_or_enum_name := node.value.split(":")[0]
             field := node.value.split(":")[1]
             is_mod := checker.modules.keys().contains(mod_or_enum_name)
-            is_enum := checker.enums.keys().contains(mod_or_enum_name)
+            is_enum := checker.context.enums.keys().contains(mod_or_enum_name)
 
             if is_enum {
-                if !checker.enums[mod_or_enum_name].values.contains(field) {
+                if !checker.context.enums[mod_or_enum_name].values.contains(field) {
                     panic("Trying to access unkown field ${field} of enum `${mod_or_enum_name}`")
                 }
             }
@@ -149,7 +181,7 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
         panic("Type mismatch. Trying to assign ${my_type} to variable `${node.name}`, but it expects ${expected}")
     }
 
-    checker.variables[checker.current_fn][node.name] = node
+    checker.context.variables[checker.current_fn][node.name] = node
 
     // checking the variable body
     checker.check(node.value)
@@ -180,12 +212,12 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         }
     }
 
-    if !checker.functions.keys().contains(function_name) {
+    if !checker.context.functions.keys().contains(function_name) {
         // calling on a variable
         if node.name.contains(".") {
             variable := node.name.split(".")[0]
             fn_name := node.name.split(".")[1]
-            var_type := checker.variables[checker.current_fn][variable].type_name
+            var_type := checker.context.variables[checker.current_fn][variable].type_name
             if !checker.struct_has_function_by_name(var_type.replace("::", ":"), fn_name) {
                 panic("Trying to call unknown function: ${node.name}")
             }
@@ -195,7 +227,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     }
 
     // Checking argument count
-    ast_node := checker.functions[function_name]
+    ast_node := checker.context.functions[function_name]
     args_len := ast_node.args.len
     if node.args.len > args_len {
         panic("Too many arguments to call $function_name; got ${node.args.len}, expected ${args_len}")
@@ -223,7 +255,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
 
 fn (mut checker Checker) struct_decl(node ast.StructInitialization) {
     args_len := node.args.len
-    ast_node := checker.structs[node.name]
+    ast_node := checker.context.structs[node.name]
     // Checking argument types
     for i in 0..args_len {
         checker.check(node.args[i])
@@ -278,7 +310,7 @@ fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
 
 fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
     mut expected := "UNKNOWN"
-    if !checker.variables[checker.current_fn].keys().contains(node.name) {
+    if !checker.context.variables[checker.current_fn].keys().contains(node.name) {
         if checker.fn_has_arg_with_name(checker.current_fn, node.name) {
             expected = checker.fn_get_arg_with_name(checker.current_fn, node.name).type_name.replace("ref ", "")
         } else if node.name.contains(".") {
@@ -295,7 +327,7 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
         }
 
     } else {
-        expected = checker.infer(checker.variables[checker.current_fn][node.name].value)
+        expected = checker.infer(checker.context.variables[checker.current_fn][node.name].value)
     }
 
     checker.check(node.value)
@@ -312,7 +344,7 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
 fn (mut checker Checker) dotchain(chain []string) {
     mut checked := []string{}
     for var in chain {
-        is_variable := checker.variables[checker.current_fn].keys().contains(var)
+        is_variable := checker.context.variables[checker.current_fn].keys().contains(var)
         panic(is_variable)
     }
 }
@@ -328,7 +360,7 @@ fn (mut checker Checker) infer(node ast.Expr) string {
     } else if node is ast.MapInit {
         type_name = "${checker.infer(node.body[0].key)}->${checker.infer(node.body[0].value)}"
     } else if node is ast.FunctionCallExpr {
-        type_name = checker.functions[resolve_function_name(node.name)].return_type.replace("?", "")
+        type_name = checker.context.functions[resolve_function_name(node.name)].return_type.replace("?", "")
     } else if node is ast.StringLiteralExpr {
         type_name = "String"
     } else if node is ast.NumberLiteralExpr {
@@ -342,13 +374,13 @@ fn (mut checker Checker) infer(node ast.Expr) string {
         if node.value.contains(".") {
             checker.dotchain(node.value.split("."))
         } else {
-            if checker.variables[checker.current_fn][node.value].type_name == "" {
+            if checker.context.variables[checker.current_fn][node.value].type_name == "" {
                 enum_name := node.value.split(":")[0]
-                if checker.enums.keys().contains(enum_name) {
+                if checker.context.enums.keys().contains(enum_name) {
                     type_name = enum_name
                 }
             }
-            type_name = checker.variables[checker.current_fn][node.value].type_name
+            type_name = checker.context.variables[checker.current_fn][node.value].type_name
         }
     }
     if type_name == "" {
@@ -361,7 +393,7 @@ fn (mut checker Checker) infer(node ast.Expr) string {
 // Utilities
 
 fn (mut checker Checker) get_struct_field_by_name(struct_name string, field_name string) ast.FunctionArgument {
-    for field in checker.structs[struct_name].fields {
+    for field in checker.context.structs[struct_name].fields {
         if field.name == field_name {
             return field
         }
@@ -372,7 +404,7 @@ fn (mut checker Checker) get_struct_field_by_name(struct_name string, field_name
 }
 
 fn (mut checker Checker) get_struct_function_by_name(struct_name string, fn_name string) ast.FunctionDeclarationStatement {
-    for memberfn in checker.structs[struct_name].member_fns {
+    for memberfn in checker.context.structs[struct_name].member_fns {
         if memberfn.name == fn_name {
             return memberfn
         }
@@ -383,7 +415,7 @@ fn (mut checker Checker) get_struct_function_by_name(struct_name string, fn_name
 }
 
 fn (mut checker Checker) struct_has_function_by_name(struct_name string, fn_name string) bool {
-    for memberfn in checker.structs[struct_name].member_fns {
+    for memberfn in checker.context.structs[struct_name].member_fns {
         if memberfn.name == fn_name {
             return true
         }
@@ -394,7 +426,7 @@ fn (mut checker Checker) struct_has_function_by_name(struct_name string, fn_name
 }
 
 fn (mut checker Checker) fn_has_arg_with_name(fn_name string, arg_name string) bool {
-    for arg in checker.functions[fn_name].args {
+    for arg in checker.context.functions[fn_name].args {
         if arg.name == arg_name {
             return true
         }
@@ -405,7 +437,7 @@ fn (mut checker Checker) fn_has_arg_with_name(fn_name string, arg_name string) b
 }
 
 fn (mut checker Checker) fn_get_arg_with_name(fn_name string, arg_name string) ast.FunctionArgument {
-    for arg in checker.functions[fn_name].args {
+    for arg in checker.context.functions[fn_name].args {
         if arg.name == arg_name {
             return arg
         }

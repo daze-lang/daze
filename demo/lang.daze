@@ -3,7 +3,5 @@ is main
 use "daze::io"
 
 fn main() :: Int {
-  io:println("hi");
-  io:println('h');
-  io:println(4);
+  io:println("Hello world.")
 }

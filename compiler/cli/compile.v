@@ -54,7 +54,6 @@ fn replace_imports(code string, lookup map[string]CompilationResult) string {
 
     for m in matches {
         mod_name := m.replace("// MODULE ", "").replace(";", "")
-        println(m)
         ret_code = ret_code.replace(m, lookup[mod_name].code)
         return replace_imports(ret_code, lookup)
     }
