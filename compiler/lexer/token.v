@@ -63,6 +63,7 @@ pub enum TokenType {
     kw_map             // `map`
     kw_enum            // `enum`
     kw_as              // `as`
+    kw_extern          // `extern`
 
     eof                // indicating that there are no more tokens left
 }
@@ -126,6 +127,7 @@ pub const keywords_map = map{
     "map": TokenType.kw_map
     "enum": TokenType.kw_enum
     "as": TokenType.kw_as
+    "extern": TokenType.kw_extern
 }
 
 pub struct Token {

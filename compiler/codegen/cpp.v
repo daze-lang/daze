@@ -129,6 +129,10 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
 }
 
 fn (mut gen CppCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) string {
+    if node.external {
+        return ""
+    }
+
     mut args := []string{}
     for arg in node.args {
         args << gen.fn_arg(arg)
@@ -200,6 +204,8 @@ fn (mut gen CppCodeGenerator) typename(name string) string {
         "Any" { "auto" }
         "Void" { "void" }
         "Char" { "char" }
+        // C types
+        "CString" { "char*" }
         else {
             if name.contains("|") && !name.contains("->") {
                 gen.generate_array_def(name)
@@ -226,7 +232,7 @@ fn (mut gen CppCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
     }
 
     mut fn_name := node.name.replace(":", "::")
-    return "${fn_name}(${args.join(", ")});\n".replace("; ;", "")
+    return "${fn_name.replace("C.", "")}(${args.join(", ")});\n".replace("; ;", "")
 }
 
 fn (mut gen CppCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
@@ -425,5 +431,11 @@ fn (mut gen CppCodeGenerator) enum_(node ast.EnumDeclarationStatement) string {
 }
 
 fn (mut gen CppCodeGenerator) typecast(node ast.TypeCast) string {
-    return "(${gen.typename(node.type_name)}) ${gen.expr(node.value)}"
+    type_name := gen.typename(node.type_name)
+    if node.type_name == "CString" {
+        return "tocstring(${gen.expr(node.value)})"
+    } else if node.type_name == "String" {
+        return "tostring(${gen.expr(node.value)})"
+    }
+    return "(${type_name}) ${gen.expr(node.value)}"
 }

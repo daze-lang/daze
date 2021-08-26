@@ -55,7 +55,21 @@ pub fn (mut checker Checker) check(node ast.Node) {
 fn (mut checker Checker) statement(node ast.Statement) {
     if node is ast.FunctionDeclarationStatement {
         checker.current_fn = node.name
+        if checker.functions.keys().contains(node.name) {
+            panic("Fn already defined.")
+        }
         checker.functions[node.name] = node
+
+        // pushing arguments as variables for a function declaration
+        for arg in node.args {
+            arg_as_var := ast.VariableDecl{
+                name: arg.name
+                value: ast.Expr{}
+                type_name: arg.type_name
+            }
+            checker.variables[checker.current_fn][arg.name] = arg_as_var
+        }
+
         for body in node.body {
             checker.check(body)
         }
@@ -93,12 +107,13 @@ fn (mut checker Checker) expr(node ast.Expr) {
     } else if node is ast.VariableAssignment {
         checker.var_assignment(node)
     } else if node is ast.VariableExpr {
-        if !checker.variables.keys().contains(node.value) && !checker.enums.keys().contains(node.value.split(":")[0])  {
+        if !checker.variables[checker.current_fn].keys().contains(node.value) && !checker.enums.keys().contains(node.value.split(":")[0])  {
             // TODO: proper error message
             // TODO: check dot operator accessing here
             if node.value.contains(".") {
                 checker.dotchain(node.value.split("."))
             }
+            println(checker.current_fn)
             panic("Accessing unknown variable: ${node.value}")
         }
 
@@ -142,6 +157,7 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     mut function_name := resolve_function_name(node.name)
+
     for arg in node.args {
         checker.check(arg)
     }
@@ -194,6 +210,10 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         checker.check(node.args[i])
         expected := ast_node.args[i].type_name.replace("ref ", "")
         my_type := checker.infer(node.args[i])
+
+        if expected == "Any" {
+            return
+        }
 
         if expected != my_type {
             panic("Type mismatch. Trying to call function `$function_name` with argument `${ast_node.args[i].name}` as ${my_type}, but it expects ${expected}")

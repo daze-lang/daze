@@ -12,6 +12,11 @@ std::string tostring(auto s) {
   return ss.str();
 }
 
+char* tocstring(std::string str) {
+  char* c = const_cast<char*>(str.c_str());
+  return c;
+}
+
 int len(std::string s) {
   return s.length();
 }

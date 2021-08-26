@@ -13,11 +13,11 @@
 - [ ] Implement `when`
 - [x] Implement optional return types
 - [ ] Implement Sum types
-- [ ] Implement Enums
-- [ ] Implement maps
+- [x] Implement Enums
+- [x] Implement maps
 - [x] Implement module system
 - [ ] Better string interpolation
-- [ ] Can we make semicolons optional? (or remove them completely for the most part?)
+- [x] Can we make semicolons optional? (or remove them completely for the most part?)
 
 ## Built in Types
 

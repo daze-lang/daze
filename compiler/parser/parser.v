@@ -44,6 +44,14 @@ fn (mut parser Parser) statements() []Statement {
 
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement(ast.NoOp{})
+
+    if parser.lookahead().kind == .kw_extern {
+        parser.expect(.kw_extern)
+        if parser.lookahead().kind == .kw_fn {
+            return parser.fn_decl(true)
+        }
+    }
+
     match parser.lookahead().kind {
         .kw_for {
             // TODO: handle cases like this
@@ -54,7 +62,7 @@ fn (mut parser Parser) statement() Statement {
         .kw_enum { node = parser.enum_() }
         .kw_use { node = parser.use() }
         .comment { node = ast.Comment{value: parser.advance().value} }
-        .kw_fn { node = parser.fn_decl() }
+        .kw_fn { node = parser.fn_decl(false) }
         .kw_is {
             if parser.lookahead_by(2).kind == .identifier {
                 node = parser.module_decl()
@@ -174,7 +182,7 @@ fn (mut parser Parser) expr() Expr {
 }
 
 // Function Declarations
-fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
+fn (mut parser Parser) fn_decl(is_external bool) ast.FunctionDeclarationStatement {
     parser.expect(.kw_fn)
     mut fn_name := parser.expect(.identifier).value
     gen_type := parser.generic()
@@ -192,6 +200,17 @@ fn (mut parser Parser) fn_decl() ast.FunctionDeclarationStatement {
         ret_type = parser.fn_arg(true, .double_colon).type_name
     } else {
         ret_type = parser.expect(.identifier).value
+    }
+
+    if is_external {
+        return ast.FunctionDeclarationStatement{
+            name: fn_name,
+            args: args,
+            body: []ast.Expr{},
+            return_type: ret_type,
+            gen_type: gen_type,
+            external: true
+        }
     }
 
     parser.expect(.open_curly)
@@ -445,7 +464,7 @@ fn (mut parser Parser) construct() ast.StructDeclarationStatement {
 
     mut member_fns := []ast.FunctionDeclarationStatement{}
     for parser.lookahead().kind != .close_curly {
-        member_fns << parser.fn_decl()
+        member_fns << parser.fn_decl(false)
     }
     parser.expect(.close_curly)
 

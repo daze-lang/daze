@@ -1,18 +1,9 @@
 is main
 
 use "daze::io"
-use "daze::net::http"
-
-struct Person {
-  name :: String
-
-  fn greet() :: String {
-    ret "Hello, {name}"
-  }
-}
 
 fn main() :: Int {
-  response :: http:HttpResponse := http:get("http://google.com")
-  # response = "Hello"
-  io:println("Hello")
+  io:println("hi");
+  io:println('h');
+  io:println(4);
 }

@@ -1,31 +1,7 @@
 is io
 
+extern fn C.printf(format :: CString, value :: Any) :: Void
+
 fn println(val :: String) :: Void {
-  `
-    std::cout << val << std::endl;
-  `
-}
-
-fn println(val :: Char) :: Void {
-  `
-    std::cout << std::string(1, val) << std::endl;
-  `
-}
-
-fn println(val :: BigInt) :: Void {
-  `
-    std::cout << std::to_string(val) << std::endl;
-  `
-}
-
-fn println(val :: Int) :: Void {
-  `
-    std::cout << std::to_string(val) << std::endl;
-  `
-}
-
-fn println(val :: Bool) :: Void {
-  `
-    std::cout << std::boolalpha << val << std::endl;
-  `
+  C.printf("%s\n" as CString, val as CString)
 }
