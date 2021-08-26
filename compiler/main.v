@@ -9,15 +9,21 @@ import cli
 fn write_generated_output(file_name string, code string) {
     os.write_file("/tmp/daze/${file_name}.cpp", code) or { panic("Failed writing file") }
     os.execute("astyle /tmp/daze/${file_name}.cpp")
-    println(os.execute("gcc -x c++ /tmp/daze/${file_name}.cpp -o $file_name -lstdc++").output)
+    result := os.execute("gcc -x c++ /tmp/daze/${file_name}.cpp -o $file_name -lstdc++ -static -fno-diagnostics-show-caret -fdiagnostics-color=always")
+    if result.exit_code != 0 {
+        println(term.red(term.bold("Compiler error. The C++ Compiler failed.")))
+        println(term.red(term.bold("========================================")))
+        println("")
+        println(result.output)
+    }
 }
 
 // compiles the main entry point & writes it to file
 fn compile_main(path string, base string) ? {
-    mut main_module_contents := os.read_file(path) or { panic("File not found") }
+    mut main_module_contents := os.read_file(path) or { panic("(main) File not found") }
     // TODO: not a good way to do things
-    mut header := os.read_file("./compiler/includes/header.h") or { panic("File not found") }
-    mut httplib := os.read_file("./compiler/includes/httplib.h") or { panic("File not found") }
+    mut header := os.read_file(os.getenv("DAZE_PATH") + "/compiler/includes/header.h") or { panic("File not found") }
+    mut httplib := os.read_file(os.getenv("DAZE_PATH") + "/compiler/includes/httplib.h") or { panic("File not found") }
 
     main_module := ast.Module{
         name: "main",
