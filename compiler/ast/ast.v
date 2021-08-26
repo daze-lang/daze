@@ -10,8 +10,10 @@ pub type Statement = FunctionDeclarationStatement
     | ModuleDeclarationStatement
     | StructDeclarationStatement
     | EnumDeclarationStatement
+    | CompflagStatement
     | ModuleUseStatement
     | FunctionArgument
+    | LoadStatement
     | RawCppCode
     | GlobalDecl
     | Comment
@@ -121,6 +123,16 @@ pub:
     name string
     value Expr
     type_name string
+}
+
+pub struct LoadStatement {
+pub:
+    path string
+}
+
+pub struct CompflagStatement {
+pub:
+    value string
 }
 
 pub struct VariableAssignment {

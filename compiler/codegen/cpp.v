@@ -174,7 +174,6 @@ fn (mut gen CppCodeGenerator) generate_array_def(info string) string {
 }
 
 fn (mut gen CppCodeGenerator) generate_map_def(info string) string {
-    mut type_name := ""
     parts := info.split("->")
     if parts[0].contains("|") {
         // TODO
@@ -399,7 +398,7 @@ fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string 
         args << gen.expr(arg)
     }
 
-    return "($node.name.replace(':', '::')){${args.join(", ").replace(",,", "").replace(";", "")}}"
+    return "(${node.name.replace(':', '::')}){${args.join(", ").replace(",,", "").replace(";", "")}}"
 }
 
 fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCall) string {

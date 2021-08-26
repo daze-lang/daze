@@ -1,7 +1,9 @@
 is main
 
 use "daze::io"
+load "sqlite.h"
+compflag "-lsqlite"
 
 fn main() :: Int {
-  io:println("Hello, world.");
+  io:println("Hello, world.")
 }

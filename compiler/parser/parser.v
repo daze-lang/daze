@@ -45,6 +45,7 @@ fn (mut parser Parser) statements() []Statement {
 fn (mut parser Parser) statement() Statement {
     mut node := ast.Statement(ast.NoOp{})
 
+    // move this to the match under
     if parser.lookahead().kind == .kw_extern {
         parser.expect(.kw_extern)
         if parser.lookahead().kind == .kw_fn {
@@ -53,6 +54,18 @@ fn (mut parser Parser) statement() Statement {
     }
 
     match parser.lookahead().kind {
+        .kw_load {
+            parser.expect(.kw_load)
+            return ast.LoadStatement {
+                path: parser.expect(.string).value
+            }
+        }
+        .kw_compflag {
+            parser.expect(.kw_compflag)
+            return ast.CompflagStatement {
+                value: parser.expect(.string).value
+            }
+        }
         .kw_for {
             // TODO: handle cases like this
             panic("For not allowed at top level")
