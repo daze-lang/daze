@@ -27,10 +27,11 @@ fn load_modules(mod Module, base string) []Module {
         mut module_file := os.read_file("${module_path}.daze") or { module_not_found(module_name, module_path) exit(1) }
         mod_name := module_name.replace("./", "").split("/")
         new_mod := Module{
-            name: mod_name.join("::"),
+            name: mod_name.pop(),
             path: module_path + ".daze"
             code: module_file
         }
+
         modules << new_mod
         modules << load_modules(new_mod, base)
     }

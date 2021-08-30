@@ -1,18 +1,21 @@
 is http
 
-struct HttpResponse {
-  text :: String
-
-  fn get_text() :: String {
-    ret text
+struct AnotherResp {
+  fn get_something() :: String {
+    ret "Hello!"
   }
 }
 
+struct HttpResponse {
+  text :: String,
+  str :: AnotherResp
+
+  fn get_text() :: AnotherResp {
+    ret str
+  }
+}
+
+
 fn get(url :: String) :: http:HttpResponse {
-  `
-    http::Request request{url};
-    const auto response = request.send("GET");
-    const auto text = std::string{response.body.begin(), response.body.end()};
-  `;
-  ret make HttpResponse(text)
+  ret make HttpResponse("text", make AnotherResp())
 }

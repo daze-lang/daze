@@ -59,7 +59,7 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     } else if mut node is ast.GlobalDecl {
         code = "const auto ${node.name} = ${gen.expr(node.value)};\n"
     } else if mut node is ast.ModuleUseStatement {
-        parts := node.path.split("/")
+        parts := node.path.split("::")
         code = "// MODULE ${parts.pop().replace("daze::", "").replace("./", "")};\n"
     } else if mut node is ast.Comment {
         code = "// $node.value\n"
@@ -398,7 +398,7 @@ fn (mut gen CppCodeGenerator) struct_init(node ast.StructInitialization) string 
         args << gen.expr(arg)
     }
 
-    return "(${node.name.replace(':', '::')}){${args.join(", ").replace(",,", "").replace(";", "")}}"
+    return "(${node.name.replace(':', '::')}){${args.join(", ").replace(",,", "").replace(", ,", ", ").replace(";", "")}}"
 }
 
 fn (mut gen CppCodeGenerator) try(assign_to string, node ast.OptionalFunctionCall) string {

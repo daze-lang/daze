@@ -117,7 +117,7 @@ fn (mut checker Checker) statement(node ast.Statement) {
         }
         // creating new context when a new module use statement is found
         context := new_context(node.name)
-        checker.contexts[node.name] = context
+        checker.contexts[checker.context.mod_name] = checker.context
         checker.context = context
     }
 }
@@ -188,7 +188,8 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
 }
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
-    mut function_name := resolve_function_name(node.name)
+    mut mod_name, mut function_name := resolve_function_name(node.name)
+    fn_node := checker.get_function_node_by_name(mod_name, function_name)
 
     for arg in node.args {
         checker.check(arg)
@@ -204,31 +205,34 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         return
     }
 
-    if node.name.contains(":") {
-        mut module_name := node.name.split(":")[0]
-        function_name = node.name.split(":")[1]
-        if !checker.modules.keys().contains(module_name) {
-            // panic("Referencing unknown module: ${module_name}")
+    if mod_name != "" {
+        if !checker.modules.keys().contains(mod_name) {
+            panic("Referencing unknown module: ${mod_name}")
         }
     }
 
-    if !checker.context.functions.keys().contains(function_name) {
-        // calling on a variable
-        if node.name.contains(".") {
-            variable := node.name.split(".")[0]
-            fn_name := node.name.split(".")[1]
-            var_type := checker.context.variables[checker.current_fn][variable].type_name
-            if !checker.struct_has_function_by_name(var_type.replace("::", ":"), fn_name) {
-                panic("Trying to call unknown function: ${node.name}")
-            }
-        } else {
-            panic("Trying to call unknown function: ${node.name}")
-        }
-    }
+    // if !checker.context.functions.keys().contains(function_name) {
+    //     // calling on a variable
+    //     if node.name.contains(".") {
+    //         variable := node.name.split(".")[0]
+    //         fn_name := node.name.split(".")[1]
+    //         var_type := checker.context.variables[checker.current_fn][variable].type_name
+    //         if !checker.struct_has_function_by_name(var_type.replace("::", ":"), fn_name) {
+    //             panic("Trying to call unknown function: ${node.name}")
+    //         }
+    //     } else if node.name.contains(":") {
+    //         mod := node.name.split(":")[0]
+    //         fn_name := node.name.split(":")[1]
+    //         if !checker.contexts.keys().contains(mod) {
+    //             panic("Referencing unknown module: ${mod}")
+    //         }
+    //     } else {
+    //         panic("Trying to call unknown function: ${node.name}")
+    //     }
+    // }
 
     // Checking argument count
-    ast_node := checker.context.functions[function_name]
-    args_len := ast_node.args.len
+    args_len := fn_node.args.len
     if node.args.len > args_len {
         panic("Too many arguments to call $function_name; got ${node.args.len}, expected ${args_len}")
     }
@@ -240,7 +244,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
     // Checking argument types
     for i in 0..args_len {
         checker.check(node.args[i])
-        expected := ast_node.args[i].type_name.replace("ref ", "")
+        expected := fn_node.args[i].type_name.replace("ref ", "")
         my_type := checker.infer(node.args[i])
 
         if expected == "Any" {
@@ -248,7 +252,7 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr) {
         }
 
         if expected != my_type {
-            panic("Type mismatch. Trying to call function `$function_name` with argument `${ast_node.args[i].name}` as ${my_type}, but it expects ${expected}")
+            panic("Type mismatch. Trying to call function `$function_name` with argument `${fn_node.args[i].name}` as ${my_type}, but it expects ${expected}")
         }
     }
 }
@@ -359,7 +363,16 @@ fn (mut checker Checker) infer(node ast.Expr) string {
     } else if node is ast.MapInit {
         type_name = "${checker.infer(node.body[0].key)}->${checker.infer(node.body[0].value)}"
     } else if node is ast.FunctionCallExpr {
-        type_name = checker.context.functions[resolve_function_name(node.name)].return_type.replace("?", "")
+        mod, fn_name := resolve_function_name(node.name)
+
+        if mod != "" {
+            return checker.get_function_node_by_name(mod, fn_name).return_type.replace("?", "")
+        }
+
+        type_name = checker.context.functions[fn_name].return_type.replace("?", "")
+        if type_name == "" {
+            return checker.resolve_callchain_to_fn(node.callchain).return_type
+        }
     } else if node is ast.StringLiteralExpr {
         type_name = "String"
     } else if node is ast.NumberLiteralExpr {
@@ -368,6 +381,8 @@ fn (mut checker Checker) infer(node ast.Expr) string {
         type_name = node.name
     } else if node is ast.TypeCast {
         type_name = node.type_name
+    } else if node is ast.VariableDecl {
+        type_name = node.type_name.replace("::", ":")
     } else if node is ast.VariableExpr {
         // accessing struct field
         if node.value.contains(".") {
@@ -402,28 +417,6 @@ fn (mut checker Checker) get_struct_field_by_name(struct_name string, field_name
     return ast.FunctionArgument{}
 }
 
-fn (mut checker Checker) get_struct_function_by_name(struct_name string, fn_name string) ast.FunctionDeclarationStatement {
-    for memberfn in checker.context.structs[struct_name].member_fns {
-        if memberfn.name == fn_name {
-            return memberfn
-        }
-    }
-
-    // Should be unreachable
-    return ast.FunctionDeclarationStatement{}
-}
-
-fn (mut checker Checker) struct_has_function_by_name(struct_name string, fn_name string) bool {
-    for memberfn in checker.context.structs[struct_name].member_fns {
-        if memberfn.name == fn_name {
-            return true
-        }
-    }
-
-    // Should be unreachable
-    return false
-}
-
 fn (mut checker Checker) fn_has_arg_with_name(fn_name string, arg_name string) bool {
     for arg in checker.context.functions[fn_name].args {
         if arg.name == arg_name {
@@ -446,10 +439,68 @@ fn (mut checker Checker) fn_get_arg_with_name(fn_name string, arg_name string) a
     return ast.FunctionArgument{}
 }
 
-fn resolve_function_name(name string) string {
+fn (mut checker Checker) get_function_node_by_name(mod string, name string) ast.FunctionDeclarationStatement {
+    if mod != "" {
+        if !checker.contexts.keys().contains(mod) {
+            // TODO
+            panic("Trying to reference unknown module: ${mod}")
+        }
+        if !checker.contexts[mod].functions.keys().contains(name) {
+            panic("Trying to call unknown function: `$name` in module `$mod`")
+        }
+        return checker.contexts[mod].functions[name]
+    } else {
+        // If its not a function definition
+        if !checker.context.functions.keys().contains(name) {
+            return checker.resolve_callchain_to_fn(name.split("."))
+        } else {
+            return checker.context.functions[name]
+        }
+    }
+    // should be unreachable
+    panic("checker.get_function_node_by_name: mod: $mod name: $name")
+    return ast.FunctionDeclarationStatement{}
+}
+
+fn resolve_function_name(name string) (string, string) {
     mut function_name := name
+    mut mod_name := ""
     if name.contains(":") {
+        mod_name = name.split(":")[0]
         function_name = name.split(":")[1]
     }
-    return function_name
+    return mod_name, function_name
+}
+
+fn (mut checker Checker) get_fn_declaration_from_struct(structdecl ast.StructDeclarationStatement, name string) ast.FunctionDeclarationStatement {
+    for member_fn in structdecl.member_fns {
+        if member_fn.name == name {
+            return member_fn
+        }
+    }
+
+    panic("Unreachable: get_fn_declaration_from_struct")
+}
+
+fn (mut checker Checker) resolve_callchain_to_fn(chain []string) ast.FunctionDeclarationStatement {
+    mut types_of_each := []string{}
+    println(chain)
+    for call in chain {
+        // we are accessing a variable
+        if checker.context.variables[checker.current_fn].keys().contains(call) {
+            types_of_each << checker.infer(checker.context.variables[checker.current_fn][call])
+        } else {
+            latest_type := types_of_each[types_of_each.len - 1]
+            if latest_type.contains(":") {
+                // a module
+                struct_def := checker.contexts[latest_type.split(":")[0]].structs[latest_type]
+                return checker.get_fn_declaration_from_struct(struct_def, call)
+            } else {
+                panic("Unhandled: resolve_callchain_to_fn (doesnt contain :)")
+            }
+            panic("Unhandled: resolve_callchain_to_fn: $call")
+        }
+    }
+
+    return ast.FunctionDeclarationStatement{}
 }
