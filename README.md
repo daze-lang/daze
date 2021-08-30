@@ -17,6 +17,7 @@
 - [x] Implement maps
 - [x] Implement module system
 - [ ] Better string interpolation
+- [ ] Detect variable shadowing
 - [x] Can we make semicolons optional? (or remove them completely for the most part?)
 
 ## Built in Types

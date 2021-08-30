@@ -2,44 +2,45 @@ is strings
 
 use "daze::io"
 use "daze::range"
+use "daze::conv"
 
 fn contains(str :: String, substr :: String) :: Bool {
   ret true
 }
 
-fn lower(c :: Char) :: Char {
-  ret c + 32
-}
+# fn lower(c :: Char) :: Char {
+#   ret c + 32
+# }
 
-fn lower(s :: String) :: String {
-  lowered_str :: String := ""
+# fn lower(s :: String) :: String {
+#   lowered_str :: String := ""
 
-  for c in s {
-    lowered_str = lowered_str + lower(c)
-  }
+#   for c in s {
+#     lowered_str = lowered_str + lower(c)
+#   }
 
-  ret lowered_str
-}
+#   ret lowered_str
+# }
 
-fn upper(c :: Char) :: Char {
-  ret c - 32
-}
+# fn upper(c :: Char) :: Char {
+#   ret c - 32
+# }
 
-fn upper(s :: String) :: String {
-  uppered_str :: String := ""
+# fn upper(s :: String) :: String {
+#   uppered_str :: String := ""
 
-  for c in s {
-    uppered_str = uppered_str + upper(c)
-  }
+#   for c in s {
+#     uppered_str = uppered_str + upper(c)
+#   }
 
-  ret uppered_str
-}
+#   ret uppered_str
+# }
 
 fn substring(str :: String, from :: Int, to :: Int) :: String {
   substring :: String := ""
 
   for c in range:between(from, to) {
-    substring = substring + tostring(str[c])
+    substring = substring + conv:toString(str[c])
   }
 
   ret substring
@@ -47,7 +48,7 @@ fn substring(str :: String, from :: Int, to :: Int) :: String {
 
 fn findIndex(str :: String, chr :: String) :: Int {
   for i in range:up(len(str)) {
-    if tostring(str[i]) == chr {
+    if conv:toString(str[i]) == chr {
       ret i
     }
   }
@@ -74,8 +75,8 @@ fn join(strArr :: [String], delim :: String) :: String {
 
 #   for i in range:up(len(str)) {
 #     # str[i] is of type Char, so we need to convert it to String
-#     if tostring(str[i]) != delimiter {
-#       word = word + tostring(str[i]);
+#     if conv:toString(str[i]) != delimiter {
+#       word = word + conv:toString(str[i]);
 #     } else {
 #       if len(word) != 0 {
 #         substrings <- word;
@@ -93,22 +94,40 @@ fn removeFromIndex(str :: String, from :: Int, length :: Int) :: String {
 
   for i in range:up(len(str)) {
     if i < from || i > length {
-      result = result + tostring(str[i])
+      result = result + conv:toString(str[i])
     }
   }
 
   ret result
 }
 
-fn split(str :: String, delimiter :: String) :: [String] {
+# fn split(str :: String, delimiter :: String) :: [String] {
+#   result :: [String] := {}
+#   str = str + delimiter
+
+#   for i in range:up(len(str)) {
+
+#   }
+# }
+
+fn split(text :: String, delim :: String) :: [String] {
   result :: [String] := {}
-  str = str + delimiter
+  `
+  size_t pos = 0, prevPos = 0;
+   while (1) {
+       pos = text.find(delim, prevPos);
+       if (pos == std::string::npos) {
+           result.push_back(text.substr(prevPos));
+           return result;
+       }
 
-  for i in range:up(len(str)) {
+       result.push_back(text.substr(prevPos, pos - prevPos));
+       prevPos = pos + delim.length();
+   }
+  `
 
-  }
+  ret result
 }
-
 
 # fn replace(str :: String, replace_what :: String, replace_with :: String) :: String {
 #   ret join(split(str, replace_what), replace_with);

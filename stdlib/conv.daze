@@ -1,0 +1,18 @@
+is conv
+
+fn toString(val :: Any) :: String {
+  `
+  std::stringstream ss;
+  ss << val;
+  return ss.str();
+  `
+}
+
+fn toInt(val :: String) :: Int {
+  result :: Int := 0;
+  `
+  std::stringstream intValue(val);
+  intValue >> result;
+  `
+  ret result
+}

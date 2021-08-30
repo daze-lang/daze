@@ -1,7 +1,20 @@
 is io
 
 extern fn printf(format :: CString, value :: Any) :: Void
+extern fn readline(io :: Any, var :: String) :: Void
 
 fn println(val :: String) :: Void {
   printf("%s\n" as CString, val as CString)
+}
+
+fn print(val :: String) :: Void {
+  printf("%s" as CString, val as CString)
+}
+
+fn input() :: String {
+  line :: ref String := "";
+  `
+  getline(std::cin, line);
+  `
+  ret line
 }

@@ -88,7 +88,7 @@ fn (mut checker Checker) statement(node ast.Statement) {
     if node is ast.FunctionDeclarationStatement {
         checker.current_fn = node.name
         if checker.context.functions.keys().contains(node.name) {
-            panic("Fn already defined.")
+            panic("Fn already defined. (${node.name})")
         }
         checker.context.functions[node.name] = node
 
@@ -145,7 +145,8 @@ fn (mut checker Checker) expr(node ast.Expr) {
     } else if node is ast.VariableAssignment {
         checker.var_assignment(node)
     } else if node is ast.VariableExpr {
-        if !checker.context.variables[checker.current_fn].keys().contains(node.value) && !checker.context.enums.keys().contains(node.value.split(":")[0])  {
+        if !checker.context.variables[checker.current_fn].keys().contains(node.value)
+            && !checker.context.enums.keys().contains(node.value.split(":")[0])  {
             if node.value !in ["true", "false"] {
                 panic("Accessing unknown variable: ${node.value}")
             }
@@ -184,7 +185,9 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
     my_type := checker.infer(infer_ctx)
 
     if expected != my_type {
-        panic("Type mismatch. Trying to assign ${my_type} to variable `${node.name}`, but it expects ${expected}")
+        if my_type != "Any" {
+            panic("Type mismatch. Trying to assign ${my_type} to variable `${node.name}`, but it expects ${expected}")
+        }
     }
 
     checker.context.variables[checker.current_fn][node.name] = node
@@ -195,6 +198,10 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
 
 fn (mut checker Checker) fn_call(node ast.FunctionCallExpr, context Context) {
     mut function_name := node.name
+
+    if function_name in ["tostring", "toint"] {
+        return
+    }
 
     if !context.functions.keys().contains(function_name) {
         panic("Trying to call undefined function `$function_name`")
@@ -338,7 +345,14 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
 
     mut type_name := ""
 
-    if node is ast.BinaryOperation {
+    if node is ast.IndexingExpr {
+        type_name = checker.infer(TypeInferenceContext{expr: ast.VariableExpr{node.var, false, false}, context: context})
+        if !type_name.contains("|") {
+            panic("Indexing is only allowed for array types")
+        }
+
+        type_name = type_name.split("|")[0]
+    } else if node is ast.BinaryOperation {
         type_name = checker.infer(TypeInferenceContext{expr: node.lhs, context: context})
     } else if node is ast.CallChainExpr {
         return checker.callchain(node)
@@ -363,8 +377,13 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
         type_name = "Int"
     } else if node is ast.StructInitialization {
         type_name = node.name
+    } else if node is ast.ArrayInit {
+        // TODO:
+        type_name = "Any"
     } else if node is ast.TypeCast {
         type_name = node.type_name
+    } else if node is ast.RawCppCode {
+        type_name = "Any"
     } else if node is ast.VariableDecl {
         type_name = node.type_name.replace("::", ":")
     } else if node is ast.VariableExpr {
@@ -382,6 +401,7 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
             return checker.get_struct_field_by_name(context, last_type, node.value).type_name
         }
     }
+
     if type_name == "" {
         panic("Unable to infer type: $node")
     }
@@ -407,7 +427,6 @@ fn (mut checker Checker) callchain(node ast.CallChainExpr) string {
                     panic("Error to be decided. (checker.v:400)")
                 }
                 latest_type = checker.infer(TypeInferenceContext{expr: call, context: context, last_known_type: latest_type})
-                // checker.get_struct_field_by_name(context, latest_type, call.value)
             }
         } else if call is ast.FunctionCallExpr {
             if context.structs.keys().contains(latest_type) {
@@ -427,7 +446,10 @@ fn (mut checker Checker) callchain(node ast.CallChainExpr) string {
 
 // Utilities
 
-fn (mut checker Checker) get_struct_member_fn_by_name(context Context, struct_name string, fn_name string) ast.FunctionDeclarationStatement {
+fn (mut checker Checker) get_struct_member_fn_by_name(
+    context Context,
+    struct_name string,
+    fn_name string) ast.FunctionDeclarationStatement {
     for member_fn in context.structs[struct_name].member_fns {
         if member_fn.name == fn_name {
             return member_fn
@@ -438,7 +460,10 @@ fn (mut checker Checker) get_struct_member_fn_by_name(context Context, struct_na
     panic("Trying to call function `$fn_name` on struct `$struct_name`, but it does not exist")
 }
 
-fn (mut checker Checker) get_struct_field_by_name(context Context, struct_name string, field_name string) ast.FunctionArgument {
+fn (mut checker Checker) get_struct_field_by_name(
+    context Context,
+    struct_name string,
+    field_name string) ast.FunctionArgument {
     for field in context.structs[struct_name].fields {
         if field.name == field_name {
             return field

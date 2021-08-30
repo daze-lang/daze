@@ -1,8 +1,15 @@
 is main
 
 use "daze::io"
-use "daze::net::http"
+use "daze::strings"
+use "daze::conv"
+use "daze::range"
 
 fn main() :: Int {
-  io:println(http:get("").get_text().get_something("Mark"))
+  numOfTestCases :: Int := conv:toInt(io:input())
+  for i in range:up(numOfTestCases) {
+    io:println(conv:toString(i))
+  }
+  # io:println(strings:split("Hello, Whats your name?", " ")[0])
+  # io:println("Hello, " + io:input())
 }
