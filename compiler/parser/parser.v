@@ -734,7 +734,7 @@ fn (mut parser Parser) try() ast.OptionalFunctionCall {
 fn (mut parser Parser) binary(node ast.Expr) ast.BinaryOperation {
     lhs := node
     mut op := ""
-    mut rhs := ast.Expr{}
+    mut rhs := ast.Expr(ast.NoOp{})
 
     if is_binary_op(parser.lookahead()) {
         op = parser.advance().value

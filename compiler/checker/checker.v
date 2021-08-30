@@ -96,7 +96,7 @@ fn (mut checker Checker) statement(node ast.Statement) {
         for arg in node.args {
             arg_as_var := ast.VariableDecl{
                 name: arg.name
-                value: ast.Expr{}
+                value: ast.NoOp{}
                 type_name: arg.type_name
             }
             checker.context.variables[checker.current_fn][arg.name] = arg_as_var
@@ -337,6 +337,7 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
     last_type := inference_context.last_known_type
 
     mut type_name := ""
+
     if node is ast.BinaryOperation {
         type_name = checker.infer(TypeInferenceContext{expr: node.lhs, context: context})
     } else if node is ast.CallChainExpr {
@@ -351,7 +352,6 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
         type_name = context.functions[node.name].return_type.replace("?", "")
         if type_name == "" {
             if !context.structs.keys().contains(last_type) {
-                println(context.structs)
                 panic("Trying to call function on nonexistent struct ($last_type)")
             }
 
