@@ -75,6 +75,7 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
     mut code := codegen.run()
 
     if mod.name == "main" {
+        // panic(program_ast)
         module_lookup := compile_modules(load_modules(mod, base), base)
         mut checker := checker.new(program_ast, module_lookup)
         checker.run()

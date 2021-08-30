@@ -38,6 +38,7 @@ pub type Expr = FunctionCallExpr
     | VariableExpr
     | VariableDecl
     | IfExpression
+    | TernaryExpr
     | ForLoopExpr
     | GroupedExpr
     | RawCppCode
@@ -218,6 +219,13 @@ pub:
 pub mut:
     mod bool
     is_struct_member bool
+}
+
+pub struct TernaryExpr {
+pub:
+    conditional Expr
+    truthy Expr
+    falsey Expr
 }
 
 pub struct BinaryOp {

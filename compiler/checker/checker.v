@@ -397,6 +397,9 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
 
         // possibly struct field access
         if type_name == "" {
+            if node.value in ["true", "false"] {
+                return "Bool"
+            }
             // TODO: check if struct exists
             return checker.get_struct_field_by_name(context, last_type, node.value).type_name
         }

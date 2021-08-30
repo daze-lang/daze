@@ -1,15 +1,7 @@
 is main
 
 use "daze::io"
-use "daze::strings"
-use "daze::conv"
-use "daze::range"
 
 fn main() :: Int {
-  numOfTestCases :: Int := conv:toInt(io:input())
-  for i in range:up(numOfTestCases) {
-    io:println(conv:toString(i))
-  }
-  # io:println(strings:split("Hello, Whats your name?", " ")[0])
-  # io:println("Hello, " + io:input())
+  5 >= 5 do io:println("a") or io:println("b")
 }

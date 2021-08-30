@@ -219,6 +219,12 @@ fn (mut parser Parser) expr(parsing_callchain bool) Expr {
         }
     }
 
+    if node is ast.BinaryOperation || node is ast.VariableExpr {
+        if parser.lookahead().kind == .kw_do {
+            node = parser.ternary(node)
+        }
+    }
+
     return node
 }
 
@@ -773,5 +779,19 @@ fn (mut parser Parser) enum_() ast.EnumDeclarationStatement {
     return ast.EnumDeclarationStatement{
         name: name,
         values: values
+    }
+}
+
+fn (mut parser Parser) ternary(conditional ast.Expr) ast.TernaryExpr {
+    parser.expect(.kw_do)
+    truthy := parser.expr(false)
+    println(truthy)
+    parser.expect(.kw_or)
+    falsey := parser.expr(false)
+
+    return ast.TernaryExpr{
+        conditional: conditional,
+        truthy: truthy,
+        falsey: falsey
     }
 }

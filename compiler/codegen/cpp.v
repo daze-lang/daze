@@ -115,6 +115,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.for_in_loop(node)
     } else if mut node is ast.IndexingExpr {
         code = gen.indexing(node)
+    } else if mut node is ast.TernaryExpr {
+        code = gen.ternary(node)
     } else if mut node is ast.GroupedExpr {
         code = gen.grouped_expr(node)
     } else if mut node is ast.ArrayInit {
@@ -460,4 +462,10 @@ fn (mut gen CppCodeGenerator) callchain(node ast.CallChainExpr) string {
     }
 
     return code.trim_right(".").trim_space() + ";"
+}
+
+fn (mut gen CppCodeGenerator) ternary(node ast.TernaryExpr) string {
+    truthy := gen.expr(node.truthy).replace(";", "").trim_space()
+    falsey := gen.expr(node.falsey).replace(";", "").trim_space()
+    return "(${gen.expr(node.conditional)}) ? $truthy : $falsey;"
 }

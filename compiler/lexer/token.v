@@ -38,7 +38,6 @@ pub enum TokenType {
     arrow_left         // <-
     arrow_right        // ->
     dot                // .
-    pipe               // |>
     single_quote       // '
     comment            // # comment
     raw_cpp_code       // raw c++ code between `
@@ -66,6 +65,7 @@ pub enum TokenType {
     kw_extern          // `extern`
     kw_load            // `load`
     kw_compflag        // `compflag`
+    kw_do              // `do`
 
     eof                // indicating that there are no more tokens left
 }
@@ -132,6 +132,7 @@ pub const keywords_map = map{
     "extern": TokenType.kw_extern
     "load": TokenType.kw_load
     "compflag": TokenType.kw_compflag
+    "do": TokenType.kw_do
 }
 
 pub struct Token {
