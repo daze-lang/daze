@@ -1,7 +1,7 @@
 is io
 
-extern fn C.printf(format :: CString, value :: Any) :: Void
+extern fn printf(format :: CString, value :: Any) :: Void
 
 fn println(val :: String) :: Void {
-  C.printf("%s\n" as CString, val as CString)
+  printf("%s\n" as CString, val as CString)
 }

@@ -79,6 +79,8 @@ fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
         code = gen.number_literal_expr(node)
     } else if mut node is ast.FunctionCallExpr {
         code = gen.fn_call(node)
+    } else if mut node is ast.CallChainExpr {
+        code = gen.callchain(node)
     } else if mut node is ast.VariableExpr {
         code = gen.variable_expr(node)
     } else if mut node is ast.RawCppCode {
@@ -437,4 +439,18 @@ fn (mut gen CppCodeGenerator) typecast(node ast.TypeCast) string {
         return "tostring(${gen.expr(node.value)})"
     }
     return "(${type_name}) ${gen.expr(node.value)}"
+}
+
+fn (mut gen CppCodeGenerator) callchain(node ast.CallChainExpr) string {
+    mut code := ""
+
+    for c in node.chain {
+        code += "${gen.expr(c).replace(";", "")}".trim_space()
+
+        if c !is ast.VariableExpr {
+            code += "."
+        }
+    }
+
+    return code.trim_right(".").trim_space() + ";"
 }

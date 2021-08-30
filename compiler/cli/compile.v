@@ -68,6 +68,7 @@ pub fn compile(mod Module, base string) CompilationResult {
     mut parser := parser.new(tokens, mod.path)
     ast := parser.parse()
 
+
     mut codegen := codegen.new_cpp(ast)
     mut code := codegen.run()
 

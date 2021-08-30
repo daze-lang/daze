@@ -1,10 +1,7 @@
 is main
 
 use "daze::io"
-use "daze::term"
-use "daze::net::http"
 
 fn main() :: Int {
-  resp :: http:HttpResponse := http:get("http://google.com")
-  io:println(term:bold(term:fg_blue(resp.get_text().get_something())))
+  io:println("Hello fing")
 }

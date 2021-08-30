@@ -89,7 +89,6 @@ fn (mut parser Parser) statement() Statement {
 
 fn (mut parser Parser) expr() Expr {
     mut node := ast.Expr(ast.NoOp{})
-
     match parser.lookahead().kind {
         .open_curly {
             if parser.lookahead_by(3).kind == .arrow_right {
@@ -178,6 +177,26 @@ fn (mut parser Parser) expr() Expr {
         else { node = ast.NoOp{} }
     }
 
+    if node is ast.FunctionCallExpr || node is ast.VariableExpr {
+        mut chain := []ast.Expr{}
+        if parser.lookahead().kind == .dot || parser.lookahead().kind == .colon {
+            chain << node
+            if node is ast.VariableExpr && parser.lookahead().kind == .colon {
+                // Cheating a bit for modules
+                chain << ast.VariableExpr{":"}
+            }
+            for parser.lookahead().kind == .dot || parser.lookahead().kind == .colon {
+                parser.advance() // eating .dot
+                chain << parser.fn_call()
+            }
+
+
+            return ast.CallChainExpr {
+                chain: chain
+            }
+        }
+    }
+
     if is_binary_op(parser.lookahead()) {
         node = parser.binary(node)
     }
@@ -198,7 +217,6 @@ fn (mut parser Parser) expr() Expr {
 fn (mut parser Parser) fn_decl(is_external bool) ast.FunctionDeclarationStatement {
     parser.expect(.kw_fn)
     mut fn_name := parser.expect(.identifier).value
-    gen_type := parser.generic()
     parser.expect(.open_paren)
     mut args := []ast.FunctionArgument{}
     if parser.lookahead().kind == .identifier {
@@ -221,7 +239,6 @@ fn (mut parser Parser) fn_decl(is_external bool) ast.FunctionDeclarationStatemen
             args: args,
             body: []ast.Expr{},
             return_type: ret_type,
-            gen_type: gen_type,
             external: true
         }
     }
@@ -239,7 +256,6 @@ fn (mut parser Parser) fn_decl(is_external bool) ast.FunctionDeclarationStatemen
         args: args,
         body: body,
         return_type: ret_type,
-        gen_type: gen_type,
         external: false
     }
 }
@@ -381,14 +397,12 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
 
     parser.expect(.open_paren)
     mut args := []Expr{}
-    mut callchain := fn_name.split(".")
 
     // no args passed
     if parser.lookahead().kind == .close_paren {
         parser.advance()
         return ast.FunctionCallExpr{
             name: fn_name,
-            callchain: callchain,
             args: []ast.Expr{},
         }
     }
@@ -406,8 +420,6 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
     if parser.lookahead().kind !in [.close_paren, .open_curly] && !is_binary_op(parser.lookahead()) {
         // parser.expect(.semicolon)
     }
-
-
     return ast.FunctionCallExpr{
         name: fn_name,
         args: args
@@ -445,25 +457,6 @@ fn (mut parser Parser) module_decl() ast.ModuleDeclarationStatement {
     }
     // parser.expect(.semicolon)
     return node
-}
-
-fn (mut parser Parser) generic() string {
-    mut gen_type := ""
-    if parser.lookahead().kind == .less_than {
-        parser.expect(.less_than)
-        for parser.lookahead().kind != .greater_than {
-            if parser.lookahead().kind == .identifier {
-                gen_type += parser.expect(.identifier).value
-            } else if parser.lookahead().kind == .comma {
-                gen_type += parser.expect(.comma).value
-            } else {
-                break
-            }
-        }
-        parser.expect(.greater_than)
-    }
-
-    return gen_type
 }
 
 fn (mut parser Parser) construct() ast.StructDeclarationStatement {

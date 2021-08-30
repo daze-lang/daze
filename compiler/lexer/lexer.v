@@ -76,10 +76,10 @@ pub fn (mut lexer Lexer) lex() []Token {
                 tokens << Token{.close_curly, current, lexer.line, lexer.column - current.len}
                 continue
             }
-            // "@" {
-            //     tokens << Token{.at, current, lexer.line, lexer.column - current.len}
-            //     continue
-            // }
+            "." {
+                tokens << Token{.dot, current, lexer.line, lexer.column - current.len}
+                continue
+            }
             ";" {
                 tokens << Token{.semicolon, current, lexer.line, lexer.column - current.len}
                 continue
@@ -201,7 +201,7 @@ pub fn (mut lexer Lexer) lex() []Token {
             else {}
         }
 
-        if !lexer.is_number(current) || current == "." {
+        if !lexer.is_number(current) {
             if current != "\"" {
                 id := lexer.read_identifier(current)
                 // if id == "unsafe" {

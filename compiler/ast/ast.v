@@ -30,6 +30,7 @@ pub type Expr = FunctionCallExpr
     | RawBinaryOpExpr
     | BinaryOperation
     | ForInLoopExpr
+    | CallChainExpr
     | ArrayPushExpr
     | IncrementExpr
     | DecrementExpr
@@ -56,7 +57,6 @@ pub mut:
     args []FunctionArgument
     body []Expr
     return_type string
-    gen_type string
     external bool
 }
 
@@ -91,7 +91,6 @@ pub struct StructDeclarationStatement {
 pub:
     name string
     fields []FunctionArgument
-    gen_type string
     external bool
 pub mut:
     member_fns []FunctionDeclarationStatement
@@ -144,8 +143,12 @@ pub:
 pub struct FunctionCallExpr {
 pub:
     name string
-    callchain []string
     args []Expr
+}
+
+pub struct CallChainExpr {
+pub:
+    chain []Expr
 }
 
 pub struct RawBinaryOpExpr {

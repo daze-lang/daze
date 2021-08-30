@@ -371,7 +371,7 @@ fn (mut checker Checker) infer(node ast.Expr) string {
 
         type_name = checker.context.functions[fn_name].return_type.replace("?", "")
         if type_name == "" {
-            return checker.resolve_callchain_to_fn(node.callchain).return_type
+            // return checker.resolve_callchain_to_fn(node.callchain).return_type
         }
     } else if node is ast.StringLiteralExpr {
         type_name = "String"
