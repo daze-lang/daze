@@ -1,8 +1,9 @@
 is http
 
 struct AnotherResp {
-  fn get_something() :: String {
-    ret "Hello!"
+  something :: String
+  fn get_something(something :: String) :: String {
+    ret "Hello {something}!"
   }
 }
 
@@ -16,6 +17,6 @@ struct HttpResponse {
 }
 
 
-fn get(url :: String) :: http:HttpResponse {
-  ret make HttpResponse("text", make AnotherResp())
+fn get(url :: String) :: HttpResponse {
+  ret make HttpResponse("text", make AnotherResp("Field value!"))
 }

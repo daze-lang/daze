@@ -87,7 +87,7 @@ fn (mut parser Parser) statement() Statement {
     return node
 }
 
-fn (mut parser Parser) expr() Expr {
+fn (mut parser Parser) expr(parsing_callchain bool) Expr {
     mut node := ast.Expr(ast.NoOp{})
     match parser.lookahead().kind {
         .open_curly {
@@ -118,7 +118,7 @@ fn (mut parser Parser) expr() Expr {
             }
         }
         .kw_break {
-            node = ast.VariableExpr{parser.advance().value + ";"}
+            node = ast.VariableExpr{parser.advance().value + ";", false, false}
             // parser.expect(.semicolon)
         }
         .kw_if { node = parser.if_statement() }
@@ -167,7 +167,7 @@ fn (mut parser Parser) expr() Expr {
                             // TODO: better error message
                             panic("Directly trying to access struct field. Store it in a variable instead")
                         } else {
-                            node = ast.VariableExpr{val}
+                            node = ast.VariableExpr{val, false, false}
                             parser.advance()
                         }
                     }
@@ -177,17 +177,26 @@ fn (mut parser Parser) expr() Expr {
         else { node = ast.NoOp{} }
     }
 
-    if node is ast.FunctionCallExpr || node is ast.VariableExpr {
+    if (node is ast.FunctionCallExpr || node is ast.VariableExpr) && !parsing_callchain {
         mut chain := []ast.Expr{}
         if parser.lookahead().kind == .dot || parser.lookahead().kind == .colon {
-            chain << node
-            if node is ast.VariableExpr && parser.lookahead().kind == .colon {
-                // Cheating a bit for modules
-                chain << ast.VariableExpr{":"}
+            casted := node
+            if casted is ast.VariableExpr && parser.lookahead().kind == .colon {
+                chain << ast.VariableExpr{casted.value, true, false}
+            } else {
+                chain << node
             }
             for parser.lookahead().kind == .dot || parser.lookahead().kind == .colon {
                 parser.advance() // eating .dot
-                chain << parser.fn_call()
+                next := parser.expr(true)
+                if chain.len != 1 {
+                    if mut next is ast.FunctionCallExpr {
+                        next.is_member_fn = true
+                    } else if mut next is ast.VariableExpr {
+                        next.is_struct_member = true
+                    }
+                }
+                chain << next
             }
 
 
@@ -231,6 +240,10 @@ fn (mut parser Parser) fn_decl(is_external bool) ast.FunctionDeclarationStatemen
         ret_type = parser.fn_arg(true, .double_colon).type_name
     } else {
         ret_type = parser.expect(.identifier).value
+        for parser.lookahead().kind == .colon {
+            ret_type += parser.expect(.colon).value
+            ret_type += parser.expect(.identifier).value
+        }
     }
 
     if is_external {
@@ -247,7 +260,7 @@ fn (mut parser Parser) fn_decl(is_external bool) ast.FunctionDeclarationStatemen
 
     mut body := []Expr{}
     for parser.lookahead().kind != .close_curly {
-        body << parser.expr()
+        body << parser.expr(false)
     }
     parser.expect(.close_curly)
 
@@ -333,7 +346,7 @@ fn (mut parser Parser) fn_arg(is_decl bool, delim lexer.TokenType) ast.FunctionA
 fn (mut parser Parser) array_push() ast.ArrayPushExpr {
     target_arr := parser.expect(.identifier).value
     parser.expect(.arrow_left)
-    value_to_push := parser.expr()
+    value_to_push := parser.expr(false)
     // parser.expect(.semicolon)
 
     return ast.ArrayPushExpr {
@@ -344,13 +357,13 @@ fn (mut parser Parser) array_push() ast.ArrayPushExpr {
 
 fn (mut parser Parser) for_loop() ast.ForLoopExpr {
     parser.expect(.kw_for)
-    mut conditional := parser.expr()
+    mut conditional := parser.expr(false)
     parser.expect(.open_curly)
 
     mut body := []Expr{}
 
     for parser.lookahead().kind != .close_curly {
-        body_expr := parser.expr()
+        body_expr := parser.expr(false)
         if body_expr is ast.NoOp {
             break
         }
@@ -369,12 +382,12 @@ fn (mut parser Parser) for_in_loop() ast.ForInLoopExpr {
     parser.expect(.kw_for)
     container := parser.expect(.identifier).value
     parser.expect(.kw_in)
-    target := parser.expr()
+    target := parser.expr(false)
     mut body := []Expr{}
     parser.expect(.open_curly)
 
     for parser.lookahead().kind != .close_curly {
-        body_expr := parser.expr()
+        body_expr := parser.expr(false)
         if body_expr is ast.NoOp {
             break
         }
@@ -408,7 +421,7 @@ fn (mut parser Parser) fn_call() ast.FunctionCallExpr {
     }
 
     for parser.lookahead().kind != .close_paren {
-        args << parser.expr()
+        args << parser.expr(false)
 
         if parser.lookahead().kind == .comma {
             parser.advance()
@@ -434,7 +447,7 @@ fn (mut parser Parser) array() ast.ArrayDefinition {
     type_name := parser.expect(.identifier).value
     parser.expect(.open_curly)
     for parser.lookahead().kind != .close_curly {
-        items << parser.expr()
+        items << parser.expr(false)
         if parser.lookahead().kind != .close_curly {
             parser.expect(.comma)
         }
@@ -495,7 +508,7 @@ fn (mut parser Parser) ret() ast.ReturnExpr {
     parser.expect(.kw_return)
 
     return ast.ReturnExpr{
-        value: parser.expr(),
+        value: parser.expr(false),
     }
 }
 
@@ -524,7 +537,7 @@ fn (mut parser Parser) variable_decl() Expr {
         }
     }
 
-    mut body := parser.expr()
+    mut body := parser.expr(false)
 
     // var = "some string";
     if is_reassignment {
@@ -553,13 +566,13 @@ fn (mut parser Parser) variable_decl() Expr {
 
 fn (mut parser Parser) if_statement() ast.IfExpression {
     parser.expect(.kw_if)
-    mut conditional := parser.expr()
+    mut conditional := parser.expr(false)
     parser.expect(.open_curly)
     mut body := []Expr{}
     mut else_body := []Expr{}
 
     for parser.lookahead().kind != .close_curly {
-        body << parser.expr()
+        body << parser.expr(false)
     }
 
     parser.expect(.close_curly)
@@ -567,12 +580,12 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
     if parser.lookahead().kind == .kw_elif {
         for parser.lookahead().kind == .kw_elif {
             parser.expect(.kw_elif)
-            mut elseif_conditional := parser.expr()
+            mut elseif_conditional := parser.expr(false)
             parser.expect(.open_curly)
             mut elseif_body := []Expr{}
 
             for parser.lookahead().kind != .close_curly {
-                elseif_body << parser.expr()
+                elseif_body << parser.expr(false)
             }
             parser.expect(.close_curly)
             elseif_expr := ast.IfExpression{
@@ -588,7 +601,7 @@ fn (mut parser Parser) if_statement() ast.IfExpression {
         parser.expect(.kw_else)
         parser.expect(.open_curly)
         for parser.lookahead().kind != .close_curly {
-            else_body << parser.expr()
+            else_body << parser.expr(false)
         }
         parser.expect(.close_curly)
     }
@@ -622,7 +635,7 @@ fn (mut parser Parser) decrement() ast.DecrementExpr {
 fn (mut parser Parser) indexing() ast.IndexingExpr {
     var_name := parser.expect(.identifier).value
     parser.expect(.open_square)
-    body := parser.expr()
+    body := parser.expr(false)
     parser.expect(.close_square)
 
     return ast.IndexingExpr{
@@ -633,7 +646,7 @@ fn (mut parser Parser) indexing() ast.IndexingExpr {
 
 fn (mut parser Parser) grouped_expr() ast.GroupedExpr {
     parser.expect(.open_paren)
-    mut body := parser.expr()
+    mut body := parser.expr(false)
     parser.expect(.close_paren)
     return ast.GroupedExpr{body}
 }
@@ -643,7 +656,7 @@ fn (mut parser Parser) array_init() ast.ArrayInit {
     mut body := []ast.Expr{}
 
     for parser.lookahead().kind != .close_curly {
-        body << parser.expr()
+        body << parser.expr(false)
     }
 
     parser.expect(.close_curly)
@@ -655,12 +668,12 @@ fn (mut parser Parser) map_init() ast.MapInit {
     mut body := []ast.MapKeyValuePair{}
 
     for parser.lookahead().kind != .close_curly {
-        key := parser.expr()
+        key := parser.expr(false)
         if key is ast.NoOp {
             continue
         }
         parser.expect(.arrow_right)
-        value := parser.expr()
+        value := parser.expr(false)
         if value is ast.NoOp {
             continue
         }
@@ -675,7 +688,7 @@ fn (mut parser Parser) global() ast.GlobalDecl {
     parser.expect(.kw_global)
     name := parser.expect(.identifier).value
     parser.expect(.equal)
-    value := parser.expr()
+    value := parser.expr(false)
     // parser.expect(.semicolon)
 
     return ast.GlobalDecl{
@@ -690,7 +703,7 @@ fn (mut parser Parser) struct_new() ast.StructInitialization {
     parser.expect(.open_paren)
     mut args := []ast.Expr{}
     for parser.lookahead().kind != .close_paren {
-        args << parser.expr()
+        args << parser.expr(false)
     }
     parser.expect(.close_paren)
 
@@ -702,14 +715,14 @@ fn (mut parser Parser) struct_new() ast.StructInitialization {
 
 fn (mut parser Parser) try() ast.OptionalFunctionCall {
     parser.expect(.kw_try)
-    fn_call := parser.expr()
+    fn_call := parser.expr(false)
     if fn_call !is ast.FunctionCallExpr {
         // TODO: move error message to checker
         panic("Only function calls can be used in try blocks.")
     }
 
     parser.expect(.kw_or)
-    default := parser.expr()
+    default := parser.expr(false)
     // parser.expect(.semicolon)
 
     return ast.OptionalFunctionCall{
@@ -725,7 +738,7 @@ fn (mut parser Parser) binary(node ast.Expr) ast.BinaryOperation {
 
     if is_binary_op(parser.lookahead()) {
         op = parser.advance().value
-        rhs = parser.expr()
+        rhs = parser.expr(false)
         if is_binary_op(parser.lookahead()) {
             rhs = parser.binary(rhs)
         }

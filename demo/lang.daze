@@ -1,7 +1,8 @@
 is main
 
 use "daze::io"
+use "daze::net::http"
 
 fn main() :: Int {
-  io:println("Hello fing")
+  io:println(http:get("").get_text().get_something("Mark"))
 }

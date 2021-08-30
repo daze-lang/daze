@@ -144,6 +144,8 @@ pub struct FunctionCallExpr {
 pub:
     name string
     args []Expr
+pub mut:
+    is_member_fn bool
 }
 
 pub struct CallChainExpr {
@@ -213,6 +215,9 @@ pub:
 pub struct VariableExpr {
 pub:
     value string
+pub mut:
+    mod bool
+    is_struct_member bool
 }
 
 pub struct BinaryOp {
