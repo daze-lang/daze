@@ -95,11 +95,12 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
 }
 
 fn write_generated_output(file_name string, code string) {
-    os.write_file("/tmp/daze/${file_name}.cpp", code) or { panic("Failed writing file") }
-    os.execute("astyle /tmp/daze/${file_name}.cpp")
+    dir := os.temp_dir()
+    os.write_file("$dir/${file_name}.cpp", code) or { panic("Failed writing file") }
+    os.execute("astyle $dir/${file_name}.cpp")
     include_dir := "${os.getenv("DAZE_PATH")}/compiler/thirdparty"
     command_args := [
-        "gcc -x c++ /tmp/daze/${file_name}.cpp -o $file_name",
+        "gcc -x c++ $dir/${file_name}.cpp -o $file_name",
         "-lstdc++",
         "-I$include_dir",
         "-static",
@@ -111,6 +112,8 @@ fn write_generated_output(file_name string, code string) {
         println(term.red(term.bold("========================================")))
         println("")
         println(result.output)
+    } else {
+        os.execute("rm -rf $dir/${file_name}.cpp")
     }
 }
 
@@ -160,7 +163,7 @@ fn main() {
 
         "diag" {
             println(term.bold(term.white("Version: $__version")))
-            println(term.bold(term.white("Path: ${os.getenv("DAZE_PATH")}")))
+            println(term.bold(term.white("Daze Compiler Path: ${os.getenv("DAZE_PATH")}")))
         }
 
         // "run" {
