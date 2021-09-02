@@ -19,6 +19,7 @@
 - [ ] Better string interpolation
 - [ ] Detect variable shadowing
 - [x] Can we make semicolons optional? (or remove them completely for the most part?)
+- [ ] Compile time ifs
 
 ## Built in Types
 
