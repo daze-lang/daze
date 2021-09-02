@@ -8,11 +8,18 @@ import checker
 import utils
 import ast
 import os
+import cli
 
 const __version = "0.0.3"
 
 fn module_not_found(name string, path string) {
-    println("Module `$name` not found. Aborting.")
+    println(term.red(term.bold("Module `$name` not found. Aborting.")))
+    exit(1)
+}
+
+fn has_astyle() bool {
+    result := os.execute("astyle --help")
+    return result.exit_code == 0
 }
 
 fn load_modules(mod ast.Module, base string) []ast.Module {
@@ -46,7 +53,10 @@ fn compile_modules(mods []ast.Module, base string) map[string]ast.CompilationRes
     mut compiled_modules_map := map[string]ast.CompilationResult{}
 
     for rawmod in mods {
-        compiled_modules_map[rawmod.name] = compile(rawmod, base)
+        if !compiled_modules_map.keys().contains(rawmod.name) {
+            compiled_modules_map[rawmod.name] = compile(rawmod, base)
+        }
+
     }
 
     return compiled_modules_map
@@ -96,17 +106,21 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
 
 fn write_generated_output(file_name string, code string) {
     dir := os.temp_dir()
-    os.write_file("$dir/${file_name}.cpp", code) or { panic("Failed writing file") }
-    os.execute("astyle $dir/${file_name}.cpp")
+    out_file := "$dir/${file_name}.cpp"
+    os.write_file(out_file, code) or { panic("Failed writing file") }
+    if has_astyle() {
+        os.execute("astyle $out_file")
+    }
     include_dir := "${os.getenv("DAZE_PATH")}/compiler/thirdparty"
     command_args := [
-        "gcc -x c++ $dir/${file_name}.cpp -o $file_name",
+        "gcc -x c++ $out_file -o $file_name",
         "-lstdc++",
         "-I$include_dir",
         "-static",
         "-fno-diagnostics-show-caret -fdiagnostics-color=always"
     ]
     result := os.execute(command_args.join(" "))
+
     if result.exit_code != 0 {
         println(term.red(term.bold("Codegen error. The C++ Compiler failed.")))
         println(term.red(term.bold("========================================")))
@@ -119,9 +133,15 @@ fn write_generated_output(file_name string, code string) {
 
 // compiles the main entry point & writes it to file
 fn compile_main(path string, base string) ? {
-    mut main_module_contents := os.read_file(path) or { panic("(main) File not found") }
+    mut main_module_contents := os.read_file(path) or {
+        println(term.red(term.bold("`$path` not found.")))
+        exit(1)
+    }
     // TODO: not a good way to do things
-    mut header := os.read_file(os.getenv("DAZE_PATH") + "/compiler/include/header.h") or { panic("File not found") }
+    mut header := os.read_file(os.getenv("DAZE_PATH") + "/compiler/include/header.h") or {
+        println(term.red(term.bold("Default header include not found.")))
+        exit(1)
+    }
 
     main_module := ast.Module{
         name: "main",
@@ -132,15 +152,16 @@ fn compile_main(path string, base string) ? {
     result := compile(main_module, base)
     version_def := "#define __DAZE_VERSION__ ${__version}\n"
     output_file_name := os.file_name(path).replace(".daze", "")
-    write_generated_output(output_file_name, version_def + header + result.code)
+    code := version_def + header + result.code
+    write_generated_output(output_file_name, code)
 }
 
 fn help() {
     println(term.bold(term.bright_blue("Daze Compiler v${__version}\n")))
     println(term.bold(term.white("Available subcommands:\n")))
-    println(" ".repeat(4) + " - build <main_file>  Builds an executable")
-    println(" ".repeat(4) + " - diag               Outputs helpful information about the setup of the Daze Compiler")
-    println(" ".repeat(4) + " - version            Outputs the version of the installed Daze Compiler")
+    println(" ".repeat(2) + "build <main_file>  Builds an executable")
+    println(" ".repeat(2) + "diag               Outputs helpful information about the setup of the Daze Compiler")
+    println(" ".repeat(2) + "version            Outputs the version of the installed Daze Compiler")
 }
 
 fn main() {
@@ -149,41 +170,51 @@ fn main() {
         return
     }
 
-    match os.args[1] {
-        "build" {
-            if os.args.len != 3 {
-                utils.error("Too few arguments for command `build`.")
-            }
-            compile_main(os.args[2], get_base_dir(os.args[2]))?
-        }
-
-        "version" {
-            println(__version)
-        }
-
-        "diag" {
-            println(term.bold(term.white("Version: $__version")))
-            println(term.bold(term.white("Daze Compiler Path: ${os.getenv("DAZE_PATH")}")))
-        }
-
-        // "run" {
-        //     if os.args.len != 3 {
-        //         utils.error("Too few arguments for command `run`.")
-        //     }
-        //     compile_main(os.args[2], get_base_dir(os.args[2]))?
-        //     executable := os.file_name(os.args[2]).replace(".daze", "")
-        //     println(os.execute("./${executable}").output)
-        // }
-
-        else {
-            help()
-        }
+    mut app := cli.Command{
+        name: "daze"
+        description: "Compiler for the Daze Programming Language."
+        disable_help: true
+        commands: [
+            cli.Command{
+                name: "build"
+                disable_help: true
+                execute: fn (cmd cli.Command) ? {
+                    if cmd.args.len == 0 {
+                        help()
+                        return
+                    }
+                    compile_main(cmd.args[0], utils.get_base_dir(cmd.args[0]))?
+                    return
+                }
+            },
+            cli.Command{
+                name: "help"
+                disable_help: true
+                execute: fn (cmd cli.Command) ? {
+                    help()
+                    return
+                }
+            },
+            cli.Command{
+                name: "version"
+                disable_help: true
+                execute: fn (cmd cli.Command) ? {
+                    println(__version)
+                    return
+                }
+            },
+            cli.Command{
+                name: "diag"
+                disable_help: true
+                execute: fn (cmd cli.Command) ? {
+                    println(cmd.parent)
+                    println(term.bold(term.white("Version: $__version")))
+                    println(term.bold(term.white("Daze Compiler Path: ${os.getenv("DAZE_PATH")}")))
+                    return
+                }
+            },
+        ]
     }
-}
-
-fn get_base_dir(path string) string {
-    parts := path.split("/")
-    parts.pop()
-    base := os.join_path(os.getwd(), parts.join("/")) + "/"
-    return base
+    app.setup()
+    app.parse(os.args)
 }

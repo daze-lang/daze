@@ -1,6 +1,7 @@
 module utils
 
 import pcre
+import os
 
 pub fn match_all(text string, regexp string) []string {
     mut matches := []string{}
@@ -16,4 +17,11 @@ pub fn match_all(text string, regexp string) []string {
     }
 
     return matches
+}
+
+pub fn get_base_dir(path string) string {
+    parts := path.split("/")
+    parts.pop()
+    base := os.join_path(os.getwd(), parts.join("/")) + "/"
+    return base
 }

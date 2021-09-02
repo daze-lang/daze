@@ -785,7 +785,6 @@ fn (mut parser Parser) enum_() ast.EnumDeclarationStatement {
 fn (mut parser Parser) ternary(conditional ast.Expr) ast.TernaryExpr {
     parser.expect(.kw_do)
     truthy := parser.expr(false)
-    println(truthy)
     parser.expect(.kw_or)
     falsey := parser.expr(false)
 

@@ -2,6 +2,6 @@ is main
 
 use "daze::io"
 
-fn main() :: Int {
-  5 >= 5 do io:println("a") or io:println("b")
+fn main() :: Void {
+  io:println("Hello, world.")
 }

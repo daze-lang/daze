@@ -8,8 +8,10 @@
 
 std::string __ERROR__;
 
-int toint(std::string s) {
-  return stoi(s);
+std::string __tostring(auto val) {
+  std::stringstream ss;
+  ss << val;
+  return ss.str();
 }
 
 const char* tocstring(std::string str) {
