@@ -77,97 +77,108 @@ pub fn (mut checker Checker) run() {
 
 
 pub fn (mut checker Checker) check(node ast.Node) {
-    if mut node is ast.Statement {
-        checker.statement(node)
-    } else if mut node is ast.Expr {
-        checker.expr(node)
+    match node {
+        ast.Statement {
+            checker.statement(node)
+        }
+        ast.Expr {
+            checker.expr(node)
+        }
     }
 }
 
 fn (mut checker Checker) statement(node ast.Statement) {
-    if node is ast.FunctionDeclarationStatement {
-        checker.current_fn = node.name
-        if checker.context.functions.keys().contains(node.name) {
-            panic("Fn already defined. (${node.name})")
-        }
-        checker.context.functions[node.name] = node
-
-        // pushing arguments as variables for a function declaration
-        for arg in node.args {
-            arg_as_var := ast.VariableDecl{
-                name: arg.name
-                value: ast.NoOp{}
-                type_name: arg.type_name
+    match node {
+        ast.FunctionDeclarationStatement {
+            checker.current_fn = node.name
+            if checker.context.functions.keys().contains(node.name) {
+                panic("Fn already defined. (${node.name})")
             }
-            checker.context.variables[checker.current_fn][arg.name] = arg_as_var
-        }
+            checker.context.functions[node.name] = node
 
-        for body in node.body {
-            checker.check(body)
+            // pushing arguments as variables for a function declaration
+            for arg in node.args {
+                arg_as_var := ast.VariableDecl{
+                    name: arg.name
+                    value: ast.NoOp{}
+                    type_name: arg.type_name
+                }
+                checker.context.variables[checker.current_fn][arg.name] = arg_as_var
+            }
+
+            for body in node.body {
+                checker.check(body)
+            }
+        } ast.StructDeclarationStatement {
+            // if checker.current_mod != "main" {
+            //     checker.context.structs[checker.current_mod + ":" + node.name] = node
+            // } else {
+                checker.context.structs[node.name] = node
+            // }
+        } ast.EnumDeclarationStatement {
+            checker.context.enums[node.name] = node
+        } ast.GlobalDecl {
+            if node.name != node.name.capitalize() {
+                utils.error("Global variable names must be uppercase, found: `$node.name`")
+            }
+        } ast.ModuleDeclarationStatement {
+            if node.name == node.name.capitalize() {
+                utils.error("Module names must be lowercase, found: `$node.name`")
+            }
+            // creating new context when a new module use statement is found
+            context := new_context(node.name)
+            checker.contexts[checker.context.mod_name] = checker.context
+            checker.context = context
+        } else {
+            println("Unchecked statement: $node")
         }
-    } else if node is ast.StructDeclarationStatement {
-        // if checker.current_mod != "main" {
-        //     checker.context.structs[checker.current_mod + ":" + node.name] = node
-        // } else {
-            checker.context.structs[node.name] = node
-        // }
-    } else if node is ast.EnumDeclarationStatement {
-        checker.context.enums[node.name] = node
-    } else if node is ast.GlobalDecl {
-        if node.name != node.name.capitalize() {
-            utils.error("Global variable names must be uppercase, found: `$node.name`")
-        }
-    } else if node is ast.ModuleDeclarationStatement {
-        if node.name == node.name.capitalize() {
-            utils.error("Module names must be lowercase, found: `$node.name`")
-        }
-        // creating new context when a new module use statement is found
-        context := new_context(node.name)
-        checker.contexts[checker.context.mod_name] = checker.context
-        checker.context = context
     }
 }
 
 
 fn (mut checker Checker) expr(node ast.Expr) {
-    if node is ast.FunctionCallExpr {
-        checker.fn_call(node, checker.context)
-    } else if node is ast.VariableDecl {
-        checker.var_decl(node)
-    } else if node is ast.StructInitialization {
-        checker.struct_decl(node)
-    } else if node is ast.CallChainExpr {
-       checker.callchain(node)
-    } else if node is ast.BinaryOperation {
-        checker.binary(node)
-    } else if node is ast.OptionalFunctionCall {
-        checker.optional(node)
-    } else if node is ast.VariableAssignment {
-        checker.var_assignment(node)
-    } else if node is ast.VariableExpr {
-        if !checker.context.variables[checker.current_fn].keys().contains(node.value)
-            && !checker.context.enums.keys().contains(node.value.split(":")[0])  {
-            if node.value !in ["true", "false"] {
-                panic("Accessing unknown variable: ${node.value}")
-            }
-        }
-
-        if node.value.contains(":") {
-            // module or enum
-            mod_or_enum_name := node.value.split(":")[0]
-            field := node.value.split(":")[1]
-            is_mod := checker.modules.keys().contains(mod_or_enum_name)
-            is_enum := checker.context.enums.keys().contains(mod_or_enum_name)
-
-            if is_enum {
-                if !checker.context.enums[mod_or_enum_name].values.contains(field) {
-                    panic("Trying to access unkown field ${field} of enum `${mod_or_enum_name}`")
+    match node {
+        ast.FunctionCallExpr {
+            checker.fn_call(node, checker.context)
+        } ast.VariableDecl {
+            checker.var_decl(node)
+        } ast.StructInitialization {
+            checker.struct_decl(node)
+        } ast.CallChainExpr {
+           checker.callchain(node)
+        } ast.BinaryOperation {
+            checker.binary(node)
+        } ast.OptionalFunctionCall {
+            checker.optional(node)
+        } ast.VariableAssignment {
+            checker.var_assignment(node)
+        } ast.VariableExpr {
+            if !checker.context.variables[checker.current_fn].keys().contains(node.value)
+                && !checker.context.enums.keys().contains(node.value.split(":")[0])  {
+                if node.value !in ["true", "false"] {
+                    panic("Accessing unknown variable: ${node.value}")
                 }
             }
 
-            if is_mod {
-                panic("Unhandled: checker.v:109")
+            if node.value.contains(":") {
+                // module or enum
+                mod_or_enum_name := node.value.split(":")[0]
+                field := node.value.split(":")[1]
+                is_mod := checker.modules.keys().contains(mod_or_enum_name)
+                is_enum := checker.context.enums.keys().contains(mod_or_enum_name)
+
+                if is_enum {
+                    if !checker.context.enums[mod_or_enum_name].values.contains(field) {
+                        panic("Trying to access unkown field ${field} of enum `${mod_or_enum_name}`")
+                    }
+                }
+
+                if is_mod {
+                    panic("Unhandled: checker.v:109")
+                }
             }
+        } else {
+            println("Unchecked expression: $node")
         }
     }
 }

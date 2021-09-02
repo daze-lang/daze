@@ -41,28 +41,39 @@ pub fn (mut gen CppCodeGenerator) gen(node ast.Node) string {
 
 fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
     mut code := ""
-    if mut node is ast.FunctionDeclarationStatement {
-        code = gen.fn_decl(node)
-    } else if mut node is ast.FunctionArgument {
-        code = gen.fn_arg(node)
-    } else if mut node is ast.ModuleDeclarationStatement {
-        gen.mod_name = node.name
-        if node.name != "main" {
-            code = "\nnamespace $node.name {\n"
+    match node {
+        ast.FunctionDeclarationStatement {
+            code = gen.fn_decl(node)
         }
-    } else if mut node is ast.RawCppCode {
-        code = node.body
-    } else if mut node is ast.StructDeclarationStatement {
-        code = gen.struct_decl(node)
-    } else if mut node is ast.EnumDeclarationStatement {
-        code = gen.enum_(node)
-    } else if mut node is ast.GlobalDecl {
-        code = "const auto ${node.name} = ${gen.expr(node.value)};\n"
-    } else if mut node is ast.ModuleUseStatement {
-        parts := node.path.split("::")
-        code = "// MODULE ${parts.pop().replace("daze::", "").replace("./", "")};\n"
-    } else if mut node is ast.Comment {
-        code = "// $node.value\n"
+        ast.FunctionArgument {
+            code = gen.fn_arg(node)
+        }
+        ast.ModuleDeclarationStatement {
+            gen.mod_name = node.name
+            if node.name != "main" {
+                code = "\nnamespace $node.name {\n"
+            }
+        }
+        ast.RawCppCode {
+            code = node.body
+        }
+        ast.StructDeclarationStatement {
+            code = gen.struct_decl(node)
+        }
+        ast.EnumDeclarationStatement {
+            code = gen.enum_(node)
+        }
+        ast.GlobalDecl {
+            code = "const auto ${node.name} = ${gen.expr(node.value)};\n"
+        }
+        ast.ModuleUseStatement {
+            parts := node.path.split("::")
+            code = "// MODULE ${parts.pop().replace("daze::", "").replace("./", "")};\n"
+        }
+        ast.Comment {
+            code = "// $node.value\n"
+        }
+        else {}
     }
 
     return code
@@ -71,62 +82,92 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
 fn (mut gen CppCodeGenerator) expr(node ast.Expr) string {
     mut code := ""
 
-    if mut node is ast.StringLiteralExpr {
-        code = gen.string_literal_expr(node)
-    } else if mut node is ast.CharLiteralExpr {
-        code = "'$node.value'"
-    } else if mut node is ast.NumberLiteralExpr {
-        code = gen.number_literal_expr(node)
-    } else if mut node is ast.FunctionCallExpr {
-        code = gen.fn_call(node)
-    } else if mut node is ast.CallChainExpr {
-        code = gen.callchain(node)
-    } else if mut node is ast.VariableExpr {
-        code = gen.variable_expr(node)
-    } else if mut node is ast.RawCppCode {
-        code = node.body
-    } else if mut node is ast.VariableAssignment {
-        code = gen.variable_assignment(node)
-    } else if mut node is ast.BinaryOp {
-        code = "$node.value"
-    } else if mut node is ast.BinaryOperation {
-        code = gen.binary(node)
-    } else if mut node is ast.ReturnExpr {
-        code = gen.return_expr(node)
-    } else if mut node is ast.VariableDecl {
-        code = gen.variable_decl(node)
-    } else if mut node is ast.RawBinaryOpExpr {
-        code = node.value
-    } else if mut node is ast.IfExpression {
-        code = gen.if_statement(node)
-    } else if mut node is ast.ForLoopExpr {
-        code = gen.for_loop(node)
-    } else if mut node is ast.ArrayDefinition {
-        code = gen.array(node)
-    } else if mut node is ast.StructInitialization {
-        code = gen.struct_init(node)
-    } else if mut node is ast.ArrayPushExpr {
-        code = "${node.target}.push_back(${gen.gen(node.value).replace(";", "")});\n"
-    } else if mut node is ast.IncrementExpr {
-        code = "$node.target++;\n"
-    } else if mut node is ast.DecrementExpr {
-        code = "$node.target--;\n"
-    } else if mut node is ast.ForInLoopExpr {
-        code = gen.for_in_loop(node)
-    } else if mut node is ast.IndexingExpr {
-        code = gen.indexing(node)
-    } else if mut node is ast.TernaryExpr {
-        code = gen.ternary(node)
-    } else if mut node is ast.GroupedExpr {
-        code = gen.grouped_expr(node)
-    } else if mut node is ast.ArrayInit {
-        code = gen.array_init(node)
-    } else if mut node is ast.MapInit {
-        code = gen.map_init(node)
-    } else if mut node is ast.Comment {
-        code = "// $node.value\n"
-    } else if mut node is ast.TypeCast {
-        code = gen.typecast(node)
+    match node {
+        ast.StringLiteralExpr {
+            code = gen.string_literal_expr(node)
+        }
+        ast.CharLiteralExpr {
+            code = "'$node.value'"
+        }
+        ast.NumberLiteralExpr {
+            code = gen.number_literal_expr(node)
+        }
+        ast.FunctionCallExpr {
+            code = gen.fn_call(node)
+        }
+        ast.CallChainExpr {
+            code = gen.callchain(node)
+        }
+        ast.VariableExpr {
+            code = gen.variable_expr(node)
+        }
+        ast.RawCppCode {
+            code = node.body
+        }
+        ast.VariableAssignment {
+            code = gen.variable_assignment(node)
+        }
+        ast.BinaryOp {
+            code = "$node.value"
+        }
+        ast.BinaryOperation {
+            code = gen.binary(node)
+        }
+        ast.ReturnExpr {
+            code = gen.return_expr(node)
+        }
+        ast.VariableDecl {
+            code = gen.variable_decl(node)
+        }
+        ast.RawBinaryOpExpr {
+            code = node.value
+        }
+        ast.IfExpression {
+            code = gen.if_statement(node)
+        }
+        ast.ForLoopExpr {
+            code = gen.for_loop(node)
+        }
+        ast.ArrayDefinition {
+            code = gen.array(node)
+        }
+        ast.StructInitialization {
+            code = gen.struct_init(node)
+        }
+        ast.ArrayPushExpr {
+            code = "${node.target}.push_back(${gen.gen(node.value).replace(";", "")});\n"
+        }
+        ast.IncrementExpr {
+            code = "$node.target++;\n"
+        }
+        ast.DecrementExpr {
+            code = "$node.target--;\n"
+        }
+        ast.ForInLoopExpr {
+            code = gen.for_in_loop(node)
+        }
+        ast.IndexingExpr {
+            code = gen.indexing(node)
+        }
+        ast.TernaryExpr {
+            code = gen.ternary(node)
+        }
+        ast.GroupedExpr {
+            code = gen.grouped_expr(node)
+        }
+        ast.ArrayInit {
+            code = gen.array_init(node)
+        }
+        ast.MapInit {
+            code = gen.map_init(node)
+        }
+        ast.Comment {
+            code = "// $node.value\n"
+        }
+        ast.TypeCast {
+            code = gen.typecast(node)
+        }
+        else {}
     }
 
     return code
