@@ -8,7 +8,7 @@
 
 std::string __ERROR__;
 
-std::string __tostring(auto val) {
+std::string __tostring(int val) {
   std::stringstream ss;
   ss << val;
   return ss.str();

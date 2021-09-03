@@ -104,6 +104,26 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
     }
 }
 
+fn get_command_args(output_file string, bin_file_name string, include_dir string) []string {
+    $if linux {
+        return [
+            "gcc -x c++ $output_file -o $bin_file_name",
+            "-lstdc++",
+            "-I$include_dir",
+            "-static",
+            "-fno-diagnostics-show-caret -fdiagnostics-color=always"
+        ]
+    } $else $if macos {
+        return [
+            "g++ $output_file -o $bin_file_name",
+            "-I$include_dir",
+        ]
+    } $else {
+        panic("Unsupported platform.")
+        return []string{}
+    }
+}
+
 fn write_generated_output(file_name string, code string) {
     dir := os.temp_dir()
     out_file := "$dir/${file_name}.cpp"
@@ -112,13 +132,7 @@ fn write_generated_output(file_name string, code string) {
         os.execute("astyle $out_file")
     }
     include_dir := "${os.getenv("DAZE_PATH")}/compiler/thirdparty"
-    command_args := [
-        "gcc -x c++ $out_file -o $file_name",
-        "-lstdc++",
-        "-I$include_dir",
-        "-static",
-        "-fno-diagnostics-show-caret -fdiagnostics-color=always"
-    ]
+    command_args := get_command_args(out_file, file_name, include_dir)
     result := os.execute(command_args.join(" "))
 
     if result.exit_code != 0 {
