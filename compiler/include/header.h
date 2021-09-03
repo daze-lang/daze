@@ -8,7 +8,8 @@
 
 std::string __ERROR__;
 
-std::string __tostring(int val) {
+template<typename T>
+std::string __tostring(T val) {
   std::stringstream ss;
   ss << val;
   return ss.str();

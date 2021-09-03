@@ -1,7 +1,13 @@
 is main
 
 use "daze::io"
+use "./fibonacci"
+
+struct Person {
+  name :: String
+}
 
 fn main() :: Void {
-  io:println("Hello, world.")
+  p :: Person := make Person("Mark")
+  io:println(p)
 }
