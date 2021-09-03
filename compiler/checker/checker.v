@@ -4,6 +4,7 @@ import ast{CompilationResult, Module}
 import utils
 
 pub struct Checker {
+pub:
     ast ast.AST
 mut:
     // list of modules, key: module name
@@ -58,31 +59,35 @@ pub fn new(ast ast.AST, modules map[string]CompilationResult) Checker {
     }
 }
 
-pub fn (mut checker Checker) run() {
+pub fn (mut checker Checker) run() ast.AST {
     // when we initialize the type checker, it first goes through every imported module
     // and typechecks them in an isolated space
     for modname, mod in checker.modules {
         checker.current_mod = modname
-        for node in mod.ast.nodes {
-            checker.check(node)
+        for mut node in mod.ast.nodes {
+            checker.check(mut &node)
         }
     }
 
     // when we get to the main module, we set it as the current module and start the type checker
     checker.current_mod = "main"
-    for node in checker.ast.nodes {
-        checker.check(node)
+    for mut node in checker.ast.nodes {
+        checker.check(mut &node)
     }
+
+    return checker.ast
 }
 
 
-pub fn (mut checker Checker) check(node ast.Node) {
+pub fn (mut checker Checker) check(mut node &ast.Node) {
     match node {
         ast.Statement {
-            checker.statement(node)
+            mut cast := node as ast.Statement
+            checker.statement(cast)
         }
         ast.Expr {
-            checker.expr(node)
+            mut cast := node as ast.Expr
+            checker.expr(mut &cast)
         }
     }
 }
@@ -106,8 +111,8 @@ fn (mut checker Checker) statement(node ast.Statement) {
                 checker.context.variables[checker.current_fn][arg.name] = arg_as_var
             }
 
-            for body in node.body {
-                checker.check(body)
+            for mut body in node.body {
+                checker.check(mut body)
             }
         } ast.StructDeclarationStatement {
             // if checker.current_mod != "main" {
@@ -130,40 +135,45 @@ fn (mut checker Checker) statement(node ast.Statement) {
             checker.contexts[checker.context.mod_name] = checker.context
             checker.context = context
         } else {
-            println("Unchecked statement: $node")
+            // println("Unchecked statement: $node")
         }
     }
 }
 
 
-fn (mut checker Checker) expr(node ast.Expr) {
-    match node {
+fn (mut checker Checker) expr(mut node ast.Expr) {
+    // if mut node is ast.VariableDecl {
+    //     checker.var_decl(mut &node)
+    // }
+
+    match mut node {
         ast.FunctionCallExpr {
-            checker.fn_call(node, checker.context)
+            checker.fn_call(mut &node, checker.context)
         } ast.VariableDecl {
-            checker.var_decl(node)
+            checker.var_decl(mut &node)
         } ast.StructInitialization {
-            checker.struct_decl(node)
+            checker.struct_init(mut &node)
         } ast.CallChainExpr {
-           checker.callchain(node)
+           checker.callchain(&node)
         } ast.BinaryOperation {
-            checker.binary(node)
+            checker.binary(mut &node)
         } ast.OptionalFunctionCall {
-            checker.optional(node)
+            checker.optional(mut &node)
         } ast.VariableAssignment {
-            checker.var_assignment(node)
+            checker.var_assignment(mut &node)
         } ast.VariableExpr {
-            if !checker.context.variables[checker.current_fn].keys().contains(node.value)
-                && !checker.context.enums.keys().contains(node.value.split(":")[0])  {
-                if node.value !in ["true", "false"] {
-                    panic("Accessing unknown variable: ${node.value}")
+            cast := node as ast.VariableExpr
+            if !checker.context.variables[checker.current_fn].keys().contains(cast.value)
+                && !checker.context.enums.keys().contains(cast.value.split(":")[0])  {
+                if cast.value !in ["true", "false"] {
+                    panic("Accessing unknown variable: ${cast.value}")
                 }
             }
 
-            if node.value.contains(":") {
+            if cast.value.contains(":") {
                 // module or enum
-                mod_or_enum_name := node.value.split(":")[0]
-                field := node.value.split(":")[1]
+                mod_or_enum_name := cast.value.split(":")[0]
+                field := cast.value.split(":")[1]
                 is_mod := checker.modules.keys().contains(mod_or_enum_name)
                 is_enum := checker.context.enums.keys().contains(mod_or_enum_name)
 
@@ -178,22 +188,23 @@ fn (mut checker Checker) expr(node ast.Expr) {
                 }
             }
         } else {
-            println("Unchecked expression: $node")
+            // println("Unchecked expression: $node")
         }
     }
 }
 
-fn (mut checker Checker) var_decl(node ast.VariableDecl) {
-    checker.check(node.value)
-    if node.value is ast.NoOp {
-        return
-    }
-    expected := node.type_name.replace("::", ":").replace("ref ", "")
+fn (mut checker Checker) var_decl(mut node &ast.VariableDecl) {
+    checker.check(mut node.value)
+    mut expected := node.type_name.replace("::", ":").replace("ref ", "")
     infer_ctx := TypeInferenceContext{
         expr: node.value
         context: checker.context
     }
     my_type := checker.infer(infer_ctx)
+    if expected == "" {
+        node.type_name = my_type
+        expected = my_type
+    }
 
     if expected != my_type {
         if my_type != "Any" {
@@ -202,12 +213,11 @@ fn (mut checker Checker) var_decl(node ast.VariableDecl) {
     }
 
     checker.context.variables[checker.current_fn][node.name] = node
-
     // checking the variable body
-    checker.check(node.value)
+    checker.check(mut node.value)
 }
 
-fn (mut checker Checker) fn_call(node ast.FunctionCallExpr, context Context) {
+fn (mut checker Checker) fn_call(mut node ast.FunctionCallExpr, context Context) {
     mut function_name := node.name
 
     if function_name in ["tostring", "toint"] {
@@ -221,18 +231,18 @@ fn (mut checker Checker) fn_call(node ast.FunctionCallExpr, context Context) {
     fn_node := context.functions[function_name]
     // TODO: check if it exists
 
-    for arg in node.args {
-        checker.check(arg)
+    for mut arg in node.args {
+        checker.check(mut arg)
     }
 
     if function_name == "main" {
         panic("Calling `main` is not allowed.")
     }
 
-    checker.function_call_args(fn_node, node)
+    checker.function_call_args(fn_node, mut node)
 }
 
-fn (mut checker Checker) function_call_args(declaration ast.FunctionDeclarationStatement, call ast.FunctionCallExpr) {
+fn (mut checker Checker) function_call_args(declaration ast.FunctionDeclarationStatement, mut call ast.FunctionCallExpr) {
     mut function_name := call.name
 
     // Checking argument count
@@ -247,7 +257,7 @@ fn (mut checker Checker) function_call_args(declaration ast.FunctionDeclarationS
 
     // Checking argument types
     for i in 0..args_len {
-        checker.check(call.args[i])
+        checker.check(mut call.args[i])
         expected := declaration.args[i].type_name.replace("ref ", "")
         my_type := checker.infer(TypeInferenceContext{expr: call.args[i], context: checker.context})
 
@@ -261,12 +271,13 @@ fn (mut checker Checker) function_call_args(declaration ast.FunctionDeclarationS
     }
 }
 
-fn (mut checker Checker) struct_decl(node ast.StructInitialization) {
+fn (mut checker Checker) struct_init(mut node ast.StructInitialization) {
     args_len := node.args.len
     ast_node := checker.context.structs[node.name]
+    println(node.name)
     // Checking argument types
     for i in 0..args_len {
-        checker.check(node.args[i])
+        checker.check(mut node.args[i])
         expected := ast_node.fields[i].type_name
         my_type := checker.infer(TypeInferenceContext{expr: node.args[i], context: checker.context})
 
@@ -276,12 +287,12 @@ fn (mut checker Checker) struct_decl(node ast.StructInitialization) {
     }
 }
 
-fn (mut checker Checker) array_init(expected_type string, node ast.ArrayInit) {
+fn (mut checker Checker) array_init(expected_type string, mut node ast.ArrayInit) {
     expected := expected_type.split("|")[0]
     // // Checking argument types
     for i in 0..node.body.len {
         my_type := checker.infer(TypeInferenceContext{expr: node.body[i], context: checker.context})
-        checker.check(node.body[i])
+        checker.check(mut node.body[i])
 
         if expected != my_type {
             // TODO: proper error message
@@ -290,9 +301,9 @@ fn (mut checker Checker) array_init(expected_type string, node ast.ArrayInit) {
     }
 }
 
-fn (mut checker Checker) binary(node ast.BinaryOperation) {
-    checker.check(node.lhs)
-    checker.check(node.rhs)
+fn (mut checker Checker) binary(mut node ast.BinaryOperation) {
+    checker.check(mut node.lhs)
+    checker.check(mut node.rhs)
 
     lhs_type := checker.infer(TypeInferenceContext{expr: node.lhs, context: checker.context})
     rhs_type := checker.infer(TypeInferenceContext{expr: node.rhs, context: checker.context})
@@ -302,16 +313,18 @@ fn (mut checker Checker) binary(node ast.BinaryOperation) {
     }
 
     if node.lhs is ast.BinaryOperation {
-        checker.binary(node.lhs)
+        mut lhs_cast := node.lhs as ast.BinaryOperation
+        checker.binary(mut lhs_cast)
     }
 
     if node.rhs is ast.BinaryOperation {
-        checker.binary(node.rhs)
+        mut rhs_cast := node.rhs as ast.BinaryOperation
+        checker.binary(mut rhs_cast)
     }
 }
 
-fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
-    checker.check(node.fn_call)
+fn (mut checker Checker) optional(mut node ast.OptionalFunctionCall) {
+    checker.check(mut node.fn_call)
     type_name := checker.infer(TypeInferenceContext{expr: node.fn_call, context: checker.context}).replace("?", "")
     default_type_ctx := TypeInferenceContext{expr: node.default, context: checker.context}
     if type_name != checker.infer(default_type_ctx) {
@@ -320,7 +333,7 @@ fn (mut checker Checker) optional(node ast.OptionalFunctionCall) {
     }
 }
 
-fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
+fn (mut checker Checker) var_assignment(mut node ast.VariableAssignment) {
     mut expected := "UNKNOWN"
     if !checker.context.variables[checker.current_fn].keys().contains(node.name) {
         if checker.fn_has_arg_with_name(checker.current_fn, node.name) {
@@ -336,7 +349,7 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
         })
     }
 
-    checker.check(node.value)
+    checker.check(mut node.value)
     my_type := checker.infer(TypeInferenceContext{expr: node.value, context: checker.context})
 
     if expected != my_type {
@@ -344,7 +357,7 @@ fn (mut checker Checker) var_assignment(node ast.VariableAssignment) {
     }
 
     // checking the variable body
-    checker.check(node.value)
+    checker.check(mut node.value)
 }
 
 // Type Inference
@@ -363,6 +376,8 @@ fn (mut checker Checker) infer(inference_context TypeInferenceContext) string {
         }
 
         type_name = type_name.split("|")[0]
+    } else if node is ast.StructInitialization {
+        type_name = node.name
     } else if node is ast.BinaryOperation {
         type_name = checker.infer(TypeInferenceContext{expr: node.lhs, context: context})
     } else if node is ast.CallChainExpr {
@@ -438,18 +453,22 @@ fn (mut checker Checker) callchain(node ast.CallChainExpr) string {
                 context = checker.contexts[call.value]
             } else {
                 if !context.structs.keys().contains(latest_type) {
-                    panic("Error to be decided. (checker.v:400)")
+                    if context.variables[checker.current_fn].keys().contains(call.value) {
+                        latest_type = context.variables[checker.current_fn][call.value].type_name
+                    }
+                    // println(context.variables[checker.current_fn])
+                    // panic("Error to be decided. (checker.v:400) ($latest_type)")
                 }
                 latest_type = checker.infer(TypeInferenceContext{expr: call, context: context, last_known_type: latest_type})
             }
-        } else if call is ast.FunctionCallExpr {
+        } else if mut call is ast.FunctionCallExpr {
             if context.structs.keys().contains(latest_type) {
-                checker.function_call_args(checker.get_struct_member_fn_by_name(context, latest_type, call.name), call)
+                checker.function_call_args(checker.get_struct_member_fn_by_name(context, latest_type, call.name), mut call)
             } else {
                 if !context.functions.keys().contains(call.name) {
                     panic("Trying to call undefined function `${call.name}` in module `${context.mod_name} (latest type: $latest_type)`")
                 }
-                checker.fn_call(call, context)
+                checker.fn_call(mut call, context)
             }
             latest_type = checker.infer(TypeInferenceContext{expr: call, context: context, last_known_type: latest_type})
         }
@@ -470,7 +489,6 @@ fn (mut checker Checker) get_struct_member_fn_by_name(
         }
     }
 
-    // Should be unreachable
     panic("Trying to call function `$fn_name` on struct `$struct_name`, but it does not exist")
 }
 
@@ -484,7 +502,6 @@ fn (mut checker Checker) get_struct_field_by_name(
         }
     }
 
-    // Should be unreachable
     panic("Trying to access field `$field_name` on struct `$struct_name`, but it does not exist")
 }
 
@@ -495,7 +512,7 @@ fn (mut checker Checker) fn_has_arg_with_name(fn_name string, arg_name string) b
         }
     }
 
-    // should be unreachable
+    panic("Unreachable: checker.fn_has_arg_with_name")
     return false
 }
 
@@ -506,6 +523,6 @@ fn (mut checker Checker) fn_get_arg_with_name(fn_name string, arg_name string) a
         }
     }
 
-    // should be unreachable
+    panic("Unreachable: checker.fn_get_arg_with_name")
     return ast.FunctionArgument{}
 }

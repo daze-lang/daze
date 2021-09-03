@@ -1,13 +1,19 @@
 is main
 
 use "daze::io"
-use "./fibonacci"
+# use "./container"
 
-struct Person {
-  name :: String
-}
+# struct Person {
+#   dataContainer :: container:FnContainer
+
+#   fn getData() :: container:FnContainer {
+#     ret dataContainer
+#   }
+# }
 
 fn main() :: Void {
-  p :: Person := make Person("Mark")
-  io:println(p)
+  # something := make Person(make FnContainer("Some Data"))
+  # io:println(something.getData().data)
+
+  io:println("Hello, world")
 }

@@ -62,95 +62,92 @@ pub mut:
 }
 
 pub struct RawCppCode {
-pub:
+pub mut:
     body string
 }
 
 pub struct StructInitialization {
-pub:
+pub mut:
     name string
     args []Expr
 }
 
 pub struct GlobalDecl {
-pub:
+pub mut:
     name string
     value Expr
 }
 
 pub struct ModuleDeclarationStatement {
-pub:
+pub mut:
     name string
 }
 
 pub struct ModuleUseStatement {
-pub:
+pub mut:
     path string
 }
 
 pub struct StructDeclarationStatement {
-pub:
+pub mut:
     name string
     fields []FunctionArgument
     external bool
-pub mut:
     member_fns []FunctionDeclarationStatement
 }
 
 pub struct ReturnExpr {
-pub:
+pub mut:
     value Expr
 }
 
 pub struct OptionalFunctionCall {
-pub:
+pub mut:
     fn_call Expr
     default Expr
 }
 
 pub struct IfExpression {
-pub:
+pub mut:
     conditional Expr
     body []Expr
     elseifs []IfExpression
     else_branch []Expr
-mut:
     assign_to string
 }
 
 pub struct VariableDecl {
-pub:
+pub mut:
     name string
     value Expr
     type_name string
 }
 
 pub struct LoadStatement {
-pub:
+pub mut:
     path string
 }
 
 pub struct CompflagStatement {
-pub:
+pub mut:
     value string
 }
 
 pub struct VariableAssignment {
-pub:
+pub mut:
     name string
     value Expr
 }
 
 pub struct FunctionCallExpr {
-pub:
+pub mut:
     name string
     args []Expr
-pub mut:
     is_member_fn bool
 }
 
 pub struct CallChainExpr {
-pub:
+pub mut:
     chain []Expr
 }
 
@@ -165,126 +162,125 @@ pub mut:
 }
 
 pub struct GroupedExpr {
-pub:
+pub mut:
     body Expr
 }
 
 pub struct ArrayInit {
-pub:
+pub mut:
     body []Expr
 }
 
 pub struct MapInit {
-pub:
+pub mut:
     body []MapKeyValuePair
 }
 
 pub struct MapKeyValuePair {
-pub:
+pub mut:
     key Expr
     value Expr
 }
 
 pub struct StringLiteralExpr {
-pub:
+pub mut:
     value string
     value_type string
 }
 
 pub struct CharLiteralExpr {
-pub:
+pub mut:
     value string
     value_type string
 }
 
 pub struct NumberLiteralExpr {
-pub:
+pub mut:
     value f64
     value_type string
 }
 
 pub struct IncrementExpr {
-pub:
+pub mut:
     target string
 }
 
 pub struct DecrementExpr {
-pub:
+pub mut:
     target string
 }
 
 pub struct VariableExpr {
-pub:
-    value string
 pub mut:
+    value string
     mod bool
     is_struct_member bool
 }
 
 pub struct TernaryExpr {
-pub:
+pub mut:
     conditional Expr
     truthy Expr
     falsey Expr
 }
 
 pub struct BinaryOp {
-pub:
+pub mut:
     value string
 }
 
 pub struct IndexingExpr {
-pub:
+pub mut:
     var string
     body Expr
 }
 
 pub struct ForLoopExpr {
-pub:
+pub mut:
     conditional Expr
     body []Expr
 }
 
 pub struct ForInLoopExpr {
-pub:
+pub mut:
     container string
     target Expr
     body []Expr
 }
 
 pub struct ArrayPushExpr {
-pub:
+pub mut:
     target string
     value Expr
 }
 
 pub struct ArrayDefinition {
-pub:
+pub mut:
     type_name string
     items []Expr
 }
 
 pub struct FunctionArgument {
-pub:
+pub mut:
     name string
     type_name string
 }
 
 pub struct BinaryOperation {
-pub:
+pub mut:
     lhs Expr
     op string
     rhs Expr
 }
 
 pub struct EnumDeclarationStatement {
-pub:
+pub mut:
     name string
     values []string
 }
 
 pub struct TypeCast {
-pub:
+pub mut:
     value Expr
     type_name string
 }

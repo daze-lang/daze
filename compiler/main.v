@@ -76,29 +76,30 @@ fn replace_imports(code string, lookup map[string]ast.CompilationResult) string 
 }
 
 pub fn compile(mod ast.Module, base string) ast.CompilationResult {
+    module_lookup := compile_modules(load_modules(mod, base), base)
+
     mut lexer := lexer.new(mod.code)
     tokens := lexer.lex()
     mut parser := parser.new(tokens, mod.path)
     program_ast := parser.parse()
 
+    mut checker := checker.new(program_ast, module_lookup)
+    transformed_ast := checker.run()
+
     mut codegen := codegen.new_cpp(program_ast)
     mut code := codegen.run()
 
     if mod.name == "main" {
-        // panic(program_ast)
-        module_lookup := compile_modules(load_modules(mod, base), base)
-        mut checker := checker.new(program_ast, module_lookup)
-        checker.run()
-
+        // panic(transformed_ast)
         return ast.CompilationResult{
-            ast: program_ast,
+            ast: transformed_ast,
             mod: mod,
             code: replace_imports(code, module_lookup)
         }
     }
 
     return ast.CompilationResult{
-        ast: program_ast,
+        ast: transformed_ast,
         mod: mod,
         code: code
     }
@@ -141,7 +142,7 @@ fn write_generated_output(file_name string, code string) {
         println("")
         println(result.output)
     } else {
-        os.execute("rm -rf $dir/${file_name}.cpp")
+        // os.execute("rm -rf $dir/${file_name}.cpp")
     }
 }
 

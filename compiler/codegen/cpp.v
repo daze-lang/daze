@@ -492,17 +492,15 @@ fn (mut gen CppCodeGenerator) callchain(node ast.CallChainExpr) string {
     mut code := ""
 
     for c in node.chain {
-        code += "${gen.expr(c).replace(";", "")}".trim_space()
-
-        casted := c
-        if casted is ast.VariableExpr {
-            if casted.mod {
-                code += "::"
-            } else if casted.is_struct_member {
-                code += "."
+        call := "${gen.expr(c).replace(";", "")}".trim_space()
+        if mut c is ast.VariableExpr {
+            if c.mod {
+                code += "$call::"
+            } else {
+                code += "${call}."
             }
-        } else if casted is ast.FunctionCallExpr {
-            code += "."
+        } else {
+            code += "${call}."
         }
     }
 

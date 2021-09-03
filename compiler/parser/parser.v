@@ -189,13 +189,14 @@ fn (mut parser Parser) expr(parsing_callchain bool) Expr {
             for parser.lookahead().kind == .dot || parser.lookahead().kind == .colon {
                 parser.advance() // eating .dot
                 next := parser.expr(true)
-                if chain.len != 1 {
+                // if chain.len != 1 {
                     if mut next is ast.FunctionCallExpr {
                         next.is_member_fn = true
                     } else if mut next is ast.VariableExpr {
                         next.is_struct_member = true
                     }
-                }
+                // }
+                // println(next)
                 chain << next
             }
 
@@ -338,6 +339,11 @@ fn (mut parser Parser) fn_arg(is_decl bool, delim lexer.TokenType) ast.FunctionA
             is_ref = true
         }
         type_name = parser.expect(.identifier).value
+
+        if parser.lookahead().kind == .colon {
+            parser.advance() // eating :
+            type_name += ":${parser.expect(.identifier).value}"
+        }
         if is_ref {
             type_name = "ref $type_name"
         }
