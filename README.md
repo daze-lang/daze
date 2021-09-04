@@ -20,6 +20,8 @@
 - [ ] Detect variable shadowing
 - [x] Can we make semicolons optional? (or remove them completely for the most part?)
 - [ ] Compile time ifs
+- [ ] Implement anonymous functions (syntax: ->(var1 :: Type, var2 :: Type) :: ReturnType { return var1 })
+- [ ] Custom environment variable shouldn't be required to find the standard library (should be relative to the compiler's binary, which should be symlinked to /usr/bin/)
 
 ## Built in Types
 
