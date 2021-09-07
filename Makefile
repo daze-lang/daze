@@ -12,5 +12,8 @@ run-vm:
 build-and-run:
 	make clean && make && ./bin/daze build demo/lang.daze && ./lang
 
+changelog:
+	git cliff > CHANGELOG.md
+
 clean:
 	find . -maxdepth 1 -type f -executable -exec rm {} +
