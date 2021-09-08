@@ -20,7 +20,9 @@ jobs:
         v-version: latest
       id: v
     - name: Build compiler
-      run: v .
+      run: sudo make
+    - name: Run tests
+      run: sudo make test
 
   macos:
     runs-on: macos-latest

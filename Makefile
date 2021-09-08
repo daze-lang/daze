@@ -10,5 +10,8 @@ build-and-run:
 changelog:
 	git cliff > CHANGELOG.md
 
+test:
+	cd tests && v test .
+
 clean:
 	find . -maxdepth 1 -type f -executable -exec rm {} +

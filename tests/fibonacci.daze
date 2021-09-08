@@ -1,0 +1,15 @@
+is main
+
+use "daze::io"
+
+fn fibonacci(num :: BigInt) :: BigInt {
+  if num <= 1 {
+    ret 1
+  }
+
+  ret fibonacci(num - 1) + fibonacci(num - 2)
+}
+
+fn main() :: Void {
+  io:println(fibonacci(20 as BigInt))
+}

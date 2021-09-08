@@ -56,7 +56,6 @@ fn compile_modules(mods []ast.Module, base string) map[string]ast.CompilationRes
         if !compiled_modules_map.keys().contains(rawmod.name) {
             compiled_modules_map[rawmod.name] = compile(rawmod, base)
         }
-
     }
 
     return compiled_modules_map
@@ -64,7 +63,6 @@ fn compile_modules(mods []ast.Module, base string) map[string]ast.CompilationRes
 
 fn replace_imports(code string, lookup map[string]ast.CompilationResult) string {
     mut ret_code := code
-    // "use.*\n$"
     matches := utils.match_all(code, "// MODULE (.*);")
 
     for m in matches {
