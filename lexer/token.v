@@ -70,7 +70,7 @@ pub enum TokenType {
     eof                // indicating that there are no more tokens left
 }
 
-pub const tokens_map = map{
+pub const tokens_map = {
   "open_paren"         :"(",
   "close_paren"        :")",
   "open_curly"         :"{",
@@ -108,7 +108,7 @@ pub const tokens_map = map{
   "comment"            :"comment",
 }
 
-pub const keywords_map = map{
+pub const keywords_map = {
     "struct": TokenType.kw_struct
     "fn": TokenType.kw_fn
     "is": TokenType.kw_is
