@@ -1,3 +1,3 @@
-*.daze linguist-language=Rust
+*.daze linguist-language=V
 include/** linguist-vendored
 thirdparty/** linguist-vendored
