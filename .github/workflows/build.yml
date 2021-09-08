@@ -26,10 +26,8 @@ jobs:
       run: sudo /opt/hostedtoolcache/nocturlab/setup-vlang-action/0.2.4/x64/v symlink
     - name: Build Compiler
       run: sudo make
-    - name: Check date path
-      run: echo $DAZE_PATH
     - name: Tests
-      run: cd tests && v test .
+      run: sudo chown $USER /tmp/v/ && cd tests && v test .
 
   macos:
     runs-on: macos-latest
