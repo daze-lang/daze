@@ -3,8 +3,6 @@ main:
 
 run:
 	./bin/daze
-run-vm:
-	./bin/vm
 
 build-and-run:
 	make clean && make && ./bin/daze build demo/lang.daze && ./lang
