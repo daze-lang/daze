@@ -23,7 +23,7 @@ fn has_astyle() bool {
 }
 
 fn load_modules(mod ast.Module, base string) []ast.Module {
-    matches := utils.match_all(mod.code, "use (.*?\n)")
+    matches := utils.match_all(mod.code, "use.*\n$")
     mut modules := []ast.Module{}
     for m in matches {
         mut module_path := m.trim_space().replace("\"", "").replace("use ", "").replace(";", "")
@@ -64,7 +64,8 @@ fn compile_modules(mods []ast.Module, base string) map[string]ast.CompilationRes
 
 fn replace_imports(code string, lookup map[string]ast.CompilationResult) string {
     mut ret_code := code
-    matches := utils.match_all(code, "// MODULE (.*?);")
+    // "use.*\n$"
+    matches := utils.match_all(code, "// MODULE (.*);")
 
     for m in matches {
         mod_name := m.replace("// MODULE ", "").replace(";", "")

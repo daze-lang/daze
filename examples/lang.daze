@@ -15,5 +15,5 @@ fn main() :: Void {
   # something := make Person(make FnContainer("Some Data"))
   # io:println(something.getData().data)
 
-  io:println("Hello, world")
+  io:println("Hello, world!")
 }
