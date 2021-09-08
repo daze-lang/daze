@@ -19,6 +19,8 @@ jobs:
       with:
         v-version: latest
       id: v
+    - name: Symlink V
+      run: sudo v symlink
     - name: Build compiler
       run: sudo make
     - name: Run tests
