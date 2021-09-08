@@ -132,7 +132,7 @@ fn write_generated_output(file_name string, code string) {
     if has_astyle() {
         os.execute("astyle $out_file")
     }
-    include_dir := "${os.getenv("DAZE_PATH")}/compiler/thirdparty"
+    include_dir := "${os.getenv("DAZE_PATH")}/thirdparty"
     command_args := get_command_args(out_file, file_name, include_dir)
     result := os.execute(command_args.join(" "))
 
@@ -153,7 +153,7 @@ fn compile_main(path string, base string) ? {
         exit(1)
     }
     // TODO: not a good way to do things
-    mut header := os.read_file(os.getenv("DAZE_PATH") + "/compiler/include/header.h") or {
+    mut header := os.read_file(os.getenv("DAZE_PATH") + "/include/header.h") or {
         println(term.red(term.bold("Default header include not found.")))
         exit(1)
     }

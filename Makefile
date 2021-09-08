@@ -1,8 +1,5 @@
 main:
-	cd compiler && v . && mv ./compiler ../bin/daze && sudo cp ../bin/daze /usr/bin/daze
-
-vm:
-	cd compiler/vm && v . && mv ./vm ../../bin/vm
+	v . && mv ./daze ./bin/daze && sudo cp ./bin/daze /usr/bin/daze
 
 run:
 	./bin/daze
