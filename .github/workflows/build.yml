@@ -17,14 +17,17 @@ jobs:
     - name: Set up V version latest
       uses: nocturlab/setup-vlang-action@v1
       with:
-        v-version: latest
+        v-version: 0.2.4
+        v_home: /opt/v
       id: v
     - name: Symlink V
-      run: sudo v symlink
+      run: sudo /opt/hostedtoolcache/nocturlab/setup-vlang-action/0.2.4/x64/v symlink
     - name: Build compiler
       run: sudo make
     - name: Run tests
       run: sudo make test
+      env:
+        DAZE_PATH: ${{env.working_directory}}
 
   macos:
     runs-on: macos-latest

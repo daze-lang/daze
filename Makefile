@@ -1,5 +1,5 @@
 main:
-	v . && mv ./daze ./bin/daze && sudo cp ./bin/daze /usr/bin/daze
+	rm -rf ./bin && mkdir ./bin && v . && mv ./daze ./bin/daze && sudo cp ./bin/daze /usr/bin/daze
 
 run:
 	./bin/daze
@@ -11,7 +11,7 @@ changelog:
 	git cliff > CHANGELOG.md
 
 test:
-	cd tests && v test .
+	cd tests && sudo v test .
 
 clean:
 	find . -maxdepth 1 -type f -executable -exec rm {} +
