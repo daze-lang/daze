@@ -11,10 +11,12 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    env:
+      DAZE_PATH: .
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Set up V version latest
+    - name: Set up V 0.2.4
       uses: nocturlab/setup-vlang-action@v1
       with:
         v-version: 0.2.4
@@ -22,12 +24,12 @@ jobs:
       id: v
     - name: Symlink V
       run: sudo /opt/hostedtoolcache/nocturlab/setup-vlang-action/0.2.4/x64/v symlink
-    - name: Build compiler
+    - name: Build Compiler
       run: sudo make
-    - name: Run tests
-      run: sudo make test
-      env:
-        DAZE_PATH: ${{env.working_directory}}
+    - name: Check date path
+      run: echo $DAZE_PATH
+    - name: Tests
+      run: cd tests && v test .
 
   macos:
     runs-on: macos-latest
