@@ -35,15 +35,15 @@ jobs:
     - name: Build compiler
       run: v install pcre && v .
 
-  windows:
-    runs-on: windows-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up V version latest
-      uses: nocturlab/setup-vlang-action@v1
-      with:
-        v-version: latest
-      id: v
-    - name: Build compiler
-      run: v install pcre && v .
+  # windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Set up V version latest
+  #     uses: nocturlab/setup-vlang-action@v1
+  #     with:
+  #       v-version: latest
+  #     id: v
+  #   - name: Build compiler
+  #     run: v install pcre && v .
