@@ -27,7 +27,7 @@ jobs:
     - name: Build Compiler
       run: sudo make
     - name: Tests
-      run: sudo chown $USER /tmp/v/ && cd tests && v test .
+      run: sudo chown $USER /tmp/v/ && v test tests
 
   macos:
     runs-on: macos-latest
