@@ -82,8 +82,8 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
     mut parser := parser.new(tokens, mod.path)
     program_ast := parser.parse()
 
-    mut checker := checker.new(program_ast, module_lookup)
-    transformed_ast := checker.run()
+    // mut checker := checker.new(program_ast, module_lookup)
+    // transformed_ast := checker.run()
 
     mut codegen := codegen.new_parrot(program_ast)
     mut code := codegen.run()
@@ -91,14 +91,14 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
     if mod.name == "main" {
         // panic(transformed_ast)
         return ast.CompilationResult{
-            ast: transformed_ast,
+            ast: program_ast,
             mod: mod,
             code: replace_imports(code, module_lookup)
         }
     }
 
     return ast.CompilationResult{
-        ast: transformed_ast,
+        ast: program_ast,
         mod: mod,
         code: code
     }

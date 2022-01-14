@@ -1,5 +1,7 @@
-is main
-
+fn getHelloWorld() :: String {
+  ret "Hello, world."
+}
 
 fn main() :: Void {
+  println(getHelloWorld())
 }
