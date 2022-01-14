@@ -483,7 +483,7 @@ fn (mut gen CppCodeGenerator) typecast(node ast.TypeCast) string {
     if node.type_name == "CString" {
         return "tocstring(${gen.expr(node.value)})"
     } else if node.type_name == "String" {
-        return "tostring(${gen.expr(node.value)})"
+        return "__tostring(${gen.expr(node.value)})"
     }
     return "(${type_name}) ${gen.expr(node.value)}"
 }

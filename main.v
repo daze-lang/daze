@@ -85,7 +85,7 @@ pub fn compile(mod ast.Module, base string) ast.CompilationResult {
     mut checker := checker.new(program_ast, module_lookup)
     transformed_ast := checker.run()
 
-    mut codegen := codegen.new_cpp(program_ast)
+    mut codegen := codegen.new_parrot(program_ast)
     mut code := codegen.run()
 
     if mod.name == "main" {
@@ -126,23 +126,23 @@ fn get_command_args(output_file string, bin_file_name string, include_dir string
 
 fn write_generated_output(file_name string, code string) {
     dir := os.temp_dir()
-    out_file := "$dir/${file_name}.cpp"
+    out_file := "$dir/${file_name}.pir"
     os.write_file(out_file, code) or { panic("Failed writing file") }
-    if has_astyle() {
-        os.execute("astyle $out_file")
-    }
-    include_dir := "${os.getenv("DAZE_PATH")}/thirdparty"
-    command_args := get_command_args(out_file, file_name, include_dir)
-    result := os.execute(command_args.join(" "))
+    // if has_astyle() {
+    //     os.execute("astyle $out_file")
+    // }
+    // include_dir := "${os.getenv("DAZE_PATH")}/thirdparty"
+    // command_args := get_command_args(out_file, file_name, include_dir)
+    // result := os.execute(command_args.join(" "))
 
-    if result.exit_code != 0 {
-        println(term.red(term.bold("Codegen error. The C++ Compiler failed.")))
-        println(term.red(term.bold("========================================")))
-        println("")
-        println(result.output)
-    } else {
-        // os.execute("rm -rf $dir/${file_name}.cpp")
-    }
+    // if result.exit_code != 0 {
+    //     println(term.red(term.bold("Codegen error. The C++ Compiler failed.")))
+    //     println(term.red(term.bold("========================================")))
+    //     println("")
+    //     // println(result.output)
+    // } else {
+    //     // os.execute("rm -rf $dir/${file_name}.cpp")
+    // }
 }
 
 // compiles the main entry point & writes it to file
@@ -152,10 +152,10 @@ fn compile_main(path string, base string) ? {
         exit(1)
     }
     // TODO: not a good way to do things
-    mut header := os.read_file(os.getenv("DAZE_PATH") + "/include/header.h") or {
-        println(term.red(term.bold("Default header include not found.")))
-        exit(1)
-    }
+    // mut header := os.read_file(os.getenv("DAZE_PATH") + "/include/header.h") or {
+    //     println(term.red(term.bold("Default header include not found.")))
+    //     exit(1)
+    // }
 
     main_module := ast.Module{
         name: "main",
@@ -164,9 +164,9 @@ fn compile_main(path string, base string) ? {
     }
 
     result := compile(main_module, base)
-    version_def := "#define __DAZE_VERSION__ ${__version}\n"
+    // version_def := "#define __DAZE_VERSION__ ${__version}\n"
     output_file_name := os.file_name(path).replace(".daze", "")
-    code := version_def + header + result.code
+    code := result.code
     write_generated_output(output_file_name, code)
 }
 

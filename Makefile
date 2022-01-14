@@ -1,5 +1,5 @@
 main:
-	rm -rf ./bin && mkdir ./bin && v . && mv ./daze ./bin/daze && sudo cp ./bin/daze /usr/bin/daze
+	rm -rf ./bin && mkdir ./bin && v . && mv ./daze ./bin/daze
 
 run:
 	./bin/daze

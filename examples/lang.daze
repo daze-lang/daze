@@ -1,19 +1,5 @@
 is main
 
-use "daze::io"
-# use "./container"
-
-# struct Person {
-#   dataContainer :: container:FnContainer
-
-#   fn getData() :: container:FnContainer {
-#     ret dataContainer
-#   }
-# }
 
 fn main() :: Void {
-  # something := make Person(make FnContainer("Some Data"))
-  # io:println(something.getData().data)
-
-  io:println("Hello, world!")
 }
