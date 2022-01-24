@@ -67,7 +67,7 @@ fn (mut gen CppCodeGenerator) statement(node ast.Statement) string {
             code = "const auto ${node.name} = ${gen.expr(node.value)};\n"
         }
         ast.ModuleUseStatement {
-            parts := node.path.split("::")
+            mut parts := node.path.split("::")
             code = "// MODULE ${parts.pop().replace("daze::", "").replace("./", "")};\n"
         }
         ast.Comment {

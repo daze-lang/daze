@@ -35,7 +35,7 @@ fn load_modules(mod ast.Module, base string) []ast.Module {
         }
 
         mut module_file := os.read_file("${module_path}.daze") or { module_not_found(module_name, module_path) exit(1) }
-        mod_name := module_name.replace("./", "").split("/")
+        mut mod_name := module_name.replace("./", "").split("/")
         new_mod := ast.Module{
             name: mod_name.pop(),
             path: module_path + ".daze"
