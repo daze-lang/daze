@@ -15,8 +15,8 @@ pub mut:
 
 type RegisterValue = string | int | f64
 
-const MODULES_START_FROM = 8888888888
-const OBJECTS_START_FROM = 9999999999
+const modules_start_from = 8888888888
+const objects_start_from = 9999999999
 
 pub fn new_parrot(ast ast.AST) ParrotCodeGenerator {
     return ParrotCodeGenerator{

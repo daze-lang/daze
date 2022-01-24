@@ -1,5 +1,0 @@
-is container
-
-struct FnContainer {
-  data :: String
-}

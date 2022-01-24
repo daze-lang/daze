@@ -1,7 +1,0 @@
-is main
-
-use "daze::io"
-
-fn main() :: Void {
-  io:println("Hello, world!")
-}

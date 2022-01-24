@@ -4,7 +4,7 @@ import term
 import lexer
 import parser
 import codegen
-import checker
+// import checker
 import utils
 import ast
 import os

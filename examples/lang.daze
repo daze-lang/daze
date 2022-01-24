@@ -4,4 +4,6 @@ fn getHelloWorld() :: String {
 
 fn main() :: Void {
   println(getHelloWorld())
+  println("Hello world again.")
+  println(5 + 10 * 3)
 }
