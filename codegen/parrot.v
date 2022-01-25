@@ -9,36 +9,15 @@ pub:
     ast ast.AST
 pub mut:
     lines []string
-    registers map[string][]RegisterValue
     indentation int
 }
-
-type RegisterValue = string | int | f64
-
-const modules_start_from = 8888888888
-const objects_start_from = 9999999999
 
 pub fn new_parrot(ast ast.AST) ParrotCodeGenerator {
     return ParrotCodeGenerator{
         ast: ast,
         lines: []string{},
-        registers: map[string][]RegisterValue{}
         indentation: 0
     }
-}
-
-pub fn (mut gen ParrotCodeGenerator) push_new_string(value string) string {
-    gen.registers["string"] << value
-    key := gen.registers["string"].len
-    gen.add_line("\$S$key = \"$value\"")
-    return "\$S$key"
-}
-
-pub fn (mut gen ParrotCodeGenerator) push_new_int(value f64) string {
-    gen.registers["int"] << value
-    key := gen.registers["int"].len
-    gen.add_line("\$I$key = \"$value\"")
-    return "\$I$key"
 }
 
 pub fn (mut gen ParrotCodeGenerator) add_line(line string) {
@@ -99,16 +78,16 @@ fn (mut gen ParrotCodeGenerator) expr(node ast.Expr) string {
 
     match node {
         ast.StringLiteralExpr {
-            return gen.string_literal_expr(node)
+            gen.string_literal_expr(node)
         }
         ast.CharLiteralExpr {
 
         }
         ast.NumberLiteralExpr {
-            return gen.number_literal_expr(node)
+            gen.number_literal_expr(node)
         }
         ast.FunctionCallExpr {
-            return gen.fn_call(node)
+            gen.fn_call(node)
         }
         ast.CallChainExpr {
             gen.callchain(node)
@@ -125,10 +104,10 @@ fn (mut gen ParrotCodeGenerator) expr(node ast.Expr) string {
         ast.BinaryOp {
         }
         ast.BinaryOperation {
-            return gen.binary(node)
+            gen.binary(node)
         }
         ast.ReturnExpr {
-            return gen.return_expr(node)
+            gen.return_expr(node)
         }
         ast.VariableDecl {
             gen.variable_decl(node)
@@ -195,11 +174,9 @@ fn (mut gen ParrotCodeGenerator) fn_decl(node ast.FunctionDeclarationStatement) 
 }
 
 fn (mut gen ParrotCodeGenerator) generate_array_def(info string) {
-
 }
 
 fn (mut gen ParrotCodeGenerator) generate_map_def(info string) {
-
 }
 
 fn (mut gen ParrotCodeGenerator) typename(name string) {
@@ -215,18 +192,17 @@ fn (mut gen ParrotCodeGenerator) fn_call(node ast.FunctionCallExpr) string {
         gen.add_line("${opcode} $register")
         return ""
     } else {
-        gen.add_line("\$S${gen.registers["string"].len + 1} = ${node.name}()")
-        return "\$S${gen.registers["string"].len + 1}"
     }
 
+    return ""
 }
 
 fn (mut gen ParrotCodeGenerator) string_literal_expr(node ast.StringLiteralExpr) string {
-    return gen.push_new_string(node.value)
+    return ""
 }
 
 fn (mut gen ParrotCodeGenerator) number_literal_expr(node ast.NumberLiteralExpr) string {
-    return gen.push_new_int(node.value)
+    return ""
 }
 
 fn (mut gen ParrotCodeGenerator) variable_expr(node ast.VariableExpr) {
@@ -257,7 +233,6 @@ fn (mut gen ParrotCodeGenerator) for_loop(node ast.ForLoopExpr) {
 }
 
 fn (mut gen ParrotCodeGenerator) for_in_loop(node ast.ForInLoopExpr) {
-
 }
 
 fn (mut gen ParrotCodeGenerator) array(node ast.ArrayDefinition) {
@@ -282,13 +257,7 @@ fn (mut gen ParrotCodeGenerator) try(assign_to string, node ast.OptionalFunction
 }
 
 fn (mut gen ParrotCodeGenerator) binary(node ast.BinaryOperation) string {
-    lhs := gen.expr(node.lhs)
-    rhs := gen.expr(node.rhs)
-    latest := gen.registers["int"].len + 1
-    // gen.push_new_int(0)
-    gen.add_line("\$I$latest = $lhs $node.op $rhs")
-
-    return "\$I$latest"
+    return ""
 }
 
 fn (mut gen ParrotCodeGenerator) enum_(node ast.EnumDeclarationStatement) {
